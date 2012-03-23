@@ -268,7 +268,7 @@ mapC(cor(intdata(hiCnorm)), maxrange=1, minrange=-1,
 
 \newpage
 \section{A word about speed}
-For improving the run time on machines with multiple processors, some of the functions in the \Rpackage{HiTC} package have been implemented to make use of the functionality in the \Rpackage{multicore} package. If \Rpackage{multicore} has been attached and initialised before calling these functions, some functions will make use of \Rfunction{mclapply} instead of the normal \Rfunction{lapply}.
+For improving the run time on machines with multiple processors, some of the functions in the \Rpackage{HiTC} package have been implemented to make use of the functionality in the \Rpackage{parallel} package. If \Rpackage{parallel} has been attached and initialised before calling these functions, some functions will make use of \Rfunction{mclapply} instead of the normal \Rfunction{lapply}.
 
 \small
 \section*{Package versions}
