@@ -58,7 +58,7 @@ raiselinks,plainpages,pdftex]{hyperref}
 
 \title{\textbf{HiTC - Exploration of \textbf{Hi}gh \textbf{T}hroughput '\textbf{C}' experiments}}
 \author{
-N. Servant, B. Lajoie, E. Nora, L. Giorgetti, E. Heard, J. Dekker, E. Barillot
+N. Servant, B. Lajoie, E. Nora, L. Giorgetti, J. Dekker, E. Heard, E. Barillot
 }
 \maketitle
 
@@ -95,32 +95,30 @@ showClass("HTCexp")
 A complete dataset is composed of a list of cis and trans \Rclass{HTCexp} objects, characterised by their physical interactions.
 
 The \Rpackage{HiTC} package includes two distinct dataset.\\
-The first one is a 5C dataset published by \cite{Bau2011}, applied to the ENm008 domain of the human chromosome 16, on two different cells (GM12878 and K562). This dataset is mainly used to describe the available functionalities of the package.\\
+The first one is a 5C dataset (\href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE35721}{GSE35721}) published by \cite{Nora2012a}, from which we choose two different Mouse samples, male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). This dataset is mainly used to describe the available functionalities of the package.\\
 The second is the Human Hi-C dataset (\href{http://0-www.ncbi.nlm.nih.gov.elis.tmu.edu.tw/geo/query/acc.cgi?acc=GSE18199}{GSE18199}) published by \cite{Lieberman-Aiden2009}. The interaction map of chromosome 14 is used to illustrate the capabilities of the \Rpackage{HiTC} package to explore Hi-C data.
 
 \section{Load Data}
 
 The \Rpackage{HiTC} R package is fully compatible with the \href{http://my5c.umassmed.edu/welcome/welcome.php}{my5C web browser}. The interaction counts matrices can be imported from a table or a list file and exported. The description of the genomic intervals has to be imported in the \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} format (see section \ref{section:hic} for an example).\\
 In addition, objects can be easily created using the \Rmethod{HTCexp} method. The function \Rmethod{readBED} is also proposed to load multi-track \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files.\\
-For the following example, the processed 5C data of the chromosome X from \cite{Nora2012} are already included in the package.
+For the following example, the processed 5C data of the chromosome X from \cite{Nora2012a} are already included in the package.
 <<import5c>>=
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
+data(Nora_5C)
 
 ## List of HTCexp objects describing the 5C dataset                                                                 
-detail(GM12878)
+detail(E14)
 @ 
 
 \section{Quality Control}
 The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random collisions. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qc5c.png}).
 
 <<qc5c, eval=FALSE, echo=TRUE>>=
-CQC(GM12878)
+CQC(E14)
 @ 
 <<QCeval, echo=FALSE, results=verbatim>>=
 png(file="HiTC-qc5c.png", res=300, units="in", width=5, height=5)
-CQC(GM12878)
+CQC(E14)
 graphics.off()
 @ 
 
@@ -133,12 +131,12 @@ Therefore Hi-C and 5C results are typically displayed using two dimensional heat
 trimming. Two different views are provided; a square heatmap view (see Figure~\ref{HiTC-mapC.png}) or a triangle view. The latest is particulary useful for interaction maps comparison and alignment with genomic or epigenomic features.
 
 <<mapC5c, eval=FALSE, echo=TRUE, fig=FALSE, include=FALSE>>=
-mapC(GM12878$chr16chr16)
+mapC(E14$chrXchrX)
 @ 
 
 <<norm5CEval, echo=FALSE, results=verbatim>>=
 png(file="HiTC-mapC.png", res=300, units="in", width=5, height=5)
-mapC(GM12878$chr16chr16)
+mapC(E14$chrXchrX)
 graphics.off()
 @
 
@@ -150,12 +148,14 @@ Each pixel of an interaction map can correspond either to a single restriction f
 To produce an interaction map, the genomic range of the display should be divided into appropriately size loci. This size depends on the resolution desired for the analysis. For instance, 5C data can be visualised at the primers resolution, or segmented into 100Kb or 1Mb bins that can be partially overlap or not. Such binned interaction map is symmetrical around the diagonal. For the following example, we decided to focus on a subset of the original dataset (see Figure~\ref{HiTC-bin5C}).
 
 <<bin5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+## Focus on a subset chrX:100295000:102250000
+E14subset<-extractRegion(E14$chrXchrX, from=100295000, to=102250000)
 
 ## Binning of 5C interaction map
-GM12878.binned <- binningC(GM12878$chr16chr16, binsize=50000, step=5)
-mapC(GM12878.binned, show.na=TRUE)
+E14.subset.binned <- binningC(E14subset, binsize=100000, step=3)
+mapC(E14.subset.binned)
 @
-\myincfig{HiTC-bin5C}{0.5\textwidth}{Binned 5C interaction map of GM12878 sample.}
+\myincfig{HiTC-bin5C}{0.5\textwidth}{Binned 5C interaction map of chrX:100295000-102250000.}
 
 \subsection{Data Normalisation}
 Due to the polymer nature of chromatin, at small genomic distances, pairs of restriction fragments that are close to each other in the linear genome will give higher signal than fragments that are further apart. Such property leads to strongest counts falling on the heatmap diagonal. When considering any given pair of restriction fragments, it is therefore informative to assess whether the observed counts are above what is expected given the genomic distance that separate them.\\
@@ -163,13 +163,13 @@ Different ways of normalisation have been proposed. In the current version of th
 
 <<norm5Cexp, eval=FALSE, echo=TRUE, fig=FALSE>>=
 ## Look at exptected counts
-GM12878exp <- getExpectedCounts(GM12878$chr16chr16, stdev=TRUE, plot=TRUE, bin=0.001, span=0.3)
+E14exp <- getExpectedCounts(E14subset, stdev=TRUE, plot=TRUE)
 @ 
 
 
 <<norm5CexpEval, echo=FALSE, results=verbatim>>=
 png(file="HiTC-expint.png", res=300, units="in", width=6, height=6)
-GM12878exp <- getExpectedCounts(GM12878$chr16chr16, bin=0.001, span=0.3, stdev=TRUE, plot=TRUE)
+E14exp <- getExpectedCounts(E14subset, stdev=TRUE, plot=TRUE)
 graphics.off()
 @
 
@@ -178,20 +178,21 @@ graphics.off()
 % \noindent\includegraphics[width=0.7\textwidth]{expint.png}
 
 % <<norm5Cexpmap, eval=TRUE, echo=TRUE, fig=TRUE>>=
-% mapC(GM12878.exp$exp.interaction)
+% mapC(E14.exp$exp.interaction)
 % @
 
 Interaction frequencies can be then normalised for distance by dividing the observed value by the expected value (\Rmethod{normPerExpected}), or by calculating the zscore at each estimated points (\Rmethod{normPerZscore}). These normalisation methods can be easily applied using the methods \Rmethod{normPerReads}, \Rmethod{normPerExpected} or \Rmethod{normPerZscore} (see Figure~\ref{HiTC-norm5Cznorm}).
 
 
 % <<norm5Cexpnorm, eval=TRUE, echo=TRUE, fig=TRUE>>=
-% GM12878npe <- normPerExpected(GM12878$chr16chr16)
-% GM12878npe.binned <- binningC(GM12878npe, binsize=100000, step=3)
-% mapC(GM12878npe.binned, log.data=TRUE)
+% E14npe <- normPerExpected(E14$chrXchrX)
+% E14npe.binned <- binningC(E14npe, binsize=100000, step=3)
+% mapC(E14npe.binned, log.data=TRUE)
 % @
 <<norm5Cznorm, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
-GM12878z <- normPerZscore(GM12878$chr16chr16, span=0.3)
-mapC(GM12878z)
+E14subsetz <- normPerZscore(E14subset)
+E14subsetz.binned <- binningC(E14subsetz, binsize=50000, step=3)
+mapC(E14subsetz.binned)
 @
 \myincfig{HiTC-norm5Cznorm}{0.5\textwidth}{Interaction map of data normalised using the Zscore approach.}
 
@@ -200,26 +201,28 @@ mapC(GM12878z)
 The \Rpackage{HiTC} package contains functions for visualising genomic regions with interaction maps (see Figure~\ref{HiTC-annot5C}).
 The annotation objects have to belong to the \Rclass{Genome\_intervals} class, cand can be loaded from \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files.
 
-For instance, the following example displays the CTCF enriched regions (\cite{Kagey2010}) and RefSeq genes over the interaction map of the GM12878 sample.
+For instance, the following example displays the CTCF enriched regions (\cite{Kagey2010}) and RefSeq genes over the interaction map of the E14 sample.
 
 <<annot5C, eval=TRUE, echo=TRUE, print=FALSE, fig=TRUE, width=7, height=7, include=FALSE>>=
-Refgene <- readBED(file.path(exDir,"refseq_hg19_chr16_1_500000.bed"))
-mapC(GM12878.binned, 
-     giblocs=list(RefSeqGene=Refgene$Refseq_Gene), view=2)
+E14.binned <- binningC(E14$chrXchrX, binsize=100000, step=3)
+exDir <- system.file("extdata", package="HiTC")
+Refgene <- readBED(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"))
+CTCF <- readBED(file.path(exDir,"CTCF_chrX_98892125_102969775.bed"))
+mapC(E14.binned, 
+     giblocs=list(RefSeqGene=Refgene$Refseq_Gene, CTCF=CTCF$CTCF), 
+     maxrange=10, view=2)
 @ 
 \myincfig{HiTC-annot5C}{0.6\textwidth}{Visualisation of interaction map and genomic annotations.}
 
 \section{Comparison of HTCexp objects}
  The \Rpackage{HiTC} package provides methods to perform simple operations on \Rclass{HTCexp}, such as dividing, substracting two objects or extracting a genomic region.\\
- It also proposes a graphical view to compare two 'C' experiments. In the following example, the MEF sample is compared to the GM12878 sample (see Figure~\ref{HiTC-comp5C}).
+ It also proposes a graphical view to compare two 'C' experiments. In the following example, the MEF sample is compared to the E14 sample (see Figure~\ref{HiTC-comp5C}).
  
 <<comp5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
-K562<-import.my5C(file.path(exDir,"nsmb.1936-S6.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_K562_REV.bed"), ygi.bed=file.path(exDir,"Bau_K562_FOR.bed")) 
-K562.binned <- binningC(K562$chr16chr16, binsize=50000, step=5)
-
-mapC(GM12878.binned, K562.binned,
-     giblocs=list(RefSeqGene=Refgene$Refseq_Gene))
+MEF.binned <- binningC(MEF$chrXchrX, binsize=100000, step=3)
+mapC(E14.binned, MEF.binned,
+     giblocs=list(RefSeqGene=Refgene$Refseq_Gene, CTCF=CTCF$CTCF), 
+     maxrange=10)
 @ 
 \myincfig{HiTC-comp5C}{0.7\textwidth}{Comparison of two binned interaction maps, and visualisation with genomic annotations.}
 
@@ -268,7 +271,7 @@ mapC(cor(intdata(hiCnorm)), maxrange=1, minrange=-1,
 
 \newpage
 \section{A word about speed}
-For improving the run time on machines with multiple processors, some of the functions in the \Rpackage{HiTC} package have been implemented to make use of the functionality in the \Rpackage{parallel} package. If \Rpackage{parallel} has been attached and initialised before calling these functions, some functions will make use of \Rfunction{mclapply} instead of the normal \Rfunction{lapply}.
+For improving the run time on machines with multiple processors, some of the functions in the \Rpackage{HiTC} package have been implemented to make use of the functionality in the \Rpackage{multicore} package. If \Rpackage{multicore} has been attached and initialised before calling these functions, some functions will make use of \Rfunction{mclapply} instead of the normal \Rfunction{lapply}.
 
 \small
 \section*{Package versions}
