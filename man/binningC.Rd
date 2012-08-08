@@ -42,12 +42,10 @@ method="median", use.zero=TRUE, step=1, bnorm=FALSE)}
 \seealso{\code{\link{HTCexp-class}}}
 \author{N. Servant, B. Lajoie}
 \examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
+data(Nora_5C)
 
-## Data binning 50kb, with a 4/5 overlap
-GM12878.bin <- binningC(GM12878$chr16chr16, binsize=50000, step=5)
-show(GM12878.bin)
+## Data binning 100kb, with a 1/3 overlap
+E14.bin <- binningC(E14$chrXchrX, binsize=100000, step=3)
+show(E14.bin)
 }
 \keyword{manip}

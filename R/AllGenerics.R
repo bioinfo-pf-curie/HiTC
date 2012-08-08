@@ -1,5 +1,4 @@
 ##Generics
-
 setGeneric(name="intdata", def=function(x) standardGeneric("intdata"))
 setGeneric(name="intdata<-", def=function(x,value) standardGeneric("intdata<-"))
 
@@ -17,5 +16,5 @@ setGeneric(name="substract", def=function(x,y) standardGeneric("substract"))
 
 setGeneric(name="normPerReads", def=function(x) standardGeneric("normPerReads"))
 setGeneric(name="normPerExpected", def=function(x, ...) standardGeneric("normPerExpected"))
-setGeneric(name="normPerZscore", def=function(x, ...) standardGeneric("normPerZscore"))
+setGeneric(name="normPerTrans", def=function(x, xtrans, ytrans, ...) standardGeneric("normPerTrans"))
 

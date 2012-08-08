@@ -3,9 +3,6 @@
 \docType{class}
 \alias{HTCexp-class}
 \alias{HTCexp}
-\alias{export}
-\alias{export-methods}
-\alias{export,HTCexp,character,ANY-method}
 \alias{detail}
 \alias{detail-methods}
 \alias{detail,HTCexp-method}
@@ -36,9 +33,9 @@
 \alias{normPerExpected}
 \alias{normPerExpected-methods}
 \alias{normPerExpected,HTCexp-method}
-\alias{normPerZscore}
-\alias{normPerZscore-methods}
-\alias{normPerZscore,HTCexp-method}
+\alias{normPerTrans}
+\alias{normPerTrans-methods}
+\alias{normPerTrans,HTCexp-method}
 \alias{plot}
 \alias{plot-methods}
 \alias{plot,HTCexp,ANY-method}
@@ -102,21 +99,18 @@
   common 'x' and 'y' intervals. The operation is done only on the
   common intervals of both objects. If one of the two objects has a count
   to zero, the divided value will be NA.}
-\item{export}{create a BED file with the 'x' and 'y' intervals
-  information.}
 \item{isBinned}{return TRUE if the data are binned. The method tests
   if the 'x' and 'y' genome intervals are the same, if each bin has the
-  same size and if the full genomic range is covered.}
+  same size and if the full genomic range is covered}
 \item{isIntraChrom}{return TRUE if the current
   \code{signature("HTCexp")} object contains intrachromosomal interaction data}
   \item{normPerReads}{normalize the interaction matrix by the total
     number of reads of the matrix.}
   \item{normPerExpected}{normalize the interaction matrix by the expected
     number of reads based on the distance between two loci.}
-  \item{normPerZscore}{normalize the interaction matrix by the zscore
-    calculation, which take into account the expected number of counts
-  and the variance.}
-  \item{plot}{visualization method; Display an heatmap of the
+  \item{normPerTrans}{Normalize cis interaction map based on the trans
+  interactions. see details.}
+    \item{plot}{visualization method; Display an heatmap of the
     interaction data. Refer to the documentation of
     \code{\link{mapC}} for more details of the plotting function.}
    \item{range}{return the genomic range of the \code{signature("HTCexp")} object} 
@@ -130,41 +124,67 @@
     }
 }
 \author{Nicolas Servant}
+\details{
+
+  The \code{normPerExpected} method estimates the
+  expected interactions based on a the dependency on the genomic
+  proximity between two loci. Look at the
+  \code{\link{getExpectedCounts}} function for details.\cr
+  The \code{normPerTrans} method is based on the assumption that all
+  trans interactions should be the same. Thus, the cis interactions can be normalized by the interaction level of trans data.
+  The \code{xtrans} trans map has to share its 'xgi' intervals with the
+  cis map, and the \code{ytrans} has to share its 'ygi' intervals with
+  the cis map.
+}
+
 \seealso{
   \code{\link[genomeIntervals]{Genome_intervals-class}},
   \code{\link[girafe]{AlignedGenomeIntervals-class}},
 }
-\examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
-K562<-import.my5C(file.path(exDir,"nsmb.1936-S6.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_K562_REV.bed"), ygi.bed=file.path(exDir,"Bau_K562_FOR.bed")) 
 
-## HTCexp description
-show(GM12878)
-detail(GM12878)
+\examples{
+data(Nora_5C)
+
+## HTCexp descriptio
+show(E14)
+detail(E14)
 
 ## Is binned data ?
-isBinned(GM12878$chr16chr16)
+isBinned(E14$chrXchrX)
 
 ## Is a inter or intrachromsomal experiment ?
-isIntraChrom(GM12878$chr16chr16)
+isIntraChrom(E14$chrXchrX)
 
 ## Plotting
-plot(GM12878$chr16chr16)
-plot(GM12878$chr16chr16, view=2)
-plot(binningC(GM12878$chr16chr16), binningC(K562$chr16chr16), maxrange=20)
+plot(E14$chrXchrX)
+plot(E14$chrXchrX, view=2)
+plot(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), maxrange=20)
 
-## Zscore Normalization
-GM12878norm<-normPerZscore(GM12878$chr16chr16)
+## Divide by expected interaction counts
+E14norm<-normPerExpected(E14$chrXchrX)
 
 ## Operation on HTCexp object
-GM12878_d_K562<-divide(normPerReads(GM12878$chr16chr16), normPerReads(K562$chr16chr16))
-GM12878_s_K562<-substract(normPerReads(GM12878$chr16chr16), normPerReads(K562$chr16chr16))
+E14_d_MEF<-divide(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))
+E14_s_MEF<-substract(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))
 
 ## Overlap with genomic annotation
-Refgene <- readBED(file.path(system.file("extdata", package="HiTC"),"refseq_hg19_chr16_1_500000.bed"))
-plot(GM12878$chr16chr16, giblocs=list(RefSeqGene=Refgene$Refseq_Gene))
+Refgene <- readBED(file.path(system.file("extdata", package="HiTC"),"refseq_mm9_chrX_98831149_103425150.bed"))
+plot(E14$chrXchrX, giblocs=list(RefSeqGene=Refgene$Refseq_Gene))
+
+\dontrun{
+## normPerTrans data normalization applied on \href{http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeUmassDekker5C}{ENCODE data}.
+ENCODE=import.my5C("./ENM-GM12878-R1.matrix")
+
+## Look at raw interaction map
+mapC(ENCODE$chr7chr7)
+
+## look at normalize by trans interaction map
+mapC(normPerTrans(ENCODE$chr7chr7, xtrans=ENCODE$chr7chr5, ytrans=ENCODE$chr5chr7))
+}
+
+\dontrun{
+## Export
+exportC(E14$chrXchrX, con="E14.csv")
+}
 }
 \keyword{classes}

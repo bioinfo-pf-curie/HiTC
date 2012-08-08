@@ -5,26 +5,24 @@
 \description{
   Export \code{HTCexp} object to my5C website format
 }
-\usage{export.my5C(x, outputfile)}
+\usage{export.my5C(x, file)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
-  \item{outputfile}{character; the name of the output file}
+  \item{file}{character; the name of the output file}
 }
 \value{
-  A my5C tabbed delimited file (BED format), with :\cr
+  A my5C tabbed delimited file, with :\cr
   Y_INTERVAL_NAME/X_INTERVAL_NAME/INTERACTION_COUNT
 }
 \author{N. Servant}
-\seealso{\code{\link{export}}}
+\seealso{\code{\link{exportC}}}
 \examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
+data(Nora_5C)
 
 ## Data binning
-GM12878.bin<-binningC(GM12878$chr16chr16, binsize=50000, step=5)
+E14.bin<-binningC(E14$chrXchrX)
 
 ## Export the new intervals definition
-export.my5C(GM12878.bin, outputfile="GM12878my5C.csv")
+export.my5C(E14.bin, file="E14my5C.csv")
 }
 \keyword{plot}

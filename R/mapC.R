@@ -423,6 +423,7 @@ mapC <- function(x, y=NULL, view=1, giblocs=NULL, minrange=NA, maxrange=NA, trim
         }
         if (is.na(minrange)){
             xminrange <- min(abs(xdata[xdata!=0]), na.rm=TRUE)
+            
             if (!is.null(y))
                 yminrange <- min(abs(ydata[ydata!=0]), na.rm=TRUE)
         }

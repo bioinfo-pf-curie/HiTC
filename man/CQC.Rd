@@ -6,7 +6,7 @@
   Quality Control for high-throughput 'C' experiment
 }
 \usage{CQC(x,  cis.trans.ratio = TRUE, hist.interac=TRUE, scat.interac.dist=TRUE,
-hist.dist=TRUE, dev.new=FALSE)}
+hist.dist=TRUE, trim.range=0.98, dev.new=FALSE)}
 \arguments{
   \item{x}{object or list of objects that inherits from class
     \code{HTCexp}}
@@ -17,20 +17,24 @@ hist.dist=TRUE, dev.new=FALSE)}
     versus the genomic distance between two elements}
   \item{hist.dist}{logical; histogram of the distance between the 'x'
     and 'y' intervals}
+  \item{trim.range}{remove the extreme values by trimming the counts. Only use for plotting functions. [0,1]}
   \item{dev.new}{logical; specifying if each plots must be in a separate
     graphical device}
 }
+\details{
+If \code{x} is a list, all \code{HTCexp} objects are merged.
+The zero values are not used to compute the descriptive statistics and to display the data.
+If \code{trim.range} are lower than 1. The highest values (quantile probability is equal to \code{trim.range}) are discarded.
+}
 \value{
-    Return \code{NULL}; Create quality plots and print some additional informations
+    Return a \code{matrix}; Create quality plots and return a matrix with some simple statistics on all, cis and trans data.
 }
 \author{N. Servant, B. Lajoie}
 \seealso{\code{\link{HTCexp-class}}}
 \examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
+data(Nora_5C)
 
 ## Quality Control
-CQC(GM12878)
+CQC(E14)
 }
 \keyword{manip}

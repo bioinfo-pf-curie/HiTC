@@ -67,26 +67,21 @@
 \author{N. Servant, B. Lajoie}
 \seealso{\code{\link[genomeIntervals]{interval_overlap}}}
 \examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
+data(Nora_5C)
 
 ## Interaction map
-mapC(GM12878$chr16chr16)
+mapC(E14$chrXchrX)
 
 ## Play with contrast and color
-mapC(GM12878$chr16chr16, maxrange=100, col.pos=c("black","red","yellow"))
+mapC(E14$chrXchrX, maxrange=100, col.pos=c("black","red","yellow"))
 
 ## Add annotation and change view
 exDir <- system.file("extdata", package="HiTC")
-gene <- readBED(file.path(exDir,"refseq_hg19_chr16_1_500000.bed"))
-mapC(GM12878$chr16chr16, giblocs=list(Refseq=gene$Refseq_Gene), view=2)
+gene <- readBED(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"))
+mapC(E14$chrXchrX, giblocs=list(Refseq=gene$Refseq_Gene), view=2)
 
 ## Compare two samples
-K562<-import.my5C(file.path(exDir,"nsmb.1936-S6.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_K562_REV.bed"), ygi.bed=file.path(exDir,"Bau_K562_FOR.bed")) 
-mapC(binningC(GM12878$chr16chr16, binsize=50000, step=5),
-binningC(K562$chr16chr16, binsize=50000, step=5), giblocs=list(Refseq=gene$Refseq_Gene))
+mapC(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), giblocs=list(Refseq=gene$Refseq_Gene))
 
 }
 \keyword{hplot}

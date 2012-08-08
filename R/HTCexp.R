@@ -166,28 +166,28 @@ extractRegion <- function(x, from, to, exact=FALSE){
 
 ## Detail method
 setMethod("detail",signature(x="HTCexp"), function(x){
-    message("HTC object")
+    cat("HTC object\n")
     if (unique(seq_name(x_intervals(x))) == unique(seq_name(y_intervals(x)))){
-        message("Focus on genomic region [", as.character(seq_name(x)), ":",
-            min(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"-",max(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"]", sep="")
+        cat("Focus on genomic region [", as.character(seq_name(x)), ":",
+            min(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"-",max(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"]\n", sep="")
     }else{
-        message("Focus on genomic regions [",
+        cat("Focus on genomic regions [",
             unique(as.character(seq_name(y_intervals(x)))), ": ",min(y_intervals(x)[,1:2]),"-",max(y_intervals(x)[,1:2]),"] vs [",
-            unique(as.character(seq_name(x_intervals(x)))), ":",min(x_intervals(x)[,1:2]),"-",max(x_intervals(x)[,1:2]),"]", sep="")
+            unique(as.character(seq_name(x_intervals(x)))), ":",min(x_intervals(x)[,1:2]),"-",max(x_intervals(x)[,1:2]),"]\n", sep="")
     }
-    message("Matrix of Interaction data: [", dim(intdata(x))[1],"-",dim(intdata(x))[2], "]", sep="")
+    cat("Matrix of Interaction data: [", dim(intdata(x))[1],"-",dim(intdata(x))[2], "]\n", sep="")
     if (isBinned(x)){
-        message("Binned data - window size =", y_intervals(x)[1,2]-y_intervals(x)[1,1]+1,"")
-        message(nrow(y_intervals(x)),"genome intervals")
+        cat("Binned data - window size =", y_intervals(x)[1,2]-y_intervals(x)[1,1]+1,"\n")
+        cat(nrow(y_intervals(x)),"genome intervals\n")
     }
     else{
-        message(nrow(x_intervals(x))," genome intervals from 'xgi' object")
-        message(nrow(y_intervals(x))," genome intervals from 'ygi' object")
+        cat(nrow(x_intervals(x))," genome intervals from 'xgi' object\n")
+        cat(nrow(y_intervals(x))," genome intervals from 'ygi' object\n")
     }
     data <- as.vector(intdata(x))
-    message("Total Reads =",sum(data, na.rm=TRUE))
-    message("Number of Interactions = ",length(data[which(data>0)]))
-    message("Median Frequency = ",median(data[which(data>0)]))
+    cat("Total Reads =",sum(data, na.rm=TRUE),"\n")
+    cat("Number of Interactions = ",length(data[which(data>0)]),"\n")
+    cat("Median Frequency = ",median(data[which(data>0)]),"\n")
     invisible(NULL)
 }) 
 
@@ -285,30 +285,29 @@ setMethod(f="seq_name", signature(x="HTCexp"), definition=function(x){
 
 ## Show method
 setMethod("show",signature="HTCexp", function(object){
-    message("HTC object")
+    cat("HTC object\n")
     if (unique(seq_name(x_intervals(object))) == unique(seq_name(y_intervals(object)))){
-        message("Focus on genomic region [", as.character(seq_name(object)), ":",
-            min(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"-",max(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"]", sep="")
+        cat("Focus on genomic region [", as.character(seq_name(object)), ":",
+            min(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"-",max(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"]\n", sep="")
     }else{
-        message("Focus on genomic regions [",
+        cat("Focus on genomic regions [",
             unique(as.character(seq_name(y_intervals(object)))), ":",min(y_intervals(object)[,1:2]),"-",max(y_intervals(object)[,1:2]),"] vs [",
-            unique(as.character(seq_name(x_intervals(object)))), ":",min(x_intervals(object)[,1:2]),"-",max(x_intervals(object)[,1:2]),"]", sep="")
+            unique(as.character(seq_name(x_intervals(object)))), ":",min(x_intervals(object)[,1:2]),"-",max(x_intervals(object)[,1:2]),"]\n", sep="")
     }
     if(isIntraChrom(object)){
-        message("CIS Interaction Map")
+        cat("CIS Interaction Map\n")
     }else{
-        message("TRANS Interaction Map")
+        cat("TRANS Interaction Map\n")
     }
-    message("Matrix of Interaction data: [", dim(intdata(object))[1],"-",dim(intdata(object))[2], "]", sep="")
+    cat("Matrix of Interaction data: [", dim(intdata(object))[1],"-",dim(intdata(object))[2], "]\n", sep="")
     if (isBinned(object)){
-        message("Binned data - window size =", y_intervals(object)[1,2]-y_intervals(object)[1,1]+1,"")
-        message(nrow(y_intervals(object)),"genome intervals")
+        cat("Binned data - window size =", y_intervals(object)[1,2]-y_intervals(object)[1,1]+1,"\n")
+        cat(nrow(y_intervals(object)),"genome intervals\n")
     }
     else{
-        message(nrow(x_intervals(object))," genome intervals from 'xgi' object")
-        message(nrow(y_intervals(object))," genome intervals from 'ygi' object")
+        cat(nrow(y_intervals(object))," genome intervals from ",unique(as.character(seq_name(y_intervals(object)))), " ('ygi' object)\n")
+        cat(nrow(x_intervals(object))," genome intervals from ",unique(as.character(seq_name(x_intervals(object)))), " ('xgi' object)\n")
      }
-
     invisible(NULL)
 })
 

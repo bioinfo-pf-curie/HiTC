@@ -1,35 +1,93 @@
 ###################################
+## ImportC
+##
+## Import HiTC object to standard format
+##
+## con = name of outputfile to create
+##
+## chrA,startA,endA,nameA,strandA,chrB,startB,endB,nameB,strandB,countAB
+###################################
+## Import Method
+importC <- function(con, all.pairwise=TRUE){
+
+   alldata<-read.table(con, comment.char = "#", check.names=FALSE, sep=",")
+
+   rgr <- alldata[,1:5]
+   rgr <- rgr[which(!duplicated(rgr)),]
+   rownames(rgr) <- 1:nrow(rgr)
+   cgr <- alldata[,6:10]
+   cgr <- cgr[which(!duplicated(cgr)),]
+   rownames(cgr) <- 1:nrow(cgr)
+   data <- alldata[,c(4,9,11)]
+   
+   ygi <- new("Genome_intervals", as.matrix(rgr[,2:3]), closed=c(TRUE, TRUE), annotation=data.frame(seq_name=rgr[,1], id=rgr[,4], inter_base=FALSE))
+   xgi <- new("Genome_intervals", as.matrix(cgr[,2:3]), closed=c(TRUE, TRUE), annotation=data.frame(seq_name=cgr[,1], id=cgr[,4], inter_base=FALSE))
+   chromPair <- pair.chrom(c(chromosome(xgi), chromosome(ygi)), use.order=all.pairwise)
+
+   obj <- lapply(chromPair, function(chr){
+       xgi.subset <- xgi[which(chromosome(xgi)==chr[1]),]
+       ygi.subset <- ygi[which(chromosome(ygi)==chr[2]),]
+       
+       outs <- sapply(as.character(id(ygi.subset)), function(fp){
+           out <- rep(0,nrow(xgi.subset))
+           subdata <- data[which(data[,1]==fp),]
+
+           if(dim(subdata)[1] == 0)
+               warning(fp," not found in the interaction data",call.=FALSE, immediate.=TRUE)
+           else {
+               ind.subdata <- which(subdata[,2]%in%id(xgi.subset))
+               ind.intdata <- match(subdata[,2],id(xgi.subset))
+               out[ind.intdata[which(!is.na(ind.intdata))]] <- subdata[ind.subdata,3]
+           }
+           out
+       }, USE.NAMES=TRUE)
+       intdata <- as.matrix(t(outs))
+       colnames(intdata) <- as.character(id(xgi.subset))
+       new("HTCexp", intdata, xgi.subset, ygi.subset)
+   })
+   return(obj)    
+}
+
+
+
+###################################
 ## import.my5C
 ## Create a HiTC object from my5C's data files (line or matrix data file).
 ## The object is created from the intervals (BED) definition.
 ## Intervals not define in the BED files are not taken into account
 ## if multiple chromosomes are available in the intervals files, several HTCexp object are created, one per chromosome pair.
 ##
-## my5C.datafile : data file. Tree columns (priFOR, priREV, counts)
-## xgi.bed : BED file of x intervals to consider
-## ygi.bed : BED file of y intervals to consider
+## my5C.datafile: data file. Tree columns (priFOR, priREV, counts)
+## xgi.bed: BED file of x intervals to consider
+## ygi.bed: BED file of y intervals to consider
 ##
 ##################################
 
-import.my5C <- function(my5C.datafile, xgi.bed, ygi.bed=NULL, all.pairwise=TRUE){
+import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
 
-    ##Load primers
-    xgi <- readBED(xgi.bed)[[1]]
-    if (!is.null(ygi.bed)){
-        ygi <- readBED(ygi.bed)[[1]]
-    }else{
-        ygi <- xgi
-    }
-
-    message("Intervals files loaded")
+    ## Read data
+    stopifnot(!missing(my5C.datafile))
     my5Cdata <- read.table(my5C.datafile,comment.char = "#", check.names=FALSE)
 
     if (ncol(my5Cdata)==3){
+
+        if(is.null(xgi.bed) || is.null(ygi.bed))
+            stop("BED files of x/y intervals are required for my5C list format")
+        ## Load intervals
+        xgi <- readBED(xgi.bed)[[1]]
+        if (!is.null(ygi.bed)){
+            ygi <- readBED(ygi.bed)[[1]]
+        }else{
+            ygi <- xgi
+        }
+        
+        message("Intervals files loaded")
+        my5Cdata <- read.table(my5C.datafile,comment.char = "#", check.names=FALSE)
         my5Cdata[,1] <- unlist(lapply(strsplit(as.character(my5Cdata[,1]),"|", fixed=TRUE),function(x){x[1]}))
         my5Cdata[,2] <- unlist(lapply(strsplit(as.character(my5Cdata[,2]),"|", fixed=TRUE),function(x){x[1]}))
 
         message("Convert my5C list file in HiTC object(s)")
-        chromPair <- pair.chrom(chromosome(xgi), use.order=all.pairwise)
+        chromPair <- pair.chrom(c(chromosome(xgi), chromosome(ygi)), use.order=all.pairwise)
    
         obj <- lapply(chromPair, function(chr){
             xgi.subset <- xgi[which(chromosome(xgi)==chr[1]),]
@@ -52,13 +110,20 @@ import.my5C <- function(my5C.datafile, xgi.bed, ygi.bed=NULL, all.pairwise=TRUE)
             colnames(intdata) <- as.character(id(xgi.subset))
             new("HTCexp", intdata, xgi.subset, ygi.subset)
         })
-    } else if (ncol(my5Cdata)==dim(xgi)[1] && nrow(my5Cdata)==dim(ygi)[1]){
+    } else if (is.data.frame(my5Cdata)){
         message("Convert my5C matrix file in HiTC object(s)")
+        ## Create xgi and ygi object
+        gr <- my5C2gr(my5Cdata)
+        xgi <- gr[[1]]
+        ygi <- gr[[2]]
+
+        ## Create objects
         rownames(my5Cdata) <- unlist(lapply(strsplit(rownames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
         colnames(my5Cdata) <- unlist(lapply(strsplit(colnames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
   
-        chromPair <- pair.chrom(chromosome(xgi), use.order=all.pairwise)
+        chromPair <- pair.chrom(c(chromosome(xgi),chromosome(ygi)), use.order=all.pairwise)
         obj <- lapply(chromPair, function(chr){
+            message("Loading ",chr[1],"-",chr[2],"...")
             xgi.subset <- xgi[which(chromosome(xgi)==chr[1]),]
             ygi.subset <- ygi[which(chromosome(ygi)==chr[2]),]
             
@@ -75,10 +140,47 @@ import.my5C <- function(my5C.datafile, xgi.bed, ygi.bed=NULL, all.pairwise=TRUE)
 ###################################
 ## pair.chrom
 ## INTERNAL FUNCTION
+## Split my5C row/colnames matrix to create intervals objects
+##
+## my5Cdata: my5C matrix data
+##
+##################################
+
+my5C2gr <- function(my5Cdata){
+    if (is.null(rownames(my5Cdata)) || is.null(colnames(my5Cdata)))
+        stop("rownames and colnames in the my5C format are required")
+
+    ## Split row/colnames
+    rdata <- matrix(unlist(lapply(strsplit(rownames(my5Cdata),"|", fixed=TRUE),function(x){
+        tmp<-unlist(strsplit(x[3],":", fixed=TRUE));
+        tmp2<-unlist(strsplit(tmp[2],"-", fixed=TRUE));
+        return(c(tmp[1], tmp2[1], tmp2[2]))
+    })), ncol=3, byrow=TRUE)
+    rname <- unlist(lapply(strsplit(rownames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
+
+    cdata <- matrix(unlist(lapply(strsplit(colnames(my5Cdata),"|", fixed=TRUE),function(x){
+        tmp<-unlist(strsplit(x[3],":", fixed=TRUE));
+        tmp2<-unlist(strsplit(tmp[2],"-", fixed=TRUE));
+        return(c(tmp[1], tmp2[1], tmp2[2]))
+    })), ncol=3, byrow=TRUE)
+    cname <- unlist(lapply(strsplit(colnames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
+
+    ## Create intervals objects
+    rgr <- new("Genome_intervals", matrix(as.numeric(rdata[,2:3]), ncol=2), closed=c(TRUE, TRUE), annotation=data.frame(seq_name=rdata[,1], id=rname, inter_base=FALSE))
+    cgr <- new("Genome_intervals", matrix(as.numeric(cdata[,2:3]), ncol=2), closed=c(TRUE, TRUE), annotation=data.frame(seq_name=cdata[,1], id=cname, inter_base=FALSE))
+
+    return(list(cgr, rgr))
+}
+
+
+    
+###################################
+## pair.chrom
+## INTERNAL FUNCTION
 ## Compute chromsome pairwise combinaison
 ##
-## chrom : character i.e vector with chromosome names
-## use.order : if TRUE, all the pairwise combinaison are returned (i.e. chr1chr2 AND chr2chr1)
+## chrom: character i.e vector with chromosome names
+## use.order: if TRUE, all the pairwise combinaison are returned (i.e. chr1chr2 AND chr2chr1)
 ##
 ##################################
 
@@ -100,7 +202,7 @@ pair.chrom <- function(chrom, use.order=TRUE){
 ## Read a BED file
 ## If several tracks are found, return a list of genomeIntervals objects
 ##
-## con : The BED file
+## con: The BED file
 ##
 ##################################
 
@@ -170,7 +272,7 @@ readBED <- function(con){
         new("Genome_intervals", matrix(as.numeric(as.matrix(out[,c("chromStart","chromEnd")])), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annotation)     
     })
  
-    message("Reading",length(tracknames),"tracks from",basename(con))
+    message("Reading ",length(tracknames)," tracks from",basename(con))
     names(outl) <- tracknames
     
     outl

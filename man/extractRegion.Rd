@@ -25,12 +25,10 @@
 \author{N. Servant}
 \seealso{\code{\link[genomeIntervals]{Genome_intervals-class}}, \code{\link[girafe]{fracOverlap}}}
 \examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
+data(Nora_5C)
 
 ## Focus on the genomic region chrX:98000000-100000000
-GM12878sub<-extractRegion(GM12878$chr16chr16, from=100000, to=300000)
-GM12878sub
+E14sub<-extractRegion(E14$chrXchrX, from=98000000, to=100000000)
+E14sub
 }
 \keyword{manip}

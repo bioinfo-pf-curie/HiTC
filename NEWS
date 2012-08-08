@@ -1,4 +1,16 @@
+***********************************
+Changes in version 1.1.2
+
+   o New package vignette
+   o Simplify getExpectedCounts help page
+   o Add new normalization method - normPerTrans
+   o Update of import.my5C function. Simplify the import for matrix data
+   o Add importC and exportC function, to load and import csv file
+   o Remove normPerZscore and export functions
+   o Remove Bau et al. data
+   
+
+***********************************
 Changes in version 1.1.1
 
-	o Include the Nora et al (Nature 2012) 5C dataset (GSE35721).
-	Two mouse samples are included in the package ; male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). Only the cis interaction maps chrX vs chX are provided.
+   o Include the Nora et al (Nature 2012) 5C dataset (GSE35721).Two mouse samples are included in the package ; male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). Only the cis interaction maps chrX vs chX are provided.

@@ -16,12 +16,9 @@
 \author{N. Servant}
 \seealso{\code{\link[genomeIntervals]{Genome_intervals-class}}}
 \examples{
-exDir <- system.file("extdata", package="HiTC")
-GM12878<-import.my5C(file.path(exDir,"nsmb.1936-S5.txt"), 
-                 xgi.bed=file.path(exDir,"Bau_GM12878_REV.bed"), ygi.bed=file.path(exDir,"Bau_GM12878_FOR.bed")) 
-
+data(Nora_5C)
 
 ## Remove intervals from a HTCexp object 
-removeIntervals(GM12878$chr16chr16, ids=c("5C_305_ENm008_FOR_7", "5C_305_ENm008_REV_60"))
+removeIntervals(E14$chrXchrX, ids=c("5C_938_XIC-3_REV_2", "5C_938_XIC-3_REV_4"))
 }
 \keyword{manip}

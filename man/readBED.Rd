@@ -23,6 +23,6 @@
 \author{N. Servant}
 \examples{
 exDir <- system.file("extdata", package="HiTC")
-gene <- readBED(file.path(exDir,"refseq_hg19_chr16_1_500000.bed"))
+gene <- readBED(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"))
 }
 \keyword{manip}

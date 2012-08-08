@@ -15,7 +15,7 @@ importFrom("grDevices", "col2rgb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("ShortRead", "id")
 
-importMethodsFrom("girafe", "reduce", "plot", "export", "id<-")
+importMethodsFrom("girafe", "reduce", "plot", "id<-")
 importFrom("girafe", "fracOverlap")
 
 importClassesFrom("genomeIntervals", "Genome_intervals", "Genome_intervals_stranded")
@@ -28,11 +28,11 @@ importMethodsFrom("genomeIntervals", "strand", "strand<-", "seq_name", "seq_name
 #############################
 
 ##Export functions and generics
-export("binningC", "discretize", "HTCexp", "export.my5C", "extractRegion", "getExpectedCounts", "import.my5C", "mapC", "plot", "intervalsDist", "CQC", "readBED", "removeIntervals", "setIntervalScale", "show")
+export("binningC", "discretize", "exportC", "export.my5C", "extractRegion", "getExpectedCounts", "HTCexp", "importC", "import.my5C", "mapC", "plot", "intervalsDist", "CQC", "readBED", "removeIntervals", "setIntervalScale", "show")
 
 ##Export classes
 exportClasses("HTCexp")
 
 ##Export Methods
-exportMethods("detail","divide","export", "intdata", "intdata<-", "isBinned", "isIntraChrom", "y_intervals", "y_intervals<-", "id", "id<-", "normPerReads", "normPerExpected", "normPerZscore", "plot", "x_intervals", "x_intervals<-", "seq_name", "strand", "substract")
+exportMethods("detail","divide", "intdata", "intdata<-", "isBinned", "isIntraChrom", "y_intervals", "y_intervals<-", "id", "id<-", "normPerReads", "normPerExpected", "plot", "x_intervals", "x_intervals<-", "seq_name", "strand", "substract")
 
