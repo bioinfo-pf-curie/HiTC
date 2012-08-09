@@ -15,11 +15,11 @@ importFrom("grDevices", "col2rgb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("ShortRead", "id")
 
-importMethodsFrom("girafe", "reduce", "plot", "id<-")
+importMethodsFrom("girafe", "reduce", "plot", "export", "id<-")
 importFrom("girafe", "fracOverlap")
 
 importClassesFrom("genomeIntervals", "Genome_intervals", "Genome_intervals_stranded")
-importMethodsFrom("genomeIntervals", "strand", "strand<-", "seq_name", "seq_name<-")
+importMethodsFrom("genomeIntervals", "sort", "strand", "strand<-", "seq_name", "seq_name<-")
 
 #############################
 ##

@@ -33,6 +33,12 @@ setClass("HTCexp",
              if (length(levels(as.factor(chromosome(object@xgi)))) > 1 || length(levels(as.factor(chromosome(object@ygi)))) > 1){
                  fails <- c(fails, "Multiple chromosome found in xgi or ygi object")
              }
+             if (is.null(colnames(object@intdata)) || is.null(object@xgi$id)){
+                 fails <- c(fails,"No ids for 'xgi' intervals")
+             }
+             if (is.null(rownames(object@intdata)) || is.null(object@ygi$id)){
+                 fails <- c(fails,"No ids for 'ygi' intervals")
+             }
              if (length(fails) > 0) return(fails)
              return(TRUE)
          }
@@ -44,6 +50,19 @@ HTCexp <- function(intdata, xgi, ygi){
     stopifnot(is.matrix(intdata))
     stopifnot(inherits(ygi,"Genome_intervals"))
     stopifnot(inherits(xgi,"Genome_intervals"))
+
+    ## sort xgi and ygi data
+    xgis <- sort(xgi)
+    ygis <- sort(ygi)
+
+    if (is.null(colnames(intdata)) || is.null(xgi$id)){
+        stop("No ids for 'xgi' intervals")
+    }
+    if (is.null(rownames(intdata)) || is.null(ygi$id)){
+        stop("No ids for 'ygi' intervals")
+    }
+    intdata <- intdata[as.character(ygi$id), as.character(xgi$id)]
+
     new("HTCexp", intdata, xgi, ygi)
 }
 
@@ -74,86 +93,103 @@ removeIntervals <- function(x, ids){
     x
 }
 
-extractRegion <- function(x, from, to, exact=FALSE){
+extractRegion <- function(x, chr, from, to, exact=FALSE){
     stopifnot(inherits(x, "HTCexp"))
-    fromto <- new("Genome_intervals", matrix(c(from,to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=data.frame(seq_name=seq_name(x), inter_base=FALSE))
+    fromto <- new("Genome_intervals", matrix(c(from,to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=data.frame(seq_name=chr, inter_base=FALSE))
+
+    ## Deal with partial overlap
+    xr <- fracOverlap(x@xgi, fromto, min.frac=0, both=FALSE)$Index1
+    yr <- fracOverlap(x@ygi, fromto, min.frac=0, both=FALSE)$Index1
+    
+    if (length(xr)>0)
+        xgi <- x@xgi[xr,]
+    else
+        xgi <- x@xgi
+    if (length(yr)>0)
+        ygi <- x@ygi[yr,]
+    else
+        ygi <- x@ygi
+    
+    data <-  x@intdata[as.character(ygi$id), as.character(xgi$id)]
     
     if (exact){
-        ## Deal with partial overlap
-        xr <- fracOverlap(x@xgi, fromto, min.frac=0, both=FALSE)$Index1
-        yr <- fracOverlap(x@ygi, fromto, min.frac=0, both=FALSE)$Index1
-        xgi <- x@xgi[xr,]
-        ygi <- x@ygi[yr,]
-
-        data <-  x@intdata[as.character(ygi$id), as.character(xgi$id)]
-        
         ## if no interval with from, add NA values
         ## else force overlapping coordinates
-        if (min(xgi)>from){
-            if (is.element("score",colnames(annotation(xgi))))
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",from,"-",x@xgi[min(xr),1]-1, sep=""), score=0)
-            else
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",from,"-",x@xgi[min(xr),1]-1, sep=""))
-            xgi <- c(new("Genome_intervals", matrix(c(from,x@xgi[min(xr),1]-1), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot), xgi)
-            data <- cbind(rep(NA, nrow(data)), data)
-        }else if (min(xgi)<from){
-            maxind <- max(which(xgi[,1]<from & xgi[,2]>from))
-            xgi[maxind,1] <- from
-            data <- data[,maxind:nrow(xgi)]
-            xgi <- xgi[maxind:nrow(xgi),]
-        }
-        
-        if (max(xgi)<to){
-            if (is.element("score",colnames(annotation(xgi))))
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",x@xgi[max(xr),2]+1,"-",to, sep=""), score=0)
-            else
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",x@xgi[max(xr),2]+1,"-",to, sep="-"))
-            xgi <- c(xgi, new("Genome_intervals", matrix(c(x@xgi[max(xr),2]+1, to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot))
-            data <- cbind(data, rep(NA, nrow(data)))
-        }else if (max(xgi)>to){
-            maxind <- min(which(xgi[,1]<to & xgi[,2]>to))
-            xgi[maxind,2] <- to
-            data <- data[,1:maxind]
-            xgi <- xgi[1:maxind,]
-         }
+        if (length(xr)>0){
+            if (min(xgi)>from){
+                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",from,"-",x@xgi[min(xr),1]-1, sep=""))
+                                    
+                if (is.element("score",colnames(annotation(xgi))))
+                    annot$score <- 0
+                if (is.element("strand",colnames(annotation(xgi))))
+                    annot$strand <- "+"
+                    
+                xgi <- c(new("Genome_intervals", matrix(c(from,x@xgi[min(xr),1]-1), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot), xgi)
+                data <- cbind(rep(NA, nrow(data)), data)
+            }else if (min(xgi)<from){
+                maxind <- max(which(xgi[,1]<from & xgi[,2]>from))
+                xgi[maxind,1] <- from
+                data <- data[,maxind:nrow(xgi)]
+                xgi <- xgi[maxind:nrow(xgi),]
+            }
+            
+            if (max(xgi)<to){
+                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",x@xgi[max(xr),2]+1,"-",to, sep=""))
 
-        if (min(ygi)>from){
-            if (is.element("score",colnames(annotation(ygi))))
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",from,"-",x@ygi[min(yr),1]-1, sep=""), score=0)
-            else
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",from,"-",x@ygi[min(yr),1]-1, sep=""))
-            ygi <- c(new("Genome_intervals", matrix(c(from,x@ygi[min(yr),1]-1), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot),ygi)
-            data <- rbind(rep(NA, ncol(data)), data)
-        }else if (min(ygi)<from){
-            maxind <- max(which(ygi[,1]<from & ygi[,2]>from))
-            ygi[maxind,1] <- from
-            data <- data[maxind:nrow(ygi),]
-            ygi <- ygi[maxind:nrow(ygi),]
+                if (is.element("score",colnames(annotation(xgi))))
+                    annot$score <- 0
+                if (is.element("strand",colnames(annotation(xgi))))
+                    annot$strand <- 0
+              
+                xgi <- c(xgi, new("Genome_intervals", matrix(c(x@xgi[max(xr),2]+1, to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot))
+                data <- cbind(data, rep(NA, nrow(data)))
+            }else if (max(xgi)>to){
+                maxind <- min(which(xgi[,1]<to & xgi[,2]>to))
+                xgi[maxind,2] <- to
+                data <- data[,1:maxind]
+                xgi <- xgi[1:maxind,]
+            }
         }
 
-        if (max(ygi)<to){
-            if (is.element("score",colnames(annotation(ygi))))
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",x@ygi[max(yr),2]+1,"-",to, sep=""), score=0)
-            else
-                annot <- data.frame(seq_name=seq_name(x), inter_base=FALSE, strand="+", id=paste(seq_name(x),":",x@ygi[max(yr),2]+1,"-",to, sep=""))  
-            ygi <- c(ygi,new("Genome_intervals", matrix(c(x@ygi[max(yr),2]+1, to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot))
-            data <- rbind(data, rep(NA, ncol(data)))
-        }else if (max(ygi)>to){
-            maxind <- min(which(ygi[,1]<to & ygi[,2]>to))
-            ygi[maxind,2] <- to
-            data <- data[1:maxind,]
-            ygi <- ygi[1:maxind,]
+        if (length(yr)>0){
+            if (min(ygi)>from){
+                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",from,"-",x@ygi[min(yr),1]-1, sep=""))
+                
+                if (is.element("score",colnames(annotation(ygi))))
+                    annot$score <- 0
+                if (is.element("strand",colnames(annotation(ygi))))
+                    annot$strand <- "+"
+
+                ygi <- c(new("Genome_intervals", matrix(c(from,x@ygi[min(yr),1]-1), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot),ygi)
+                data <- rbind(rep(NA, ncol(data)), data)
+            }else if (min(ygi)<from){
+                maxind <- max(which(ygi[,1]<from & ygi[,2]>from))
+                ygi[maxind,1] <- from
+                data <- data[maxind:nrow(ygi),]
+                ygi <- ygi[maxind:nrow(ygi),]
+            }
+            
+            if (max(ygi)<to){
+                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",x@ygi[max(yr),2]+1,"-",to, sep=""))
+                
+                if (is.element("score",colnames(annotation(ygi))))
+                    annot$score <- 0
+                if (is.element("strand",colnames(annotation(ygi))))
+                    annot$strand <- "+"
+                    
+                ygi <- c(ygi,new("Genome_intervals", matrix(c(x@ygi[max(yr),2]+1, to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot))
+                data <- rbind(data, rep(NA, ncol(data)))
+            }else if (max(ygi)>to){
+                maxind <- min(which(ygi[,1]<to & ygi[,2]>to))
+                ygi[maxind,2] <- to
+                data <- data[1:maxind,]
+                ygi <- ygi[1:maxind,]
+            }
         }
         colnames(data) <- as.character(id(xgi))
         rownames(data) <- as.character(id(ygi))
-        new("HTCexp", data, xgi, ygi)
-    }else{
-        ## Full overlap
-        xr <- fracOverlap(x@xgi, fromto, min.frac=1, both=FALSE)$Index1
-        yr <- fracOverlap(x@ygi, fromto, min.frac=1, both=FALSE)$Index1
-        data <-  x@intdata[as.character(x@ygi$id)[yr], as.character(x@xgi$id)[xr]]
-        new("HTCexp", data, x@xgi[xr,], x@ygi[yr,])
     }
+    new("HTCexp", data, xgi, ygi)
 }
 
 
@@ -167,7 +203,7 @@ extractRegion <- function(x, from, to, exact=FALSE){
 ## Detail method
 setMethod("detail",signature(x="HTCexp"), function(x){
     cat("HTC object\n")
-    if (unique(seq_name(x_intervals(x))) == unique(seq_name(y_intervals(x)))){
+    if (length(seq_name(x))==1){
         cat("Focus on genomic region [", as.character(seq_name(x)), ":",
             min(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"-",max(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"]\n", sep="")
     }else{
@@ -279,14 +315,14 @@ setMethod(f="range", signature(x="HTCexp"), definition=function(x){
 ## Seq_name
 setMethod(f="seq_name", signature(x="HTCexp"), definition=function(x){
     seqname <- unique(c(as.character(unique(seq_name(x@xgi))), as.character(unique(seq_name(x@ygi)))))
-    stopifnot(length(seqname)==1)
+    ##stopifnot(length(seqname)==1)
     factor(seqname)
     })
 
 ## Show method
 setMethod("show",signature="HTCexp", function(object){
     cat("HTC object\n")
-    if (unique(seq_name(x_intervals(object))) == unique(seq_name(y_intervals(object)))){
+    if (length(seq_name(object))==1){
         cat("Focus on genomic region [", as.character(seq_name(object)), ":",
             min(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"-",max(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"]\n", sep="")
     }else{

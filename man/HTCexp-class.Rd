@@ -66,6 +66,14 @@
 \alias{y_intervals<--methods}
 \alias{y_intervals<-,HTCexp,Genome_intervals-method}
 
+% Old stuff (deprecated or defunct).
+\alias{export}
+\alias{export-methods}
+\alias{export,HTCexp,character,ANY-method}
+\alias{normPerZscore}
+\alias{normPerZscore-methods}
+\alias{normPerZscore,HTCexp-method}
+
 \title{Class 'HTCexp'}
 \description{
   A class for representing high throughput Chromosome Conformation Capture data from next-generation sequencing experiments.
@@ -95,46 +103,49 @@
     \item{detail}{\code{signature("HTCexp")}: a more
       detailed output of the experiment than provided by \code{show}.}
     \item{divide}{comparison of two \code{signature("HTCexp")}
-  objects. Perform the division of the two interaction matrices on the
-  common 'x' and 'y' intervals. The operation is done only on the
-  common intervals of both objects. If one of the two objects has a count
-  to zero, the divided value will be NA.}
-\item{isBinned}{return TRUE if the data are binned. The method tests
-  if the 'x' and 'y' genome intervals are the same, if each bin has the
-  same size and if the full genomic range is covered}
-\item{isIntraChrom}{return TRUE if the current
-  \code{signature("HTCexp")} object contains intrachromosomal interaction data}
-  \item{normPerReads}{normalize the interaction matrix by the total
-    number of reads of the matrix.}
-  \item{normPerExpected}{normalize the interaction matrix by the expected
-    number of reads based on the distance between two loci.}
-  \item{normPerTrans}{Normalize cis interaction map based on the trans
-  interactions. see details.}
+      objects. Perform the division of the two interaction matrices on the
+      common 'x' and 'y' intervals. The operation is done only on the
+      common intervals of both objects. If one of the two objects has a count
+      to zero, the divided value will be NA.}
+    \item{export}{Deprecated. See exportC function}
+    \item{isBinned}{return TRUE if the data are binned. The method tests
+      if the 'x' and 'y' genome intervals are the same, if each bin has the
+      same size and if the full genomic range is covered}
+    \item{isIntraChrom}{return TRUE if the current
+      \code{signature("HTCexp")} object contains intrachromosomal interaction data}
+    \item{normPerReads}{normalize the interaction matrix by the total
+      number of reads of the matrix.}
+    \item{normPerExpected}{normalize the interaction matrix by the expected
+      number of reads based on the distance between two loci.}
+    \item{normPerZscore}{Depracted. See normPerExpected}
+    \item{normPerTrans}{Normalize cis interaction map based on the trans
+      interactions. see details.}
     \item{plot}{visualization method; Display an heatmap of the
-    interaction data. Refer to the documentation of
-    \code{\link{mapC}} for more details of the plotting function.}
-   \item{range}{return the genomic range of the \code{signature("HTCexp")} object} 
-  \item{show}{summarized output of the experiment, with informations
-    about the data dimension and the genomic region studied.}
-  \item{substract}{comparison of two \code{signature("HTCexp")}
-    objects. Perform the substraction of the two interaction matrices on the
-    common 'x' and 'y' intervals. The operation is done only on the
-    common intervals of both objects. If one of the two objects has a count
-    to zero, the divided value will be NA.}
-    }
+      interaction data. Refer to the documentation of
+      \code{\link{mapC}} for more details of the plotting function.}
+    \item{range}{return the genomic range of the \code{signature("HTCexp")} object} 
+    \item{show}{summarized output of the experiment, with informations
+      about the data dimension and the genomic region studied.}
+    \item{substract}{comparison of two \code{signature("HTCexp")}
+      objects. Perform the substraction of the two interaction matrices on the
+      common 'x' and 'y' intervals. The operation is done only on the
+      common intervals of both objects. If one of the two objects has a count
+      to zero, the divided value will be NA.}
+  }
 }
 \author{Nicolas Servant}
 \details{
-
-  The \code{normPerExpected} method estimates the
-  expected interactions based on a the dependency on the genomic
+  The \code{normPerExpected} method estimates the expected interactions based on a the dependency on the genomic
   proximity between two loci. Look at the
   \code{\link{getExpectedCounts}} function for details.\cr
-  The \code{normPerTrans} method is based on the assumption that all
-  trans interactions should be the same. Thus, the cis interactions can be normalized by the interaction level of trans data.
+  
+  The \code{normPerTrans} method is based on the assumption that all trans interactions should be the same. Thus, the cis interactions can be normalized by the interaction level of trans data.
   The \code{xtrans} trans map has to share its 'xgi' intervals with the
   cis map, and the \code{ytrans} has to share its 'ygi' intervals with
-  the cis map.
+  the cismap.
+  The \code{method} is used to combine the normalization factor from x
+  and y intervals. Must be \sQuote{sum}, \sQuote{mult} or \sQuote{mean}.
+
 }
 
 \seealso{

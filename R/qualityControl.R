@@ -1,7 +1,7 @@
 ###################################
 ## primersDist
 ##
-## Calculate the distances between primers/intervals
+## Calculate the distances between primers/intervals for cis data only
 ##
 ## x = an object of class HTCexp.
 ##

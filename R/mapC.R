@@ -472,7 +472,7 @@ mapC <- function(x, y=NULL, view=1, giblocs=NULL, minrange=NA, maxrange=NA, trim
     if (view==1){
         if(!is.null(giblocs)){
             design <- matrix(1:4, 2, 2, byrow=TRUE)
-                        layout(design, widths=c(sizeblocs*ntrack,1-sizeblocs*ntrack), heights=c(sizeblocs*ntrack,1-sizeblocs*ntrack))
+            layout(design, widths=c(sizeblocs*ntrack,1-sizeblocs*ntrack), heights=c(sizeblocs*ntrack,1-sizeblocs*ntrack))
             
             ##blank plot at position 1
             par(mar=c(0,0,0,0))
@@ -480,24 +480,32 @@ mapC <- function(x, y=NULL, view=1, giblocs=NULL, minrange=NA, maxrange=NA, trim
             
             addImageTracks(x, giblocs, orientation="h")
             addImageTracks(x, giblocs, orientation="v")
-          }else{
+        }else{
             layout(matrix(1, 1, 1, byrow=TRUE), heights=c(1))
-          }
-      }else if (view == 2){
+        }
+    }else if (view == 2){
+        if (!isIntraChrom(x))
+            stop("The triangle view is available for intrachromosomal data only")
+        
+        
         rx <- range(x)
         
         if (!is.null(y)){
-          ##Check if non overlap between x and y
-          if (range(x)[1]<range(y)[1] && range(x)[2]<range(y)[2])
-            y <- extractRegion(y, from=range(y)[1], to=range(x)[2], exact=TRUE)
-          else if (range(x)[1]>range(y)[1] && range(x)[2]>range(y)[2])
-            y <- extractRegion(y, from=range(x)[1], to=range(y)[2], exact=TRUE)
-          else if (range(y)[1]<range(x)[1] && range(y)[2]<range(x)[2])
-            y <- extractRegion(y, from=range(x)[1], to=range(y)[2], exact=TRUE)
-          else if(range(y)[1]>range(x)[1] && range(y)[2]>range(x)[2])
-            y <- extractRegion(y, from=range(y)[1], to=range(x)[2], exact=TRUE)
-          
-          ry <- range(y)
+
+            if (seq_name(x) != seq_name(y))
+                stop("Objects x and y are not on the same chromosome")
+            
+            ##Check if non overlap between x and y
+            if (range(x)[1]<range(y)[1] && range(x)[2]<range(y)[2])
+                y <- extractRegion(y, chr=seq_name(x), from=range(y)[1], to=range(x)[2], exact=TRUE)
+            else if (range(x)[1]>range(y)[1] && range(x)[2]>range(y)[2])
+                y <- extractRegion(y, chr=seq_name(x), from=range(x)[1], to=range(y)[2], exact=TRUE)
+            else if (range(y)[1]<range(x)[1] && range(y)[2]<range(x)[2])
+                y <- extractRegion(y, chr=seq_name(x), from=range(x)[1], to=range(y)[2], exact=TRUE)
+            else if(range(y)[1]>range(x)[1] && range(y)[2]>range(x)[2])
+                y <- extractRegion(y, chr=seq_name(x), from=range(y)[1], to=range(x)[2], exact=TRUE)
+            
+            ry <- range(y)
         }
         
         if(!is.null(giblocs)){

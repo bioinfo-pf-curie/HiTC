@@ -12,7 +12,7 @@ Author: Nicolas Servant
 Maintainer: N. Servant <nicolas.servant@curie.fr>
 License: Artistic-2.0
 Collate: AllGenerics.R HTCexp.R qualityControl.R mapC.R normalize.R
-        binningC.R import.R export.R
+        binningC.R import.R export.R deprecated.R
 LazyLoad: yes
 biocViews: Sequencing, HighThroughputSequencing
 Packaged: 2012-03-20 11:34:55 UTC; nservant

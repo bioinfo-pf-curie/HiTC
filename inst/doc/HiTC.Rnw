@@ -201,7 +201,8 @@ To produce an interaction map, the genomic range of the display should be divide
 
 <<bin5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Focus on a subset chrX:100295000:102250000
-E14subset<-extractRegion(E14$chrXchrX, from=100295000, to=102250000)
+E14subset<-extractRegion(E14$chrXchrX, 
+                         chr="chrX", from=100295000, to=102250000)
 
 ## Binning of 5C interaction map
 E14.subset.binned <- binningC(E14subset, binsize=100000, step=3)
@@ -288,7 +289,8 @@ The binned (1Mb) counts matrix of the chromosome 14 was downloaded from GEO (\hr
 
 <<mapChic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Extract region of interest and plot the interaction map
-hiC <- extractRegion(hiC$chr14chr14,from=1.8e+07, to=106368584)
+hiC <- extractRegion(hiC$chr14chr14, 
+                     chr="chr14", from=1.8e+07, to=106368584)
 mapC(hiC, maxrange=100)
 @ 
 \myincfig{HiTC-mapChic}{0.5\textwidth}{Hi-C interaction map of chromosome 14}

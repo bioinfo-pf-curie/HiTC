@@ -7,11 +7,12 @@
 \alias{heatmapC}
 \alias{triViewC}
 \alias{pair.chrom}
+\alias{my5C2gr}
 
 \title{Internal HiTC functions}
 \description{
   Called internally by other \code{HiTC} functions.
-  Normally need not be called by the user.
+  In theory, not called by the user.
 }
 \author{Nicolas Servant}
 \seealso{\code{\link{HTCexp-class}}}

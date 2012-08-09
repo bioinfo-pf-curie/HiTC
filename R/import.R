@@ -43,9 +43,9 @@ importC <- function(con, all.pairwise=TRUE){
        }, USE.NAMES=TRUE)
        intdata <- as.matrix(t(outs))
        colnames(intdata) <- as.character(id(xgi.subset))
-       new("HTCexp", intdata, xgi.subset, ygi.subset)
+       HTCexp(intdata, xgi.subset, ygi.subset)
    })
-   return(obj)    
+   return(obj[which(!unlist(lapply(obj, is.null)))])
 }
 
 
@@ -93,22 +93,24 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
             xgi.subset <- xgi[which(chromosome(xgi)==chr[1]),]
             ygi.subset <- ygi[which(chromosome(ygi)==chr[2]),]
             
-            outs <- sapply(as.character(id(ygi.subset)), function(fp){
-                out <- rep(0,nrow(xgi.subset))
-                subdata <- my5Cdata[which(my5Cdata[,1]==fp),]
-                
-                if(dim(subdata)[1] == 0)
-                  warning(fp," not found in the interaction data",call.=FALSE, immediate.=TRUE)
-                else {
-                  ind.subdata <- which(subdata[,2]%in%id(xgi.subset))
-                  ind.intdata <- match(subdata[,2],id(xgi.subset))
-                  out[ind.intdata[which(!is.na(ind.intdata))]] <- subdata[ind.subdata,3]
-                }
-                out
-            }, USE.NAMES=TRUE)
-            intdata <- as.matrix(t(outs))
-            colnames(intdata) <- as.character(id(xgi.subset))
-            new("HTCexp", intdata, xgi.subset, ygi.subset)
+            if (length(xgi.subset)>0 && length(ygi.subset)>0){
+                outs <- sapply(as.character(id(ygi.subset)), function(fp){
+                    out <- rep(0,nrow(xgi.subset))
+                    subdata <- my5Cdata[which(my5Cdata[,1]==fp),]
+                    
+                    if(dim(subdata)[1] == 0)
+                        warning(fp," not found in the interaction data",call.=FALSE, immediate.=TRUE)
+                    else {
+                        ind.subdata <- which(subdata[,2]%in%id(xgi.subset))
+                        ind.intdata <- match(subdata[,2],id(xgi.subset))
+                        out[ind.intdata[which(!is.na(ind.intdata))]] <- subdata[ind.subdata,3]
+                    }
+                    out
+                }, USE.NAMES=TRUE)
+                intdata <- as.matrix(t(outs))
+                colnames(intdata) <- as.character(id(xgi.subset))
+                HTCexp(intdata, xgi.subset, ygi.subset)
+            }
         })
     } else if (is.data.frame(my5Cdata)){
         message("Convert my5C matrix file in HiTC object(s)")
@@ -123,18 +125,20 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
   
         chromPair <- pair.chrom(c(chromosome(xgi),chromosome(ygi)), use.order=all.pairwise)
         obj <- lapply(chromPair, function(chr){
-            message("Loading ",chr[1],"-",chr[2],"...")
             xgi.subset <- xgi[which(chromosome(xgi)==chr[1]),]
             ygi.subset <- ygi[which(chromosome(ygi)==chr[2]),]
-            
-            intdata <- as.matrix(my5Cdata[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
-            new("HTCexp", intdata, xgi.subset, ygi.subset)
+
+            if (length(xgi.subset)>0 && length(ygi.subset)>0){
+                message("Loading ",chr[1],"-",chr[2],"...")
+                intdata <- as.matrix(my5Cdata[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
+                HTCexp(intdata, xgi.subset, ygi.subset)
+            }
         })
         
     }else{
         stop("Unknown my5C input")
     }
-    return(obj)
+    return(obj[which(!unlist(lapply(obj, is.null)))])
 }
 
 ###################################

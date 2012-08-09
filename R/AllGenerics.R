@@ -18,3 +18,7 @@ setGeneric(name="normPerReads", def=function(x) standardGeneric("normPerReads"))
 setGeneric(name="normPerExpected", def=function(x, ...) standardGeneric("normPerExpected"))
 setGeneric(name="normPerTrans", def=function(x, xtrans, ytrans, ...) standardGeneric("normPerTrans"))
 
+
+## Deprecated
+setGeneric(name="normPerZscore", def=function(x, ...) standardGeneric("normPerZscore"))
+

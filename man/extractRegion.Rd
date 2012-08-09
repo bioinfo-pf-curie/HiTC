@@ -5,9 +5,10 @@
 \description{
   Extract a subset of the \code{HTCexp} object based on genomic ranges
 }
-\usage{extractRegion(x, from, to, exact=FALSE)}
+\usage{extractRegion(x, chr, from, to, exact=FALSE)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
+  \item{chr}{character; the chromosome of the genomic region}
   \item{from}{numeric;  start of the genomic region}
   \item{to}{numeric; end of the genomic region }
   \item{exact}{logical; exact genomic region}
@@ -28,7 +29,7 @@
 data(Nora_5C)
 
 ## Focus on the genomic region chrX:98000000-100000000
-E14sub<-extractRegion(E14$chrXchrX, from=98000000, to=100000000)
+E14sub<-extractRegion(E14$chrXchrX, chr="chrX", from=98000000, to=100000000)
 E14sub
 }
 \keyword{manip}

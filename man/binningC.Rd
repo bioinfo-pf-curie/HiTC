@@ -27,7 +27,7 @@ method="median", use.zero=TRUE, step=1, bnorm=FALSE)}
  the last bin will has a size different from \code{binsize}.
  A primer is assigned to a bin, if there is at least one base overlap
  between the bin and the primer region.\cr
- The \code{method} used to combine the counts in a bin, must be \sQuote{mea}, \sQuote{median} or \sQuote{sum}.
+ The \code{method} is used to combine the counts in a bin, must be \sQuote{mea}, \sQuote{median} or \sQuote{sum}.
  The \code{step} parameter allows to choose the overlap between the
  bins. A \code{step} of 2 means a 50\% overlap between two bins, a step
  of 3 means a 60\% overlap between two bins, \emph{etc.}

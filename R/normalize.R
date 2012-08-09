@@ -19,8 +19,8 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, stdev
 
 
 ## Normalized using TRANS data
-setMethod("normPerTrans", signature=c("HTCexp","HTCexp","HTCexp"), definition=function(x, xtrans, ytrans){
-    
+setMethod("normPerTrans", signature=c("HTCexp","HTCexp","HTCexp"), definition=function(x, xtrans, ytrans, method="sum"){
+
     ## Match the good objects
     ## TODO check whether the two objects are really the same
     ## x and trans share the same x_intervals
@@ -45,10 +45,22 @@ setMethod("normPerTrans", signature=c("HTCexp","HTCexp","HTCexp"), definition=fu
     wZ <- matrix(rep(normfacCol,nrow(ix)), nrow=nrow(ix), byrow=TRUE)
 
     ## Normalize cis data
-    #wM <- matrix(NA, ncol=ncol(wY), nrow=nrow(wY))
-    #for (i in 1:nrow(wY)){wM[i,]<-pmax(wY[i,], wZ[i,])}
-    #xnorm <- ix/(wM)
-    xnorm <- ix/(wY+wZ)
+    ## Method
+    met.agglo <- c("mult", "sum", "mean")
+    method <- met.agglo[pmatch(method, met.agglo)]
+    if (is.na(method)) 
+        stop("Error :Unknown method ['mult','sum','mean' are expected].")
+
+    if (method == "sum"){
+        xnorm <- ix/(wY+wZ)
+    }else if (method == "mult"){
+        xnorm <- ix/(wY*wZ)
+    }else if (method == "mean"){
+        wM <- matrix(NA, ncol=ncol(wY), nrow=nrow(wY))
+        for (i in 1:nrow(wY)){wM[i,]<-pmax(wY[i,], wZ[i,])}
+        xnorm <- ix/(wM)
+    }
+    
     intdata(x) <- xnorm
     return(x)
 })
