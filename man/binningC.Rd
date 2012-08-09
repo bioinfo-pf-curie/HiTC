@@ -6,7 +6,7 @@
   Windowing of 'C' interaction map
 }
 \usage{binningC(x, binsize=100000, bin.adjust=TRUE, upa=TRUE,
-method="median", use.zero=TRUE, step=1, bnorm=FALSE)}
+method="median", use.zero=TRUE, step=1)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{binsize}{size of the bin to consider for windowing}
@@ -18,8 +18,6 @@ method="median", use.zero=TRUE, step=1, bnorm=FALSE)}
     \sQuote{mean}, \sQuote{median} or \sQuote{sum}}
   \item{use.zero}{logical; use the zero values in the \code{method} calculation}
   \item{step}{numeric; binning step size in \code{n} coverage \emph{i.e.} window step}
-  \item{bnorm}{logical; normalise each combined counts by the number
-    of primers in the bin}
 }
 
 \details{
