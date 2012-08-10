@@ -10,9 +10,8 @@
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{chr}{character; the chromosome of the genomic region}
   \item{from}{numeric;  start of the genomic region}
-  \item{to}{numeric; end of the genomic region }
+  \item{to}{numeric; end of the genomic region}
   \item{exact}{logical; exact genomic region}
-
 }
 \details{
   By default, only the intervals fully included in the genomic ranges are returned.

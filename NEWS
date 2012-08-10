@@ -30,6 +30,8 @@ DEPRECATED AND DEFUNCT
 
 BUG FIXES
 
+  o isBinned. Fix bug for interchromosomal interactions
+
   o extracRegion. Add a chromosome parameter, and changes for interchromosomal data
 
   o binningC. Changes for interchromosomal maps

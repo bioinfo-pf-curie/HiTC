@@ -14,13 +14,13 @@ the interaction counts and the distance between two loci. See details for additi
   \item{span}{fraction of the data used for smoothing at each x point.}
   \item{bin}{interpolation parameter}
   \item{stdev}{logical, calculate the variance}
-  \item{plot}{logical, display loess smoothing and variance estimation points}
+  \item{plot}{logical, display lowess smoothing and variance estimation points}
 }
 
 \details{
 The expected value is the interaction frequency between two loci that one would expect
 based on a sole dependency on the genomic proximity of these fragments in the linear
-genome. This can be estimated using a Loess regression model.
+genome. This can be estimated using a Lowess regression model.
 The lowess smoothing has two parameters : span and bin.
 The span corresponds to the fraction of the data used for smoothing.
 Instead of computing the local polynomial fitting at each data point, a

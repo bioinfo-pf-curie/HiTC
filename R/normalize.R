@@ -105,10 +105,10 @@ getExpectedCounts <- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     
     delta <- bin*diff(range(xdata.dist))
     ######################
-    ## Loess Fit
+    ## Lowess Fit
     ######################
-    message("Loess fit ...")
-    loess.fit <- .C("lowess", x = as.double(xdata.dist), as.double(ydata), 
+    message("Lowess fit ...")
+    lowess.fit <- .C("lowess", x = as.double(xdata.dist), as.double(ydata), 
                     length(ydata), as.double(span), as.integer(3), as.double(delta), 
                     y = double(length(ydata)), double(length(ydata)), double(length(ydata)), PACKAGE = "stats")$y
     y1 <- sort(ydata)
@@ -117,11 +117,11 @@ getExpectedCounts <- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     if (plot){
         par(font.lab=2, mar=c(4,4,1,1))
         plot(x=xdata.dist, y=ydata,  xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="5C counts", main="", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, col="gray", frame=FALSE)
-        points(x=xdata.dist[order(loess.fit)], y=sort(loess.fit), type="l", col="red")
+        points(x=xdata.dist[order(lowess.fit)], y=sort(lowess.fit), type="l", col="red")
     }
-    loess.mat <- matrix(loess.fit[order(o)], nrow=dim(y_intervals(x))[1], byrow=FALSE)
-    rownames(loess.mat) <- id(y_intervals(x))
-    colnames(loess.mat) <- id(x_intervals(x))
+    lowess.mat <- matrix(lowess.fit[order(o)], nrow=dim(y_intervals(x))[1], byrow=FALSE)
+    rownames(lowess.mat) <- id(y_intervals(x))
+    colnames(lowess.mat) <- id(x_intervals(x))
 
     ######################
     ## Variance estimation
@@ -154,15 +154,15 @@ getExpectedCounts <- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
             drefs <- dref/max(abs(dref-x1)) ##max(dref) - NS
             ## Tricube ponderation and stdev calculation
             w <- tricube(drefs)
-            sqrt <- w*(y2-loess.fit[i])^2
+            sqrt <- w*(y2-lowess.fit[i])^2
             
             stdev <- sqrt(sum(sqrt)/
                           (((length(sqrt)-1) * sum(w))/length(sqrt)))
         }))
 
         if (plot){
-            points(x=xdata.dist[ind], y=loess.fit[ind], col="black", cex=.8, pch="+")
-            legend(x="topright", lty=c(1,NA), pch=c(NA,"+"), col=c("red","black"),legend=c("Loess fit","Interpolation points"), cex=.8, bty="n")
+            points(x=xdata.dist[ind], y=lowess.fit[ind], col="black", cex=.8, pch="+")
+            legend(x="topright", lty=c(1,NA), pch=c(NA,"+"), col=c("red","black"),legend=c("Lowess fit","Interpolation points"), cex=.8, bty="n")
         }
         
         ## Approximation according to delta
@@ -171,7 +171,7 @@ getExpectedCounts <- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
         rownames(stdev.mat) <- id(y_intervals(x))
         colnames(stdev.mat) <- id(x_intervals(x))
     }    
-    return(list(exp.interaction=loess.mat,stdev.estimate=stdev.mat))
+    return(list(exp.interaction=lowess.mat,stdev.estimate=stdev.mat))
 }
     
 ###################################

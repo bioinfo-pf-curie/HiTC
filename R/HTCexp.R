@@ -52,8 +52,12 @@ HTCexp <- function(intdata, xgi, ygi){
     stopifnot(inherits(xgi,"Genome_intervals"))
 
     ## sort xgi and ygi data
-    xgis <- sort(xgi)
-    ygis <- sort(ygi)
+    xord <- order(seq_name(xgi), xgi[,1], xgi[,2])
+    xgi<-xgi[xord]
+    yord <- order(seq_name(ygi), ygi[,1], ygi[,2])
+    ygi<-ygi[yord]
+    #xgis <- sort(xgi)
+    #ygis <- sort(ygi)
 
     if (is.null(colnames(intdata)) || is.null(xgi$id)){
         stop("No ids for 'xgi' intervals")
