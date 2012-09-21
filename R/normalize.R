@@ -88,7 +88,7 @@ setMethod("normPerTrans", signature=c("HTCexp","HTCexp","HTCexp"), definition=fu
 
 ###################################
 
-getExpectedCounts <- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
+getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     stopifnot(inherits(x,"HTCexp"))
     if ("package:parallel" %in% search()){
         lFun <- mclapply
@@ -108,9 +108,12 @@ getExpectedCounts <- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     ## Lowess Fit
     ######################
     message("Lowess fit ...")
-    lowess.fit <- .C("lowess", x = as.double(xdata.dist), as.double(ydata), 
-                    length(ydata), as.double(span), as.integer(3), as.double(delta), 
-                    y = double(length(ydata)), double(length(ydata)), double(length(ydata)), PACKAGE = "stats")$y
+    #lowess.fit <- .C("lowess", x = as.double(xdata.dist), as.double(ydata), 
+    #                length(ydata), as.double(span), as.integer(3), as.double(delta), 
+    #                y = double(length(ydata)), double(length(ydata)), double(length(ydata)), PACKAGE = "stats")$y
+
+    lowess.fit <-lowess(x=xdata.dist, y=ydata, f=span, delta=delta)$y
+      
     y1 <- sort(ydata)
     y1 <-  quantile(y1[which(y1>1)], probs=0.99)
 

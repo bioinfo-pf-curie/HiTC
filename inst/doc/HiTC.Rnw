@@ -19,6 +19,7 @@ pagebackref,bookmarks,colorlinks,linkcolor=darkblue,citecolor=darkblue,%
 filecolor=darkblue,urlcolor=darkblue,pagecolor=darkblue,%
 raiselinks,plainpages,pdftex]{hyperref}
 
+%\usepackage[utf8]{inputenc} 
 \usepackage{verbatim} % for multi-line comments
 \usepackage{amsmath,a4,t1enc, graphicx}
 \usepackage{natbib}
@@ -75,6 +76,10 @@ to the development of new statistical algorithms.
 
 Here we present the \Rpackage{HiTC} R package which has been developed to offer a bioinformatic environment to explore high-troughput 'C' data. One advantage of this package is that it operates within the open source Bioconductor framework, and thus, offers new opportunities for futur development in this field. The current version of the package provides teh basic visualization, transformation and normalization functions described in \cite{Lajoie2009}, but alos some new functionnalities such as data import, new visualization functions, annotation and other data transformation. Our goal is also to provide a flexible basis for further development, aiming at the integration of new analysis algorithm that are being developped (\cite{Yaffe2011})
 
+If you use \textit{HiTC} for analyzing your data, please cite:
+\begin{itemize}
+\item Servant N., Lajoie B.R., Nora E.P., Giorgetti L., Chen C., Heard E., Dekker J., Barillot E. (2012) HiTC : Exploration of High-Throughput 'C' experiments. \textit{Bioinformatics}.
+\end{itemize}
 
 \section{Getting started}
 
