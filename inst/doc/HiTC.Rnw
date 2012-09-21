@@ -19,7 +19,7 @@ pagebackref,bookmarks,colorlinks,linkcolor=darkblue,citecolor=darkblue,%
 filecolor=darkblue,urlcolor=darkblue,pagecolor=darkblue,%
 raiselinks,plainpages,pdftex]{hyperref}
 
-%\usepackage[utf8]{inputenc} 
+\usepackage[utf8]{inputenc} 
 \usepackage{verbatim} % for multi-line comments
 \usepackage{amsmath,a4,t1enc, graphicx}
 \usepackage{natbib}
@@ -106,13 +106,13 @@ Whereas a 5C dataset can be composed of a single cis interaction map, a complete
 <<importSimple>>=
 ## Two genome intervals objects with primers informations
 reverse <- new("Genome_intervals", 
-               matrix(c(98831149, 98834145, 98837507, 98840771), ncol = 2), 
+               matrix(c(98831149, 98837507, 98834145, 98840771), ncol = 2), 
                closed=c(TRUE, TRUE), 
                annotation=data.frame(seq_name=c("chr1","chr1"), 
                id=c("REV_2","REV_4"), inter_base=FALSE))
 
 forward <- new("Genome_intervals", 
-               matrix(c(98834146, 98837506, 98840772, 98841227), ncol = 2), 
+               matrix(c(98834146, 98840772, 98837506, 98841227), ncol = 2), 
                closed=c(TRUE, TRUE), 
                annotation=data.frame(seq_name=c("chr1","chr1"), 
                id=c("FOR_3","FOR_5"), inter_base=FALSE))
