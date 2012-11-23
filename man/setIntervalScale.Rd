@@ -8,9 +8,9 @@
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{ygi}{y intervals;
-    see class \code{genome_intervals} for details}
+    see class \code{GRanges} for details}
   \item{xgi}{x intervals;
-    see class \code{genome_intervals} for details}
+    see class \code{GRanges} for details}
    \item{upa}{logical; unique primer assignment. Allow one primer to
     belong to one or several bins}
   \item{method}{the method used to combine the counts. Must be

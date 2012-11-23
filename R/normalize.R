@@ -122,7 +122,7 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
         plot(x=xdata.dist, y=ydata,  xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="5C counts", main="", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, col="gray", frame=FALSE)
         points(x=xdata.dist[order(lowess.fit)], y=sort(lowess.fit), type="l", col="red")
     }
-    lowess.mat <- matrix(lowess.fit[order(o)], nrow=dim(y_intervals(x))[1], byrow=FALSE)
+    lowess.mat <- matrix(lowess.fit[order(o)], nrow=length(y_intervals(x)), byrow=FALSE)
     rownames(lowess.mat) <- id(y_intervals(x))
     colnames(lowess.mat) <- id(x_intervals(x))
 
@@ -155,7 +155,7 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
             ## Distance between x and other points
             dref <- d[o2] 
             drefs <- dref/max(abs(dref-x1)) ##max(dref) - NS
-            ## Tricube ponderation and stdev calculation
+            ## Tricube weigths and stdev calculation
             w <- tricube(drefs)
             sqrt <- w*(y2-lowess.fit[i])^2
             
@@ -170,7 +170,7 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
         
         ## Approximation according to delta
         stdev.estimate <- approx(x=xdata.dist[ind], y=stdev.delta, method="linear", xout=xdata.dist)$y
-        stdev.mat <- matrix(stdev.estimate[order(o)], nrow=dim(y_intervals(x))[1], byrow=FALSE)
+        stdev.mat <- matrix(stdev.estimate[order(o)], nrow=length(y_intervals(x)), byrow=FALSE)
         rownames(stdev.mat) <- id(y_intervals(x))
         colnames(stdev.mat) <- id(x_intervals(x))
     }    

@@ -3,18 +3,16 @@
 \alias{mapC}
 \title{Visualize 'C' interaction map}
 \description{
-  Visualize 'C' interaction counts matrix
+  Visualize 'C' interaction map
 }
 
 \usage{mapC(x, y=NULL, view=1, giblocs=NULL, minrange=NA, maxrange=NA, trim.range=0.98, names=FALSE, value=FALSE, show.na=FALSE, log.data=FALSE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE, title=NULL)}
 
 \arguments{
-  \item{x}{object that inherits from class \code{HTCexp} or from class
-    \code{matrix}}
-  \item{y}{optional. object that inherits from class \code{HTCexp} or
-    from class \code{matrix}. If specified, view is set to 2}
+  \item{x}{object that inherits from class \code{HTCexp}}
+  \item{y}{optional. object that inherits from class \code{HTCexp}. If specified, view is set to 2}
   \item{view}{interaction map representation. See details}
-  \item{giblocs}{genomeIntervals object of blocks to display as
+  \item{giblocs}{List of GRanges objects of data to display as
   annotation track(s)}
   \item{minrange}{the minimum range of values used to define the color palette}
   \item{maxrange}{the maximum range of values used to define the color palette}
@@ -57,8 +55,7 @@
   Annotation tracks can be added to both views. In case of binned data,
   the exact genomic positions of each features are takken into
   account. Otherwise, the 'C' intervals which overlap with the
-  annotation features are colored.
-  
+  annotation features are colored. 
 }
 \value{
   Returns \code{NULL}; this function is called for the side-effect of
@@ -76,12 +73,13 @@ mapC(E14$chrXchrX)
 mapC(E14$chrXchrX, maxrange=100, col.pos=c("black","red","yellow"))
 
 ## Add annotation and change view
+require(rtracklayer)
 exDir <- system.file("extdata", package="HiTC")
-gene <- readBED(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"))
-mapC(E14$chrXchrX, giblocs=list(Refseq=gene$Refseq_Gene), view=2)
+gene <- import(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"), format="bed", asRangedData=FALSE)
+mapC(E14$chrXchrX, giblocs=list(Refseq=gene), view=2)
 
 ## Compare two samples
-mapC(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), giblocs=list(Refseq=gene$Refseq_Gene))
+##mapC(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), giblocs=list(Refseq=gene$Refseq_Gene))
 
 }
 \keyword{hplot}

@@ -42,7 +42,6 @@
 exDir <- system.file("extdata", package="HiTC")
 ## Load my5C matrix format
 hiC<-import.my5C(file.path(exDir,"HIC_gm06690_chr14_chr14_1000000_obs.txt"))
-hiC
-
+detail(hiC)
 }
 \keyword{IO}

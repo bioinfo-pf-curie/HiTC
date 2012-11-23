@@ -23,10 +23,10 @@
 \alias{isIntraChrom,HTCexp-method}
 \alias{id}
 \alias{id-methods}
-\alias{id,Genome_intervals-method}
+\alias{id,GRanges-method}
 \alias{id<-}
 \alias{id<--methods}
-\alias{id<-,Genome_intervals,factor-method}
+\alias{id<-,GRanges,factor-method}
 \alias{normPerReads}
 \alias{normPerReads-methods}
 \alias{normPerReads,HTCexp-method}
@@ -35,7 +35,7 @@
 \alias{normPerExpected,HTCexp-method}
 \alias{normPerTrans}
 \alias{normPerTrans-methods}
-\alias{normPerTrans,HTCexp-method}
+\alias{normPerTrans,HTCexp,HTCexp,HTCexp-method}
 \alias{plot}
 \alias{plot-methods}
 \alias{plot,HTCexp,ANY-method}
@@ -57,14 +57,14 @@
 \alias{x_intervals,HTCexp-method}
 \alias{x_intervals<-}
 \alias{x_intervals<--methods}
-\alias{x_intervals<-,HTCexp,Genome_intervals-method}
+\alias{x_intervals<-,HTCexp,GRanges-method}
 \alias{y_intervals,HTCexp-method}
 \alias{y_intervals}
 \alias{y_intervals-methods}
 \alias{y_intervals,HTCexp-method}
 \alias{y_intervals<-}
 \alias{y_intervals<--methods}
-\alias{y_intervals<-,HTCexp,Genome_intervals-method}
+\alias{y_intervals<-,HTCexp,GRanges-method}
 
 % Old stuff (deprecated or defunct).
 \alias{export}
@@ -82,7 +82,7 @@
   Objects can be created either by:
   \enumerate{
     \item calls of the form
-    \code{new("HTCexp", intdata, Genome_intervals, Genome_intervals)}.
+    \code{new("HTCexp", intdata, GRanges, GRanges)}.
     \item using the auxiliary function \code{HTCexp} and supplying
     interaction matrix with x and y intervals definition.
   }
@@ -91,10 +91,10 @@
 	 \describe{
     \item{\code{intdata}:}{Integer matrix, holding the
       interaction level between each pairs of 'x-y' intervals. The 'y' intervals must be in rows, and the 'x' in columns.}
-    \item{\code{ygi}:}{Genomic interval of y intervals;
-      see class \code{genome_intervals} for details}
-    \item{\code{xgi}:}{Genomic interval of x intervals;
-      see class \code{genome_intervals} for details}
+    \item{\code{ygi}:}{Genomic ranges of y intervals;
+      see class \code{granges} for details}
+    \item{\code{xgi}:}{Genomic ranges of x intervals;
+      see class \code{granges} for details}
   }
 }
 
@@ -140,17 +140,16 @@
   \code{\link{getExpectedCounts}} function for details.\cr
   
   The \code{normPerTrans} method is based on the assumption that all trans interactions should be the same. Thus, the cis interactions can be normalized by the interaction level of trans data.
-  The \code{xtrans} trans map has to share its 'xgi' intervals with the
-  cis map, and the \code{ytrans} has to share its 'ygi' intervals with
+  The \code{xtrans} trans map has to share its 'xgi' ranges with the
+  cis map, and the \code{ytrans} has to share its 'ygi' ranges with
   the cismap.
   The \code{method} is used to combine the normalization factor from x
-  and y intervals. Must be \sQuote{sum}, \sQuote{mult} or \sQuote{mean}.
+  and y ranges. Must be \sQuote{sum}, \sQuote{mult} or \sQuote{mean}.
 
 }
 
 \seealso{
-  \code{\link[genomeIntervals]{Genome_intervals-class}},
-  \code{\link[girafe]{AlignedGenomeIntervals-class}},
+  \code{\link[GenomicRanges]{GRanges-class}},
 }
 
 \examples{
@@ -166,10 +165,10 @@ isBinned(E14$chrXchrX)
 ## Is a inter or intrachromsomal experiment ?
 isIntraChrom(E14$chrXchrX)
 
-## Plotting
-plot(E14$chrXchrX)
-plot(E14$chrXchrX, view=2)
-plot(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), maxrange=20)
+## ## Plotting
+## plot(E14$chrXchrX)
+## plot(E14$chrXchrX, view=2)
+## plot(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), maxrange=20)
 
 ## Divide by expected interaction counts
 E14norm<-normPerExpected(E14$chrXchrX)
@@ -179,8 +178,9 @@ E14_d_MEF<-divide(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))
 E14_s_MEF<-substract(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))
 
 ## Overlap with genomic annotation
-Refgene <- readBED(file.path(system.file("extdata", package="HiTC"),"refseq_mm9_chrX_98831149_103425150.bed"))
-plot(E14$chrXchrX, giblocs=list(RefSeqGene=Refgene$Refseq_Gene))
+require(rtracklayer)
+gene <- import(file.path(system.file("extdata", package="HiTC"),"refseq_mm9_chrX_98831149_103425150.bed"), format="bed", asRangedData=FALSE)
+plot(E14$chrXchrX, giblocs=GRangesList(RefSeqGene=gene))
 
 \dontrun{
 ## normPerTrans data normalization applied on \href{http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeUmassDekker5C}{ENCODE data}.

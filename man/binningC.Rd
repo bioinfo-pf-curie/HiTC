@@ -33,8 +33,7 @@ method="median", use.zero=TRUE, step=1)}
 
 \value{
   An \code{HTCexp-class} object with binned intraction data. In this
-  case, the primers are converted into bins, and the reverse or forward
-  intervals are similar.
+  case, the genomic intervals are converted into bins of fixed size.
   The interaction matrix is symetric.
 }
 \seealso{\code{\link{HTCexp-class}}}

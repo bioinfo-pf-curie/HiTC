@@ -1,6 +1,14 @@
 ##Generics
+setGeneric(name="chromosome", def=function(x) standardGeneric("chromosome"))
+
 setGeneric(name="intdata", def=function(x) standardGeneric("intdata"))
 setGeneric(name="intdata<-", def=function(x,value) standardGeneric("intdata<-"))
+
+setGeneric(name="id", def=function(x) standardGeneric("id"))
+setGeneric(name="id<-", def=function(x,value) standardGeneric("id<-"))
+
+setGeneric(name="seqlevels", def=function(x) standardGeneric("seqlevels"))
+##setGeneric(name="export", def=function(x,con) standardGeneric("export"))
 
 setGeneric(name="y_intervals", def=function(x) standardGeneric("y_intervals"))
 setGeneric(name="y_intervals<-", def=function(x, value) standardGeneric("y_intervals<-"))

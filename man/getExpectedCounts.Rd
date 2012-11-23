@@ -42,6 +42,6 @@ data(Nora_5C)
 
 ## Estimate expected interaction from distance between intervals
 E14.exp<-getExpectedCounts(E14$chrXchrX, stdev=TRUE, plot=FALSE)
-mapC(E14.exp$exp.interaction)
+mapC(HTCexp(E14.exp$exp.interaction, xgi=x_intervals(E14$chrXchrX), ygi=y_intervals(E14$chrXchrX)))
 }
 \keyword{manip}

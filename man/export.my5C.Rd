@@ -20,9 +20,9 @@
 data(Nora_5C)
 
 ## Data binning
-E14.bin<-binningC(E14$chrXchrX)
+## E14.bin<-binningC(E14$chrXchrX)
 
 ## Export the new intervals definition
-export.my5C(E14.bin, file="E14my5C.csv")
+## export.my5C(E14.bin, file="E14my5C.csv")
 }
 \keyword{plot}

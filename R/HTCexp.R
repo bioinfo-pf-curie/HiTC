@@ -1,6 +1,6 @@
 ################
 ## New S4 class for representing 5C or HiC data
-## This class is mainly based on the genomeIntervals class
+## This class is mainly based on the GRanges class
 ## The interaction matrix is added to the object 
 ################
 
@@ -8,37 +8,45 @@
 setClass("HTCexp",
          representation = representation(
          "intdata"="matrix",
-         "xgi"="Genome_intervals",
-         "ygi"="Genome_intervals"),
+         "xgi"="GRanges",
+         "ygi"="GRanges"),
          validity = function(object) {
              fails <- character(0)
-              if(class(object@intdata)!="matrix") {
-                  fails <- c(fails, "Expected matrix for the data slot!\n")
-              }
-              if(class(object@ygi)!="Genome_intervals" || class(object@xgi)!="Genome_intervals") {
-                  fails <- c(fails, "Intervals 'xgi' and 'ygi' objects must be two GenomeIntervals object!\n")
-              }
-              if (dim(object@intdata)[1] != dim(object@ygi)[1]){
-                  fails <- c(fails, "The 'ygi' Genome_Intervals object must have exactly the same length as the number of rows of the data matrix")
-              }
-             if (dim(object@intdata)[2] != dim(object@xgi)[1]){
-                   fails <- c(fails, "The 'xgi' Genome_Intervals object must have exactly the same length as the number of column of the data matrix")
-              }
-             if (length(setdiff(rownames(object@intdata), as.character(object@ygi$id)))>0){
-                 fails <- c(fails, "The 'ygi' intervals from the interaction matrix are different from those defined in the Genome_Intervals object")
+
+             ## Format
+             if(class(object@intdata)!="matrix") {
+                 fails <- c(fails, "Expected matrix for the data slot!\n")
              }
-             if (length(setdiff(colnames(object@intdata), as.character(object@xgi$id)))>0){
-                 fails <- c(fails, "The 'xgi' intervals from the interaction matrix are different from those defined in the Genome_Intervals object")
+             if(class(object@ygi)!="GRanges" || class(object@xgi)!="GRanges") {
+                 fails <- c(fails, "Intervals 'xgi' and 'ygi' objects must be two GRanges objects!\n")
              }
-             if (length(levels(as.factor(chromosome(object@xgi)))) > 1 || length(levels(as.factor(chromosome(object@ygi)))) > 1){
-                 fails <- c(fails, "Multiple chromosome found in xgi or ygi object")
+             if (dim(object@intdata)[1] != length(object@ygi)){
+                 fails <- c(fails, "The 'ygi' GRanges object must have exactly the same length as the number of rows of the data matrix")
              }
-             if (is.null(colnames(object@intdata)) || is.null(object@xgi$id)){
+             if (dim(object@intdata)[2] != length(object@xgi)){
+                 fails <- c(fails, "The 'xgi' GRanges object must have exactly the same length as the number of column of the data matrix")
+             }
+             if (is.null(colnames(object@intdata)) || is.null(id(object@xgi))){
                  fails <- c(fails,"No ids for 'xgi' intervals")
              }
-             if (is.null(rownames(object@intdata)) || is.null(object@ygi$id)){
+             if (is.null(rownames(object@intdata)) || is.null(id(object@ygi))){
                  fails <- c(fails,"No ids for 'ygi' intervals")
              }
+             
+             ## Content
+             if (length(object@xgi) == 0 || length(object@ygi) == 0){
+                 fails <- c(fails, "Inervals xgi or ygi are of size 0")
+             }
+             if (length(chromosome(object@xgi)) > 1 || length(chromosome(object@ygi)) > 1){
+                 fails <- c(fails, "Multiple chromosome found in xgi or ygi object")
+             }
+             if (length(setdiff(rownames(object@intdata), id(object@ygi)))>0){
+                 fails <- c(fails, "The 'ygi' intervals from the interaction matrix are different from those defined in the GRanges object")
+             }
+             if (length(setdiff(colnames(object@intdata), id(object@xgi)))>0){
+                 fails <- c(fails, "The 'xgi' intervals from the interaction matrix are different from those defined in the GRanges object")
+             }
+             
              if (length(fails) > 0) return(fails)
              return(TRUE)
          }
@@ -47,26 +55,26 @@ setClass("HTCexp",
 
 ## constructor
 HTCexp <- function(intdata, xgi, ygi){
+  
+    ## check xgi/ygi length
+    if (length(xgi)==0 || length(ygi)==0){
+        stop("Cannot create HTCexp object of size 0")
+    }
+    
+    ## check format
     stopifnot(is.matrix(intdata))
-    stopifnot(inherits(ygi,"Genome_intervals"))
-    stopifnot(inherits(xgi,"Genome_intervals"))
+    stopifnot(inherits(ygi,"GRanges"))
+    stopifnot(inherits(xgi,"GRanges"))
 
     ## sort xgi and ygi data
-    xord <- order(seq_name(xgi), xgi[,1], xgi[,2])
-    xgi<-xgi[xord]
-    yord <- order(seq_name(ygi), ygi[,1], ygi[,2])
-    ygi<-ygi[yord]
-    #xgis <- sort(xgi)
-    #ygis <- sort(ygi)
+    xgi <- sort(xgi)
+    ygi <- sort(ygi)
 
-    if (is.null(colnames(intdata)) || is.null(xgi$id)){
-        stop("No ids for 'xgi' intervals")
-    }
-    if (is.null(rownames(intdata)) || is.null(ygi$id)){
-        stop("No ids for 'ygi' intervals")
-    }
-    intdata <- intdata[as.character(ygi$id), as.character(xgi$id)]
+    ## deal with seqlevels in GRanges objects to avoid warnings
+    seqlevels(xgi) <- unique(c(seqlevels(xgi), seqlevels(ygi)))
+    seqlevels(ygi) <- unique(c(seqlevels(xgi), seqlevels(ygi)))
 
+    intdata <- intdata[id(ygi), id(xgi)]
     new("HTCexp", intdata, xgi, ygi)
 }
 
@@ -97,104 +105,124 @@ removeIntervals <- function(x, ids){
     x
 }
 
-extractRegion <- function(x, chr, from, to, exact=FALSE){
+extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE){
     stopifnot(inherits(x, "HTCexp"))
-    fromto <- new("Genome_intervals", matrix(c(from,to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=data.frame(seq_name=chr, inter_base=FALSE))
+    stopifnot(is.element(MARGIN, c(1,2)))
 
-    ## Deal with partial overlap
-    xr <- fracOverlap(x@xgi, fromto, min.frac=0, both=FALSE)$Index1
-    yr <- fracOverlap(x@ygi, fromto, min.frac=0, both=FALSE)$Index1
-    
-    if (length(xr)>0)
-        xgi <- x@xgi[xr,]
-    else
-        xgi <- x@xgi
-    if (length(yr)>0)
-        ygi <- x@ygi[yr,]
-    else
-        ygi <- x@ygi
-    
-    data <-  x@intdata[as.character(ygi$id), as.character(xgi$id)]
-    
+    fromto <- GRanges(seqnames = chr, ranges = IRanges(start=from, end=to))
+    xgi <- x_intervals(x)
+    ygi <- y_intervals(x)
+    data <-  x@intdata
+
+    ## Force exact overlap by adding flanking regions
     if (exact){
         ## if no interval with from, add NA values
         ## else force overlapping coordinates
-        if (length(xr)>0){
-            if (min(xgi)>from){
-                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",from,"-",x@xgi[min(xr),1]-1, sep=""))
-                                    
-                if (is.element("score",colnames(annotation(xgi))))
-                    annot$score <- 0
-                if (is.element("strand",colnames(annotation(xgi))))
-                    annot$strand <- "+"
-                    
-                xgi <- c(new("Genome_intervals", matrix(c(from,x@xgi[min(xr),1]-1), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot), xgi)
-                data <- cbind(rep(NA, nrow(data)), data)
-            }else if (min(xgi)<from){
-                maxind <- max(which(xgi[,1]<from & xgi[,2]>from))
-                xgi[maxind,1] <- from
-                data <- data[,maxind:nrow(xgi)]
-                xgi <- xgi[maxind:nrow(xgi),]
-            }
+        ## x_intervals
+        if (is.element(c(1), MARGIN)){
+            xgi <- subsetByOverlaps(xgi, fromto, ignore.strand=TRUE)
             
-            if (max(xgi)<to){
-                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",x@xgi[max(xr),2]+1,"-",to, sep=""))
-
-                if (is.element("score",colnames(annotation(xgi))))
-                    annot$score <- 0
-                if (is.element("strand",colnames(annotation(xgi))))
-                    annot$strand <- 0
-              
-                xgi <- c(xgi, new("Genome_intervals", matrix(c(x@xgi[max(xr),2]+1, to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot))
+            if (min(start(xgi))>from){
+                ##flank(xgi[which.min(start(xgi))], width=min(start(xgi))-from, start=TRUE, ignore.strand=TRUE)
+                ir <- IRanges(start=from, end=min(start(xgi))-1)
+                edata <- elementMetadata(xgi)[1,]
+                if (is.element("score",colnames(edata)))
+                    edata$score <- 0
+                if (is.element("name",colnames(edata)))
+                    edata$name <- paste(chr,":",from,"-",min(start(xgi))-1, sep="")
+                if (is.element("thick",colnames(edata)))
+                    edata$thick <- ir
+                
+                ngr <- GRanges(seqnames = chr, ranges = ir, strand = "*", edata)
+                xgi <- c(ngr,xgi)
+                data <- cbind(rep(NA, nrow(data)), data)
+            }else if (min(start(xgi))<=from){
+                maxind <- max(which(start(xgi)<=from & end(xgi)>=from))
+                start(xgi[maxind,]) <- from
+                data <- data[,maxind:length(xgi)]
+                xgi <- xgi[maxind:length(xgi),]
+            }
+            if (max(end(xgi))<to){
+                ir <- IRanges(start=max(end(xgi))+1, end=to)
+                edata <- elementMetadata(xgi)[length(xgi),]
+                if (is.element("score",colnames(edata)))
+                    edata$score <- 0
+                if (is.element("name",colnames(edata)))
+                    edata$name <- paste(chr,":",max(end(xgi))+1,"-",to, sep="")
+                if (is.element("thick",colnames(edata)))
+                    edata$thick <- ir
+                
+                ngr <- GRanges(seqnames = chr, ranges = ir, strand = "*", edata)
+                xgi <- c(xgi, ngr)
                 data <- cbind(data, rep(NA, nrow(data)))
-            }else if (max(xgi)>to){
-                maxind <- min(which(xgi[,1]<to & xgi[,2]>to))
-                xgi[maxind,2] <- to
+            }else if (max(end(xgi))>=to){
+                maxind <- min(which(start(xgi)<=to & end(xgi)>=to))
+                end(xgi[maxind,]) <- to
                 data <- data[,1:maxind]
                 xgi <- xgi[1:maxind,]
             }
         }
-
-        if (length(yr)>0){
-            if (min(ygi)>from){
-                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",from,"-",x@ygi[min(yr),1]-1, sep=""))
-                
-                if (is.element("score",colnames(annotation(ygi))))
-                    annot$score <- 0
-                if (is.element("strand",colnames(annotation(ygi))))
-                    annot$strand <- "+"
-
-                ygi <- c(new("Genome_intervals", matrix(c(from,x@ygi[min(yr),1]-1), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot),ygi)
-                data <- rbind(rep(NA, ncol(data)), data)
-            }else if (min(ygi)<from){
-                maxind <- max(which(ygi[,1]<from & ygi[,2]>from))
-                ygi[maxind,1] <- from
-                data <- data[maxind:nrow(ygi),]
-                ygi <- ygi[maxind:nrow(ygi),]
-            }
+        
+        ## y_intervals
+        if (is.element(c(2), MARGIN)){
+            ygi <- subsetByOverlaps(ygi, fromto, ignore.strand=TRUE)
             
-            if (max(ygi)<to){
-                annot <- data.frame(seq_name=chr, inter_base=FALSE, id=paste(chr,":",x@ygi[max(yr),2]+1,"-",to, sep=""))
+            if (min(start(ygi))>from){
+                ir <- IRanges(start=from, end=min(start(ygi))-1)
+                edata <- elementMetadata(ygi)[1,]
+                if (is.element("score",colnames(edata)))
+                    edata$score <- 0
+                if (is.element("name",colnames(edata)))
+                    edata$name <- paste(chr,":",from,"-",min(start(ygi))-1, sep="")
+                if (is.element("thick",colnames(edata)))
+                    edata$thick <- ir
+             
+                ngr <- GRanges(seqnames = chr, ranges = ir, strand = "*", edata)
+                ygi <- c(ngr,ygi)
+                data <- rbind(rep(NA, ncol(data)), data)
+            }else if (min(start(ygi))<=from){
+                maxind <- max(which(start(ygi)<=from & end(ygi)>=from))
+                start(ygi[maxind,]) <- from
+             data <- data[maxind:length(ygi),]
+                ygi <- ygi[maxind:length(ygi),]
+            }        
+            if (max(end(ygi))<to){
+                ir <- IRanges(start=max(end(ygi))+1, end=to)
+                edata <- elementMetadata(ygi)[length(ygi),]
+                if (is.element("score",colnames(edata)))
+                    edata$score <- 0
+                if (is.element("name",colnames(edata)))
+                    edata$name <- paste(chr,":",max(end(ygi))+1,"-",to, sep="")
+                if (is.element("thick",colnames(edata)))
+                    edata$thick <- ir
                 
-                if (is.element("score",colnames(annotation(ygi))))
-                    annot$score <- 0
-                if (is.element("strand",colnames(annotation(ygi))))
-                    annot$strand <- "+"
-                    
-                ygi <- c(ygi,new("Genome_intervals", matrix(c(x@ygi[max(yr),2]+1, to), ncol=2, byrow=FALSE), closed=c(TRUE,TRUE), annotation=annot))
+                ngr <- GRanges(seqnames = chr, ranges = ir, strand = "*", edata)
+                ygi <- c(ygi, ngr)
                 data <- rbind(data, rep(NA, ncol(data)))
-            }else if (max(ygi)>to){
-                maxind <- min(which(ygi[,1]<to & ygi[,2]>to))
-                ygi[maxind,2] <- to
+            }else if (max(end(ygi))>=to){
+                maxind <- min(which(start(ygi)<=to & end(ygi)>=to))
+                end(ygi[maxind,]) <- to
                 data <- data[1:maxind,]
                 ygi <- ygi[1:maxind,]
             }
         }
-        colnames(data) <- as.character(id(xgi))
-        rownames(data) <- as.character(id(ygi))
-    }
-    new("HTCexp", data, xgi, ygi)
-}
+        
+        data <-  x@intdata[id(ygi), id(xgi)]
+        colnames(data) <- id(xgi)
+        rownames(data) <- id(ygi)
+        HTCexp(data, xgi, ygi)
+     }else{
+         ## Full overlap
+         if (is.element(c(1), MARGIN))
+             xgi <- subsetByOverlaps(xgi, fromto, type="within", ignore.strand=TRUE)
+         
+         if (is.element(c(2), MARGIN))
+             ygi <- subsetByOverlaps(ygi, fromto, type="within", ignore.strand=TRUE)
+         
+         data <-  x@intdata[id(ygi), id(xgi)]
+         HTCexp(data, xgi, ygi)
+     }
+}##extractRegion
 
 
 ################
@@ -202,52 +230,63 @@ extractRegion <- function(x, chr, from, to, exact=FALSE){
 ## Methods
 ##
 ################
+setMethod("chromosome",signature(x="GRanges"), function(x){
+    as.vector(unique(seqnames(x)))
+})
 
 
-## Detail method
 setMethod("detail",signature(x="HTCexp"), function(x){
+    stopifnot(validObject(x))
     cat("HTC object\n")
-    if (length(seq_name(x))==1){
-        cat("Focus on genomic region [", as.character(seq_name(x)), ":",
-            min(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"-",max(c(x_intervals(x)[,1:2],y_intervals(x)[,1:2])),"]\n", sep="")
+
+    r <- range(x)
+    if (length(r)==1){
+        cat("Focus on genomic region [", chromosome(r), ":",
+                start(r),"-",end(r),"]\n", sep="")
     }else{
         cat("Focus on genomic regions [",
-            unique(as.character(seq_name(y_intervals(x)))), ": ",min(y_intervals(x)[,1:2]),"-",max(y_intervals(x)[,1:2]),"] vs [",
-            unique(as.character(seq_name(x_intervals(x)))), ":",min(x_intervals(x)[,1:2]),"-",max(x_intervals(x)[,1:2]),"]\n", sep="")
+                chromosome(r)[1], ":", start(r)[1], "-", end(r)[1],"] vs [",
+                chromosome(r)[2], ":", start(r)[2], "-", end(r)[2],"]\n", sep="")
+    }
+   
+    if(isIntraChrom(x)){
+        cat("CIS Interaction Map\n")
+    }else{
+        cat("TRANS Interaction Map\n")
     }
     cat("Matrix of Interaction data: [", dim(intdata(x))[1],"-",dim(intdata(x))[2], "]\n", sep="")
     if (isBinned(x)){
-        cat("Binned data - window size =", y_intervals(x)[1,2]-y_intervals(x)[1,1]+1,"\n")
-        cat(nrow(y_intervals(x)),"genome intervals\n")
+        cat("Binned data - window size =", width(x_intervals(x))[1],"\n")
+        cat(length(x_intervals(x)),"genome intervals\n")
     }
     else{
-        cat(nrow(x_intervals(x))," genome intervals from 'xgi' object\n")
-        cat(nrow(y_intervals(x))," genome intervals from 'ygi' object\n")
+        cat(length(x_intervals(x))," genomic ranges from 'xgi' object\n")
+        cat(length(y_intervals(x))," genomic ranges from 'ygi' object\n")
     }
     data <- as.vector(intdata(x))
-    cat("Total Reads =",sum(data, na.rm=TRUE),"\n")
+    cat("Total Reads = ",sum(data, na.rm=TRUE),"\n")
     cat("Number of Interactions = ",length(data[which(data>0)]),"\n")
     cat("Median Frequency = ",median(data[which(data>0)]),"\n")
     invisible(NULL)
 }) 
 
-
 ## Divide method
 setMethod("divide", signature=c("HTCexp","HTCexp"), definition=function(x,y){
-    ygi <- x@ygi[which(chromosome(x@ygi)==chromosome(y@ygi) & x@ygi[,1]==y@ygi[,1] & x@ygi[,2]==y@ygi[,2]),]
-    xgi <- x@xgi[which(chromosome(x@xgi)==chromosome(y@xgi) & x@xgi[,1]==y@xgi[,1] & x@xgi[,2]==y@xgi[,2]),]
- 
-    a <- x@intdata[as.character(annotation(ygi)$id), as.character(annotation(xgi)$id)]
-    b <- y@intdata[as.character(annotation(ygi)$id), as.character(annotation(xgi)$id)]
+    xgi <- subsetByOverlaps(x@xgi, y@xgi, type="equal")
+    ygi <- subsetByOverlaps(x@ygi, y@ygi, type="equal")
 
+    if (length(xgi) == 0 || length(ygi) == 0){
+        stop("No equal intervals found in x and y objects")
+    }
+    
+    a <- x@intdata[id(ygi),id(xgi)]
+    b <- y@intdata[id(ygi), id(xgi)]
     a[which(a==0 | b==0)]<-NA
     b[which(a==0 | b==0)]<-NA
-    #a[which(a==0)]<-b[which(a==0)]
-    #b[which(b==0)]<-a[which(b==0)]
- 
     data <- a/b
-    new("HTCexp", data, ygi , xgi)
+    HTCexp(data, xgi , ygi)
 })
+
 
 ## Interaction Data
 setMethod(f="intdata", signature(x="HTCexp"), definition=function(x){
@@ -273,34 +312,46 @@ setMethod("initialize",signature=c("HTCexp"), function(.Object, interaction.data
 ## Binned data
 setMethod("isBinned", signature(x="HTCexp"), function(x){
     stopifnot(validObject(x))
-    ## Symetrical and full overlap
-    if (length(setdiff(x@xgi,x@ygi))==0 && dim(interval_union(x@xgi))[1] == 1 && length(unique(x@xgi[-nrow(x@xgi),1]-x@xgi[-1,1]))==1){
-        return(TRUE)
-    }else{
-        return(FALSE)
+    ret <- TRUE
+
+    ## Same bins for intra chromosomal
+    if(isIntraChrom(x)){
+        if (length(setdiff(ranges(x@xgi),ranges(x@ygi))) != 0)
+            ret <- FALSE
     }
+    ## Same width (exept for last bins - checked in 90% of bins)
+    if (length(unique(width(x@xgi)[1:round(length(x@xgi)*.9)])) != 1 || length(unique(width(x@ygi)[1:round(length(x@ygi)*.9)])) != 1)
+        ret <- FALSE
+    ## no gaps
+    if (length(reduce(x@xgi)) != 1 || length(reduce(x@ygi)) != 1)
+        ret <- FALSE
+    
+    ret
 })
 
 ## Inter/Intra chromosomal interaction
 setMethod("isIntraChrom", signature(x="HTCexp"), function(x){
     stopifnot(validObject(x))
-    if (levels(as.factor(chromosome(x_intervals(x)))) == levels(as.factor(chromosome(y_intervals(x))))){
-        return(TRUE)
-    }else{
-        return(FALSE)
-    }
+    ret <- FALSE
+    if (chromosome(x@xgi) == chromosome(x@ygi))
+        ret <- TRUE
+    ret
 })
 
 ## Intervals names
-setMethod(f="id", signature(object="Genome_intervals"), definition=function(object){
-    object$id
+setMethod(f="id", signature(x="GRanges"), definition=function(x){
+    ret <- NULL
+    if (!is.null(names(x)))
+        ret <- names(x)
+    else if (!is.null(elementMetadata(x)$name))
+        ret <- elementMetadata(x)$name
+    ret
 })
 
-setReplaceMethod(f="id", signature(object="Genome_intervals", value="factor"),function(object, value) {
-    annotation(object)$id <- value
-    return (object)
-})
-
+#setReplaceMethod(f="id", signature(x="GRanges", value="character"),function(x, value) {
+#    elementMetadata(x)$name <- value
+#    return (x)
+#})
 
 ## Plot method
 setMethod("plot", signature="HTCexp", definition=function(x, ...) {
@@ -311,60 +362,74 @@ setMethod("plot", signature=c("HTCexp","HTCexp"), definition=function(x, y, ...)
     mapC(x, y, ...)
 })
 
+
+## setMethod(f="range", signature(x="HTCexp"), definition=function(x){
+##     if (chromosome(x@xgi) == chromosome(x@ygi)){
+##         r <- range(c(ranges(x@ygi), ranges(x@xgi)))
+##         ret <- c(chromosome(x@xgi), start(r), end(r))
+##     }else{
+##         ry <- range(x@ygi)
+##         rx <- range(x@xgi)
+##         ret <- as.data.frame(matrix(c(chromosome(x@ygi), start(ry), end(ry),  chromosome(x@xgi), start(rx), end(rx)), nrow=2, byrow=TRUE))
+##         colnames(ret) <- c("chrom","start","end")
+##     }
+##     ret
+## })
+
 setMethod(f="range", signature(x="HTCexp"), definition=function(x){
-    return(c(min(x_intervals(x), y_intervals(x)), max(x_intervals(x), y_intervals(x))))
+    range(c(x@ygi, x@xgi), ignore.strand=TRUE)
 })
 
 
-## Seq_name
-setMethod(f="seq_name", signature(x="HTCexp"), definition=function(x){
-    seqname <- unique(c(as.character(unique(seq_name(x@xgi))), as.character(unique(seq_name(x@ygi)))))
-    ##stopifnot(length(seqname)==1)
-    factor(seqname)
-    })
+## Seqlevels
+setMethod(f="seqlevels", signature(x="HTCexp"), definition=function(x){
+    unique(c(seqlevels(x@xgi), seqlevels(x@ygi)))
+})
 
 ## Show method
 setMethod("show",signature="HTCexp", function(object){
+    stopifnot(validObject(object))
     cat("HTC object\n")
-    if (length(seq_name(object))==1){
-        cat("Focus on genomic region [", as.character(seq_name(object)), ":",
-            min(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"-",max(c(x_intervals(object)[,1:2],y_intervals(object)[,1:2])),"]\n", sep="")
+
+    r <- range(object)
+    if (length(r)==1){
+        cat("Focus on genomic region [", chromosome(r), ":",
+                start(r),"-",end(r),"]\n", sep="")
     }else{
         cat("Focus on genomic regions [",
-            unique(as.character(seq_name(y_intervals(object)))), ":",min(y_intervals(object)[,1:2]),"-",max(y_intervals(object)[,1:2]),"] vs [",
-            unique(as.character(seq_name(x_intervals(object)))), ":",min(x_intervals(object)[,1:2]),"-",max(x_intervals(object)[,1:2]),"]\n", sep="")
+                chromosome(r)[1], ":", start(r)[1], "-", end(r)[1],"] vs [",
+                chromosome(r)[2], ":", start(r)[2], "-", end(r)[2],"]\n", sep="")
     }
-    if(isIntraChrom(object)){
-        cat("CIS Interaction Map\n")
-    }else{
-        cat("TRANS Interaction Map\n")
-    }
+    #if(isIntraChrom(object)){
+    #    cat("CIS Interaction Map")
+    #}else{
+    #    cat("TRANS Interaction Map")
+    #}
     cat("Matrix of Interaction data: [", dim(intdata(object))[1],"-",dim(intdata(object))[2], "]\n", sep="")
-    if (isBinned(object)){
-        cat("Binned data - window size =", y_intervals(object)[1,2]-y_intervals(object)[1,1]+1,"\n")
-        cat(nrow(y_intervals(object)),"genome intervals\n")
-    }
-    else{
-        cat(nrow(y_intervals(object))," genome intervals from ",unique(as.character(seq_name(y_intervals(object)))), " ('ygi' object)\n")
-        cat(nrow(x_intervals(object))," genome intervals from ",unique(as.character(seq_name(x_intervals(object)))), " ('xgi' object)\n")
-     }
+    #if (isBinned(object)){
+    #    cat("Binned data - window size =", y_intervals(object)[1,2]-y_intervals(object)[1,1]+1)
+    #    cat(nrow(y_intervals(object)),"genome intervals")
+    #}
+    #else{
+    #    cat(length(x_intervals(object))," genome intervals from 'xgi' object")
+    #    cat(length(y_intervals(object))," genome intervals from 'ygi' object")
+    #}
     invisible(NULL)
 })
 
 
 ## Substraction
 setMethod("substract", signature(x="HTCexp",y="HTCexp"), definition=function(x,y){
-    ygi <- x@ygi[which(chromosome(x@ygi)==chromosome(y@ygi) & x@ygi[,1]==y@ygi[,1] & x@ygi[,2]==y@ygi[,2]),]
-    xgi <- x@xgi[which(chromosome(x@xgi)==chromosome(y@xgi) & x@xgi[,1]==y@xgi[,1] & x@xgi[,2]==y@xgi[,2]),]
-    
-    a <- x@intdata[as.character(annotation(ygi)$id), as.character(annotation(xgi)$id)]
-    b <- y@intdata[as.character(annotation(ygi)$id), as.character(annotation(xgi)$id)]
-  
+    xgi <- subsetByOverlaps(x@xgi, y@xgi, type="equal")
+    ygi <- subsetByOverlaps(x@ygi, y@ygi, type="equal")
+ 
+    a <- x@intdata[id(ygi),id(xgi)]
+    b <- y@intdata[id(ygi), id(xgi)]
     a[which(a==0 | b==0)]<-NA
     b[which(a==0 | b==0)]<-NA
-
     data <- a-b
-    new("HTCexp", data, ygi , xgi)
+
+    HTCexp(data, xgi , ygi)
 })
 
 
@@ -374,9 +439,9 @@ setMethod(f="x_intervals", signature(x="HTCexp"), definition=function(x){
                 return(x@xgi)
         })
 
-setReplaceMethod(f="x_intervals", signature(x="HTCexp",value="Genome_intervals"),function(x, value) {
+setReplaceMethod(f="x_intervals", signature(x="HTCexp",value="GRanges"),function(x, value) {
     x@xgi <- value
-    x@intdata<-x@intdata[,as.character(x@xgi$id)]
+    x@intdata<-x@intdata[,id(x@xgi)]
     return (x)
 })
 
@@ -386,8 +451,8 @@ setMethod(f="y_intervals", signature(x="HTCexp"), definition=function(x){
                 return(x@ygi)
         })
 
-setReplaceMethod(f="y_intervals", signature(x="HTCexp",value="Genome_intervals"),function(x, value) {
+setReplaceMethod(f="y_intervals", signature(x="HTCexp",value="GRanges"),function(x, value) {
     x@ygi <- value
-    x@intdata<-x@intdata[as.character(x@ygi$id),]
+    x@intdata<-x@intdata[id(x@ygi),]
     return (x)
 })

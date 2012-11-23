@@ -9,6 +9,7 @@
 \usepackage{geometry}
 \usepackage{color}
 \definecolor{darkblue}{rgb}{0.0,0.0,0.75}
+\definecolor{mygray}{gray}{0.90}
 \usepackage[%
 baseurl={http://www.bioconductor.org},%
 pdftitle={HiTC - High Throughput analysis of 'C' experiments},%
@@ -66,6 +67,13 @@ N. Servant
 %\tableofcontents
 %\newpage
 
+\begin{center}
+    \fcolorbox{black}{mygray}{
+     \begin{minipage}[c]{1\textwidth}
+      \textbf{HiTC - Major Release}\\\\ Since version 1.3.1 the HiTC package now depends on the \Rpackage{IRanges} and \Rpackage{GenomicRanges} packages. All previous \Rclass{GenomeIntervals} objects and associated functions are now replaced by \Rclass{GRanges} objects. The main reason of this change is an increase of the inter-operablility of this package with the rest of the BioConductor project.
+     \end{minipage}}
+\end{center}
+
 
 \section{Introduction}
 Chromosome Capture Conformation (3C) was first introduced by \cite{Dekker2002a} ten years ago. The 3C technique aims in detecting physical contact between pairs of genomic loci and is now widely used to detect intrachromosomal (cis) and interchromosomal (trans) interactions between genes and regulatory elements. The development of the 3C-based techniques has changed our vision of the nulcear oragnization  (see \cite{Wit2012} for a review).\\
@@ -74,7 +82,7 @@ With the development of high throughput analyses, and in particular second-gener
 While the use of high-throuput 'C' techniques is expected to increase in the coming years, it also creates some new statistical and bioinformatics challenges. In this way, publicly available bioinformatics tools, as well as clear analysis strategy are still lacking. The \href{http://my5c.umassmed.edu/welcome/welcome.php}{my5C web browser} was proposed by \cite{Lajoie2009} to visualize, transform and analyze 5C data. However, the my5C webtool is targeted to end-users and biologists to prepare their 5C experiments and to handle their data but is not dedicated
 to the development of new statistical algorithms.
 
-Here we present the \Rpackage{HiTC} R package which has been developed to offer a bioinformatic environment to explore high-troughput 'C' data. One advantage of this package is that it operates within the open source Bioconductor framework, and thus, offers new opportunities for futur development in this field. The current version of the package provides teh basic visualization, transformation and normalization functions described in \cite{Lajoie2009}, but alos some new functionnalities such as data import, new visualization functions, annotation and other data transformation. Our goal is also to provide a flexible basis for further development, aiming at the integration of new analysis algorithm that are being developped (\cite{Yaffe2011})
+The \Rpackage{HiTC} R package has been developed to offer a bioinformatic environment to explore high-troughput 'C' data. One advantage of this package is that it operates within the open source Bioconductor framework, and thus, offers new opportunities for futur development in this field. The current version of the package provides the basic visualization, transformation and normalization functions described in \cite{Lajoie2009}, but also some new functionnalities such as data import, new visualization functions, annotation and other data transformation. Our goal is also to provide a flexible basis for further development, aiming at the integration of new analysis algorithm that are being developped (\cite{Yaffe2011})
 
 If you use \textit{HiTC} for analyzing your data, please cite:
 \begin{itemize}
@@ -83,14 +91,14 @@ If you use \textit{HiTC} for analyzing your data, please cite:
 
 \section{Getting started}
 
-This document briefly describes how to use the \Rpackage{HiTC} R package. The package is built on the functionality of Bioconductor packages such as \Rpackage{Girafe} and \Rpackage{GenomeIntervals}, and provides a new class and methods to handle with high-throughput 'C' data. It is especially suited to 5C and Hi-C data handling, but can also in principle be used for 4C, though specific needs of 4C users may be best met by \Rpackage{r3Cseq} R package.\\
+This document briefly describes how to use the \Rpackage{HiTC} R package. The package is built on the functionality of Bioconductor packages such as \Rpackage{IRanges} and \Rpackage{GenomicRanges}, and provides a new class and methods to handle with high-throughput 'C' data. It is especially suited to 5C and Hi-C data handling, but can also in principle be used for 4C, though specific needs of 4C users may be best met by \Rpackage{r3Cseq} R package.\\
 Even if the 5C and Hi-C approaches are derived from the same 3C technique, strong differences in their protocol can also be noticed. While 5C enables analysis of interactions between many loci, it also required an extensive number of primers, which is not suitable for a genome-wide analysis as the Hi-C. Thus, the pre-processing of these two types of data is totally different with, for instance, two different mapping strategies.
 
 The current version of the \Rpackage{HiTC} package was developped to work on processed 5C, Hi-C or other high-throughput 3C data.\\
 The \Rclass{HTCexp} (High-Throughput 'C' experiment) object was defined as :
 \begin{itemize}
 \item An interaction map (i.e a \Rclass{matrix})
-\item Two \Rclass{Genome\_intervals} objects that describe each features of the interaction matrix, respectively, the x (i.e. columns) and y (i.e. rows) labels of the interaction matrix. Basically, in the context of 5C, these objects will be the forward and reverse primers, and for the Hi-C the binned genome intervals.
+\item Two \Rclass{GRanges} objects that describe each features of the interaction matrix, respectively, the x (i.e. columns) and y (i.e. rows) labels of the interaction matrix. Basically, in the context of 5C, these objects will be the forward and reverse primers, and for the Hi-C the binned genomic intervals.
 \end{itemize}
 <<head>>=
 library(HiTC)
@@ -101,21 +109,19 @@ Whereas a 5C dataset can be composed of a single cis interaction map, a complete
 
 \section{Load Data}
 \subsection{A simple example}
-\Rclass{HTCexp} objects can be easily created using the \Rmethod{HTCexp} method. The function \Rmethod{readBED} is also proposed to load multi-track \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files.\\
+\Rclass{HTCexp} objects can be easily created using the \Rmethod{HTCexp} method.\\
 
 <<importSimple>>=
 ## Two genome intervals objects with primers informations
-reverse <- new("Genome_intervals", 
-               matrix(c(98831149, 98837507, 98834145, 98840771), ncol = 2), 
-               closed=c(TRUE, TRUE), 
-               annotation=data.frame(seq_name=c("chr1","chr1"), 
-               id=c("REV_2","REV_4"), inter_base=FALSE))
+reverse <- GRanges(seqnames=c("chr1","chr1"), 
+                   ranges = IRanges(start=c(98831149, 98837507), 
+                   end=c(98834145, 98840771), 
+                   names=c("REV_2","REV_4")))
 
-forward <- new("Genome_intervals", 
-               matrix(c(98834146, 98840772, 98837506, 98841227), ncol = 2), 
-               closed=c(TRUE, TRUE), 
-               annotation=data.frame(seq_name=c("chr1","chr1"), 
-               id=c("FOR_3","FOR_5"), inter_base=FALSE))
+forward <- GRanges(seqnames=c("chr1","chr1"), 
+                   ranges = IRanges(start=c(98834146, 98840772), 
+                   end=c(98837506, 98841227), 
+                   names=c("FOR_3","FOR_5")))
 
 ## A matrix of interaction counts
 interac <- matrix(c(8463, 7144, 2494, 8310), ncol=2)
@@ -123,7 +129,7 @@ colnames(interac) <- c("REV_2","REV_4")
 rownames(interac) <- c("FOR_3","FOR_5")
 
 z <- HTCexp(interac, xgi=reverse, ygi=forward)
-show(z)
+detail(z)
 @ 
 
 \subsection{Import/Export data from the my5C web tool}
@@ -206,12 +212,12 @@ To produce an interaction map, the genomic range of the display should be divide
 
 <<bin5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Focus on a subset chrX:100295000:102250000
-E14subset<-extractRegion(E14$chrXchrX, 
+E14subset<-extractRegion(E14$chrXchrX, c(1,2),
                          chr="chrX", from=100295000, to=102250000)
 
 ## Binning of 5C interaction map
-E14.subset.binned <- binningC(E14subset, binsize=100000, step=3)
-mapC(E14.subset.binned)
+E14subset.binned <- binningC(E14subset, binsize=100000, step=3)
+mapC(E14subset.binned)
 @
 \myincfig{HiTC-bin5C}{0.5\textwidth}{Binned 5C interaction map of chrX:100295000-102250000.}
 
@@ -239,7 +245,7 @@ graphics.off()
 % mapC(E14.exp$exp.interaction)
 % @
 
-Interaction frequencies can be then normalized for distance by dividing the observed value by the expected value (\Rmethod{normPerExpected}). The variability between the interaction counts and the genomic distance between pairs of loci can be calculated if specified. These normalization methods can be easily applied using the methods \Rmethod{normPerReads} and \Rmethod{normPerExpected} (see Figure~\ref{HiTC-norm5Cexp}).
+Interaction frequencies can be then normalized for distance by dividing the observed value by the expected value (\Rmethod{normPerExpected}). The variability between the interaction counts and the genomic distance between pairs of loci can be calculated if specified. These normalization methods can be easily applied using the methods \Rmethod{normPerReads} and \Rmethod{normPerExpected}.
 
 
 % <<norm5Cexpnorm, eval=TRUE, echo=TRUE, fig=TRUE>>=
@@ -248,25 +254,27 @@ Interaction frequencies can be then normalized for distance by dividing the obse
 % mapC(E14npe.binned, log.data=TRUE)
 % @
 <<norm5Cznorm, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
-E14subsetz <- normPerExpected(E14subset, stdev=TRUE)
-E14subsetz.binned <- binningC(E14subsetz, binsize=50000, step=3)
-mapC(E14subsetz.binned)
+E14norm <- normPerExpected(E14subset, stdev=TRUE)
+E14norm.binned <- binningC(E14norm, binsize=50000, step=3)
+mapC(E14norm.binned)
 @
 \myincfig{HiTC-norm5Cznorm}{0.5\textwidth}{Interaction map of data normalized from the background level of interactions.}
 
 \newpage
 \section{Annotation of Interaction Maps}
 The \Rpackage{HiTC} package contains functions for visualizing genomic regions with interaction maps (see Figure~\ref{HiTC-annot5C}).
-The annotation objects have to belong to the \Rclass{Genome\_intervals} class, cand can be loaded from \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files.
-
+The annotation objects have to belong to the \Rclass{GRanges} class, cand can be loaded from \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files using the \Rpackage{rtracklayer} package.
 For instance, the following example displays the CTCF enriched regions (\cite{Kagey2010}) and RefSeq genes over the interaction map of the E14 sample.
 
 <<annot5C, eval=TRUE, echo=TRUE, print=FALSE, fig=TRUE, width=7, height=7, include=FALSE>>=
 E14.binned <- binningC(E14$chrXchrX, binsize=100000, step=3)
-Refgene <- readBED(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"))
-CTCF <- readBED(file.path(exDir,"CTCF_chrX_98892125_102969775.bed"))
+require(rtracklayer)
+gene <- import(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"), 
+               format="bed", asRangedData=FALSE)
+ctcf <- import(file.path(exDir,"CTCF_chrX_98892125_102969775.bed"), 
+               format="bed", asRangedData=FALSE)
 mapC(E14.binned, 
-     giblocs=list(RefSeqGene=Refgene$Refseq_Gene, CTCF=CTCF$CTCF), 
+     giblocs=list(RefSeqGene=gene, CTCF=ctcf), 
      maxrange=10, view=2)
 @ 
 \myincfig{HiTC-annot5C}{0.6\textwidth}{Visualization of interaction map and genomic annotations.}
@@ -278,7 +286,7 @@ mapC(E14.binned,
 <<comp5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 MEF.binned <- binningC(MEF$chrXchrX, binsize=100000, step=3)
 mapC(E14.binned, MEF.binned,
-     giblocs=list(RefSeqGene=Refgene$Refseq_Gene, CTCF=CTCF$CTCF), 
+     giblocs=list(RefSeqGene=gene, CTCF=ctcf), 
      maxrange=10)
 @ 
 \myincfig{HiTC-comp5C}{0.7\textwidth}{Comparison of two binned interaction maps, and visualization with genomic annotations.}
@@ -309,7 +317,8 @@ mapC(hiCnorm, log.data=TRUE)
 
 <<mapCorhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Correlation Map of Chromosome 14
-mapC(cor(intdata(hiCnorm)), maxrange=1, minrange=-1, 
+intdata(hiCnorm) <- cor(intdata(hiCnorm))
+mapC(hiCnorm, maxrange=1, minrange=-1, 
      col.pos=c("black", NA, "red"), col.neg=c("black",NA, "blue"))
 @ 
 \myincfig{HiTC-mapCorhic}{0.5\textwidth}{Correlation map of chromosome 14}
@@ -326,7 +335,7 @@ toLatex(sessionInfo(), locale=FALSE)
 @
 
 \section*{Acknowledgements}
-Many thanks to Joern Toedling and Pierre Gestraud for useful discussion and help in developping this R package. Special thanks to Julien Gagneur and Joern Toedling for writing the \Rpackage{genomeIntervals} and \Rpackage{girafe} packages.
+Many thanks to Joern Toedling and Pierre Gestraud for useful discussion and help in developping this R package.
 
 \small
 %%% BIBLIOGRAPHY STARTS HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

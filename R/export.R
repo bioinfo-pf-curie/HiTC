@@ -13,22 +13,14 @@ exportC <- function(x, file){
     stopifnot(inherits(x,"HTCexp"))
 
     xgi <- x_intervals(x)
-    ygi <- x_intervals(x)
+    ygi <- y_intervals(x)
 
-    data <- as.data.frame(matrix(NA, ncol=11, nrow=nrow(xgi)*nrow(ygi)))
+    data <- as.data.frame(matrix(NA, ncol=11, nrow=length(xgi)*length(ygi)))
     colnames(data) <- c("chrA","startA","endA","nameA","strandA","chrB","startB","endB","nameB","strandB","countAB")
 
-    
-    data[,1:10] <- do.call("rbind", lapply(1:nrow(xgi), function(i){
-        sA <- "."
-        if (is.element("strand", names(annotation(xgi)))){
-            sA <- annotation(xgi[i,])$strand
-        }
-        sB <- rep(".", nrow(ygi))
-        if (is.element("strand", names(annotation(ygi)))){
-            sB <- annotation(ygi)$strand
-        }
-        data.frame(seq_name(xgi)[i], xgi[i,], id(xgi)[i], sA, seq_name(ygi), ygi, id(ygi), sB)
+    data[,1:10] <- do.call("rbind", lapply(1:length(xgi), function(i){
+        data.frame(as.vector(seqnames(xgi))[i], start(xgi)[i], end(xgi)[i], id(xgi)[i], as.vector(strand(xgi))[i],
+                   as.vector(seqnames(ygi)), start(ygi), end(ygi), id(ygi), as.vector(strand(ygi)))
     }))
     data[,11] <- as.vector(intdata(x))
 

@@ -1,4 +1,37 @@
 ***********************************
+CHANGES IN CURRENT DEV VERSION
+
+NEW FEATURES
+
+   o MAJOR RELEASE : replace all GenomeIntervals objects by GRanges ones in order to improve the compatibility with other HT BioC packages
+
+SIGNIFICANT USER-VISIBLE CHANGES
+ 
+   o The ExtractRegion method has a new MARGIN parameter. The idea is the same than for any apply function. If MARGIN is equal to 1 (resp. 2, resp. c(1,2)), the region is extracted from the 'x' (resp. 'y', resp. both) intervals 
+   
+   o Plot function. When two HTCexp objects are plot together, only the intersection of the 'x' and 'y' intervals are used.
+
+   o The 'range' method now returns a GRanges object
+
+   o Changes in the data windowing for the extreme bins
+
+   o mapC requires a HTCexp object only. Objects from the matrix class are no longer allowed
+
+DEPRECATED AND DEFUNCT
+
+   o seq_name is now deprecated
+
+BUG FIXES
+
+   o exportC. Bug fixed in bin coordinates
+
+   o CQC. Bug fixed with NA values
+
+   o mapC. Bug fixed in the visualization of annotation features. Select the annotation in the same chromosome space before plotting.
+
+   o mapC. Bug fixed in the visualization of count values for interchromosomal data 
+
+***********************************
 CHANGES IN VERSION 1.1.3
 
 NEW FEATURES

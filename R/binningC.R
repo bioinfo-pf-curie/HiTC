@@ -26,76 +26,65 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
     ygi <- y_intervals(x)
     xgi <- x_intervals(x)
     mat.data <- intdata(x)
-
-    xmin=min(xgi[,1])
-    xmax=max(xgi[,2])
-    ymin=min(ygi[,1])
-    ymax=max(ygi[,2])
+    xmin <- start(range(xgi))
+    xmax <- end(range(xgi))
+    ymin <- start(range(ygi))
+    ymax <- end(range(ygi))
 
     ## For cis data - set the same ranges
     if (isIntraChrom(x)){
-        xmin=min(c(ygi[,1],xgi[,1]))
-        ymin=min(c(ygi[,1],xgi[,1]))
-        xmax=max(c(xgi[,2], ygi[,2]))
-        ymax=max(c(xgi[,2], ygi[,2]))
+        xmin <- ymin <- start(range(c(xgi,ygi), ignore.strand=TRUE))
+        xmax <- ymax <- end(range(c(xgi,ygi), ignore.strand=TRUE))
     }
        
     x.nb.bin <- floor((xmax - xmin)/binsize)
     y.nb.bin <- floor((ymax - ymin)/binsize)
      
     if (bin.adjust){
-        x.size.bin <- floor(binsize+((xmax-xmin)-(x.nb.bin*binsize))/x.nb.bin)
-        y.size.bin <- floor(binsize+((ymax-ymin)-(y.nb.bin*binsize))/y.nb.bin)
+        x.size.bin <- ceiling(binsize+((xmax-xmin+1)-(x.nb.bin*binsize))/x.nb.bin)
+        y.size.bin <- ceiling(binsize+((ymax-ymin+1)-(y.nb.bin*binsize))/y.nb.bin)
     } else{ 
         x.size.bin=binsize
         y.size.bin=binsize
     }
 
     x.pas <- seq(from=xmin, to=xmax, by=floor(x.size.bin/step))
+    x.pas <- x.pas[1:(length(x.pas)-(step-1))]
     y.pas <- seq(from=ymin, to=ymax, by=floor(y.size.bin/step))
+    y.pas <- y.pas[1:(length(y.pas)-(step-1))]
+
     message("Bin size 'xgi' =",floor(x.size.bin/step)*step," [",step,"x",floor(x.size.bin/step),"]", sep="")
     message("Bin size 'ygi' =",floor(y.size.bin/step)*step," [",step,"x",floor(y.size.bin/step),"]", sep="")
 
+    x.nb.bin <- length(x.pas)
+    y.nb.bin <- length(y.pas)
     
-    x.nb.bin <- length(x.pas)-1
-    y.nb.bin <- length(y.pas)-1
-    
-    if (x.pas[length(x.pas)]<xmax){
-        x.pas<-c(x.pas, xmax)
-        x.nb.bin <- x.nb.bin+1
-    }
-    if (y.pas[length(y.pas)]<ymax){
-        y.pas<-c(y.pas, ymax)
-        y.nb.bin <- y.nb.bin+1
-    }
-
-    ## Genome Intervals classes
+    ## Unique Primer Assignment
     if (upa){
-        ygi[,1] <-ygi[,2] <- round(apply(ygi[,c(1,2)],1, mean))
-        xgi[,1] <-xgi[,2] <- round(apply(xgi[,c(1,2)],1, mean))
+        start(ranges(xgi)) <- end(ranges(xgi)) <- mean(ranges(xgi))
+        start(ranges(ygi)) <- end(ranges(ygi)) <- mean(ranges(ygi))
     }
 
     x.se.bin <- matrix(NA, ncol=2, nrow=x.nb.bin, byrow=TRUE)
-    x.se.bin[,1] <- x.pas[-length(x.pas)]
-    x.se.bin[,2] <- c(x.pas[-c(1:step)],rep(x.pas[length(x.pas)], step-1))
+    x.se.bin[,1] <- x.pas
+    x.se.bin[,2] <- ifelse(x.pas+x.size.bin>xmax,xmax,x.pas+x.size.bin)
         
     y.se.bin <- matrix(NA, ncol=2, nrow=y.nb.bin, byrow=TRUE)
-    y.se.bin[,1] <- y.pas[-length(y.pas)]
-    y.se.bin[,2] <- c(y.pas[-c(1:step)],rep(y.pas[length(y.pas)], step-1))
-
-    x.bin.set <- new("Genome_intervals",x.se.bin, closed=c(TRUE,TRUE), annotation=data.frame(seq_name=rep(unique(seq_name(xgi)),x.nb.bin), inter_base=FALSE, strand="+", id=paste(unique(seq_name(xgi)),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")))
-    y.bin.set <- new("Genome_intervals",y.se.bin, closed=c(TRUE,TRUE), annotation=data.frame(seq_name=rep(unique(seq_name(ygi)),y.nb.bin), inter_base=FALSE, strand="+", id=paste(unique(seq_name(ygi)),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")))
+    y.se.bin[,1] <- y.pas
+    y.se.bin[,2] <- ifelse(y.pas+y.size.bin>ymax,ymax,y.pas+y.size.bin)
+ 
+    x.bin.set <- GRanges(seqnames=chromosome(xgi), ranges = IRanges(start=x.se.bin[,1], end=x.se.bin[,2], names=paste(chromosome(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")))
+    y.bin.set <- GRanges(seqnames=chromosome(ygi), ranges = IRanges(start=y.se.bin[,1], end=y.se.bin[,2], names=paste(chromosome(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")))
 
     ## Overlap with both xgi and ygi (for 5C)
-    xx.bin.over <- interval_overlap(x.bin.set, xgi)
-    xy.bin.over <- interval_overlap(x.bin.set, ygi)
-    yy.bin.over <- interval_overlap(y.bin.set, ygi)
-    yx.bin.over <- interval_overlap(y.bin.set, xgi)
-
+    xx.bin.over <- as.list(findOverlaps(x.bin.set, xgi))
+    xy.bin.over <- as.list(findOverlaps(x.bin.set, ygi))
+    yy.bin.over <- as.list(findOverlaps(y.bin.set, ygi))
+    yx.bin.over <- as.list(findOverlaps(y.bin.set, xgi))
     
     mat.bin <- matrix(NA, ncol=x.nb.bin, nrow=y.nb.bin)
-    colnames(mat.bin) <- paste(unique(seq_name(xgi)),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
-    rownames(mat.bin) <- paste(unique(seq_name(ygi)),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
+    colnames(mat.bin) <- paste(chromosome(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
+    rownames(mat.bin) <- paste(chromosome(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
 
     for (i in 1:(y.nb.bin)){
         fA <-yy.bin.over[[i]]
@@ -175,18 +164,19 @@ setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method="mean", use.zero=TRUE
     x.ygi <- y_intervals(x)
     x.xgi <- x_intervals(x)
     mat.data <- intdata(x)
-    
-    ##Genome Intervals classes
+
+
+    ## Unique Primer Assignment
     if (upa){
-        x.ygi[,1] <- x.ygi[,2] <- round(apply(x.ygi[,c(1,2)],1, mean))
-        x.xgi[,1] <- x.xgi[,2] <- round(apply(x.xgi[,c(1,2)],1, mean))
+        start(ranges(x.xgi)) <- end(ranges(x.xgi)) <- mean(ranges(x.xgi))
+        start(ranges(x.ygi)) <- end(ranges(x.ygi)) <- mean(ranges(x.ygi))
     }
 
-    x.nb.bin <- dim(xgi)[1]
-    y.nb.bin <- dim(ygi)[1]
+    x.nb.bin <- length(xgi)
+    y.nb.bin <- length(ygi)
     
-    bin.over.y <- interval_overlap(ygi, x.ygi)
-    bin.over.x <- interval_overlap(xgi, x.xgi)
+    bin.over.y <- as.list(findOverlaps(ygi, x.ygi))
+    bin.over.x <- as.list(findOverlaps(xgi, x.xgi))
   
     mat.bin <- matrix(NA, ncol=x.nb.bin, nrow=y.nb.bin)
     colnames(mat.bin) <- id(xgi)

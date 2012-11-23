@@ -1,9 +1,9 @@
 \name{removeIntervals}
 \Rdversion{1.1}
 \alias{removeIntervals}
-\title{Remove intervals from HTC object}
+\title{Remove intervals from HTCexp object}
 \description{
-  Remove primers intervals from HTC object
+  Remove primers intervals from HTCexp object
 }
 \usage{removeIntervals(x, ids)}
 \arguments{
@@ -14,7 +14,7 @@
   A \code{HTCexp} object without the discarded intervals
 }
 \author{N. Servant}
-\seealso{\code{\link[genomeIntervals]{Genome_intervals-class}}}
+\seealso{\code{\link[GenomicRanges]{GRanges-class}}}
 \examples{
 data(Nora_5C)
 

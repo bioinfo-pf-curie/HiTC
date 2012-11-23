@@ -11,14 +11,14 @@
 }
 
 \details{
-  If \eqn{A} and \eqn{B} are the two sets of primers and
-  \eqn{s} and \eqn{e}, the start and end of a primer, the distance is calculated as :\cr
+  If \eqn{A} and \eqn{B} are the two sets of intervals and
+  \eqn{s} and \eqn{e}, the start and end of an interval, the distance is calculated as :\cr
   \deqn{\min(|A_e - B_s|, |A_s - B_e|)}
     Only intrachromsomal interaction maps can be use for this operation.
 }
 
 \value{
-  A matrix of distances between primers
+  A matrix of distances between genomic intervals
 }
 \seealso{\code{\link{HTCexp-class}}}
 \author{N. Servant}

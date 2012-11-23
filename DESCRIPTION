@@ -2,12 +2,20 @@ Package: HiTC
 Type: Package
 Title: High Throughput Chromosome Conformation Capture analysis
 Description: The HiTC package was developed to explore high-throughput 'C' data such as 5C or Hi-C.
+<<<<<<< .mine
+Version: 1.3.1
+Date: 2012-11-02
+Depends: R (>= 2.10.0), methods, GenomicRanges, IRanges, RColorBrewer
+Imports: methods, Biobase, Biostrings, graphics, grDevices, rtracklayer
+Suggests: rtracklayer
+=======
 Version: 1.3.0
 Date: 2012-09-21
 Depends: R (>= 2.10.0), methods, girafe (>= 1.3.1), genomeIntervals (>=
         1.7.1), RColorBrewer
 Imports: methods, Biobase, Biostrings, graphics, grDevices, ShortRead
 Suggests:
+>>>>>>> .r71428
 Author: Nicolas Servant
 Maintainer: Nicolas Servant <nicolas.servant@curie.fr>
 License: Artistic-2.0
@@ -15,4 +23,5 @@ Collate: AllGenerics.R HTCexp.R qualityControl.R mapC.R normalize.R
         binningC.R import.R export.R deprecated.R
 LazyLoad: yes
 biocViews: Sequencing, HighThroughputSequencing
-Packaged: 2012-03-20 11:34:55 UTC; nservant
+Packaged: 2012-10-02 05:31:29 UTC; biocbuild
+InstallableEverywhere: yes
