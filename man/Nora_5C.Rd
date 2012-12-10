@@ -12,8 +12,8 @@ HiTC - 5C data
 }
 \usage{data(Nora_5C)}
 \format{
-  Contains two list of \code{HTCexp} objects (E14 and MEF). Data from the
-  chromosome X are available.
+  Contains two \code{HTClist} objects (E14 and MEF). Each of them
+  containing the ChrX intrachromosomal maps as a \code{HTCexp} object.
 }
 \details{
 This 5C dataset published by Nora et al

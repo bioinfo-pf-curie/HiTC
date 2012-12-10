@@ -4,32 +4,23 @@
 ## Export HiTC object to standard format
 ##
 ## x = an object of class HTCexp
-## con = name of file to create
+## con = basename of files to create
 ##
-## chrA,startA,endA,nameA,strandA,chrB,startB,endB,nameB,strandB,countAB
 ###################################
-## Export Method
-exportC <- function(x, file){
+exportC <- function(x, file="HiTCexport"){
     stopifnot(inherits(x,"HTCexp"))
 
     xgi <- x_intervals(x)
     ygi <- y_intervals(x)
 
-    data <- as.data.frame(matrix(NA, ncol=11, nrow=length(xgi)*length(ygi)))
-    colnames(data) <- c("chrA","startA","endA","nameA","strandA","chrB","startB","endB","nameB","strandB","countAB")
+    message("Export genomic ranges as BED files ...")
+    export(xgi, con=paste(file,"_xgi.bed", sep=""), format="bed")
+    export(ygi, con=paste(file,"_ygi.bed", sep=""), format="bed")
 
-    data[,1:10] <- do.call("rbind", lapply(1:length(xgi), function(i){
-        data.frame(as.vector(seqnames(xgi))[i], start(xgi)[i], end(xgi)[i], id(xgi)[i], as.vector(strand(xgi))[i],
-                   as.vector(seqnames(ygi)), start(ygi), end(ygi), id(ygi), as.vector(strand(ygi)))
-    }))
-    data[,11] <- as.vector(intdata(x))
-
-    write("##HiTC data export", file=file)
-    write(paste("##",date(), sep=""),file=file, append=TRUE)
-    write("##chrA,startA,endA,nameA,strandA,chrB,startB,endB,nameB,strandB,countAB", file=file, append=TRUE)
-    suppressWarnings(write.table(data, file=file, quote=FALSE, sep=",", col.names=FALSE, row.names=FALSE, append=TRUE))
-}
-
+    message("Export interaction maps as matrix file ...")
+    data2export <- t(intdata(x))
+    write.table(data2export, file=paste(file,".mat", sep=""), quote=FALSE, sep="\t")
+}##exportC
 
 
 

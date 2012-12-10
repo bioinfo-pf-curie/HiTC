@@ -1,20 +1,15 @@
 ##Generics
-setGeneric(name="chromosome", def=function(x) standardGeneric("chromosome"))
-
 setGeneric(name="intdata", def=function(x) standardGeneric("intdata"))
 setGeneric(name="intdata<-", def=function(x,value) standardGeneric("intdata<-"))
 
 setGeneric(name="id", def=function(x) standardGeneric("id"))
 setGeneric(name="id<-", def=function(x,value) standardGeneric("id<-"))
 
-setGeneric(name="seqlevels", def=function(x) standardGeneric("seqlevels"))
-##setGeneric(name="export", def=function(x,con) standardGeneric("export"))
-
 setGeneric(name="y_intervals", def=function(x) standardGeneric("y_intervals"))
 setGeneric(name="y_intervals<-", def=function(x, value) standardGeneric("y_intervals<-"))
-
 setGeneric(name="x_intervals", def=function(x) standardGeneric("x_intervals"))
 setGeneric(name="x_intervals<-", def=function(x, value) standardGeneric("x_intervals<-"))
+setGeneric(name="xy_intervals", def=function(x) standardGeneric("xy_intervals"))
 
 setGeneric(name="isBinned", def=function(x) standardGeneric("isBinned"))
 setGeneric(name="isIntraChrom", def=function(x) standardGeneric("isIntraChrom"))
@@ -26,7 +21,11 @@ setGeneric(name="normPerReads", def=function(x) standardGeneric("normPerReads"))
 setGeneric(name="normPerExpected", def=function(x, ...) standardGeneric("normPerExpected"))
 setGeneric(name="normPerTrans", def=function(x, xtrans, ytrans, ...) standardGeneric("normPerTrans"))
 
+setGeneric(name="mapC", def=function(x, ...) standardGeneric("mapC"))
+setGeneric(name="mapC", def=function(x, y, ...) standardGeneric("mapC"))
 
-## Deprecated
+## Deprecated/Defunct
 setGeneric(name="normPerZscore", def=function(x, ...) standardGeneric("normPerZscore"))
+setGeneric(name="seq_name", def=function(x,...) standardGeneric("seq_name"))
+
 

@@ -11,21 +11,9 @@ import("IRanges")
 
 ##Package used in HiTC
 importFrom("graphics", "plot", "image", "abline", "axis", "text")
-
 importFrom("grDevices", "col2rgb")
-
 importMethodsFrom("Biostrings", "detail")
-##importMethodsFrom("ShortRead", "id")
-
-##importMethodsFrom("girafe", "reduce", "plot", "export", "id<-")
-##importFrom("girafe", "fracOverlap")
-
-##importClassesFrom("genomeIntervals", "Genome_intervals", "Genome_intervals_stranded")
-##importMethodsFrom("genomeIntervals", "strand", "strand<-", "seq_name", "seq_name<-")
-#importClassesFrom("GenomicRanges", "GRanges")
-#importMethodsFrom("GenomicRanges", "strand", "strand<-", "seqlevels")
-
-importMethodsFrom("rtracklayer", "import")
+importMethodsFrom("rtracklayer", "import", "export")
 
 
 #############################
@@ -34,26 +22,31 @@ importMethodsFrom("rtracklayer", "import")
 ##
 #############################
 ##Export functions and generics
-export("binningC", "CQC", "discretize", "exportC", "export.my5C", "extractRegion",  "getExpectedCounts", "HTCexp", "intervalsDist", "importC", "import.my5C", "mapC", "plot", "removeIntervals", "setIntervalScale", "show")
-
-##"readBED"
-
-##Export classes
-exportClasses("HTCexp")
-
-##Export Methods
-exportMethods("detail","divide", "intdata", "intdata<-", "isBinned", "isIntraChrom", "y_intervals", "y_intervals<-", "id", "id<-", "x_intervals", "x_intervals<-", "normPerReads", "normPerExpected", "normPerTrans", "plot", "strand", "substract")
-
-##"seqlevels"
-
-
-
-##Export functions and generics
-##export("binningC", "discretize", "exportC", "export.my5C", "extractRegion", "getExpectedCounts", "HTCexp", "importC", "import.my5C", "mapC", "plot", "intervalsDist", "CQC", "readBED", "removeIntervals", "setIntervalScale", "show")
+export(
+       "binningC",
+       "CQC", "intervalsDist",
+       "discretize",
+       "exportC", "export.my5C", "importC", "import.my5C",
+       "extractRegion",
+       "getExpectedCounts",
+       "HTCexp","HTClist",
+       "removeIntervals", "setIntervalScale")
 
 ##Export classes
-##exportClasses("HTCexp")
+exportClasses("HTCexp", "HTClist")
 
 ##Export Methods
-##exportMethods("detail","divide", "intdata", "intdata<-", "isBinned", "isIntraChrom", "y_intervals", "y_intervals<-", "id", "id<-", "normPerReads", "normPerExpected", "plot", "x_intervals", "x_intervals<-", "seq_name", "strand", "substract")
+exportMethods(
+              "as.list",
+              "detail","show",
+              "intdata", "intdata<-",
+              "isBinned", "isIntraChrom",
+              "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
+              "id",
+              "mapC","plot",
+              "normPerReads", "normPerExpected", "normPerTrans",
+              "range", "ranges",
+              "seqlevels",
+              "substract", "divide"
+)
 

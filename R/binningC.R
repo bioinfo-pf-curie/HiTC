@@ -1,4 +1,4 @@
-###################################
+##################################
 ## binningC
 ##
 ## Windowing of 'C' data
@@ -15,7 +15,7 @@
 
 
 binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="median", use.zero=TRUE, step=1){
-    
+
     stopifnot(inherits(x,"HTCexp"))
 
     met.agglo <- c("mean", "median", "sum")
@@ -73,8 +73,8 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
     y.se.bin[,1] <- y.pas
     y.se.bin[,2] <- ifelse(y.pas+y.size.bin>ymax,ymax,y.pas+y.size.bin)
  
-    x.bin.set <- GRanges(seqnames=chromosome(xgi), ranges = IRanges(start=x.se.bin[,1], end=x.se.bin[,2], names=paste(chromosome(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")))
-    y.bin.set <- GRanges(seqnames=chromosome(ygi), ranges = IRanges(start=y.se.bin[,1], end=y.se.bin[,2], names=paste(chromosome(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")))
+    x.bin.set <- GRanges(seqnames=seqlevels(xgi), ranges = IRanges(start=x.se.bin[,1], end=x.se.bin[,2], names=paste(seqlevels(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")))
+    y.bin.set <- GRanges(seqnames=seqlevels(ygi), ranges = IRanges(start=y.se.bin[,1], end=y.se.bin[,2], names=paste(seqlevels(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")))
 
     ## Overlap with both xgi and ygi (for 5C)
     xx.bin.over <- as.list(findOverlaps(x.bin.set, xgi))
@@ -83,8 +83,8 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
     yx.bin.over <- as.list(findOverlaps(y.bin.set, xgi))
     
     mat.bin <- matrix(NA, ncol=x.nb.bin, nrow=y.nb.bin)
-    colnames(mat.bin) <- paste(chromosome(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
-    rownames(mat.bin) <- paste(chromosome(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
+    colnames(mat.bin) <- paste(seqlevels(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
+    rownames(mat.bin) <- paste(seqlevels(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
 
     for (i in 1:(y.nb.bin)){
         fA <-yy.bin.over[[i]]
@@ -94,19 +94,6 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
             fB <-xy.bin.over[[j]]
             rB <-xx.bin.over[[j]]
 
-            #print ("--------------------")
-            #print (bin.set[i,])
-            #print ("---------fa--------")
-            #print (id(ygi)[fA])
-            #print ("---------ra--------")
-            #print (id(xgi)[rA])
-            #print ("--------------------")
-            #print (bin.set[j,])
-            #print ("---------fb--------")
-            #print (id(xgi)[fB])
-            #print ("---------rb--------")
-            #print (id(ygi)[rB])
-            
             if ((length(fA>0) || length(rA)>0) && (length(fB>0) || length(rB)>0)){
                 if (method=="sum"){
                     mat.bin[i,j] <- sum(mat.data[fA,rB], na.rm=TRUE)+sum(mat.data[fB,rA], na.rm=TRUE)

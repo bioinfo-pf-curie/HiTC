@@ -1,5 +1,28 @@
 ***********************************
-CHANGES IN CURRENT DEV VERSION
+CHANGES IN VERSION 1.3.2
+
+NEW FEATURES
+
+   o New visualization for HTClist objects
+
+   o New methods for HTClist objects
+
+   o New HTClist class to manage list of HTCexp object (basically Hi-C data)
+
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Update of all man pages
+
+   o Update of the Nora_5C data. E14 and MEF are now HTClist objects
+
+   o Update of the importC/exportC function. The standard format is now matrix-based. This seems to be the most commonly used format.
+
+   o Update of all mapC methods. The view parameter is removed. The HTCexp object are now displayed in the triangle view, whereas the HTClist are displayed in the heatmap view
+
+
+***********************************
+CHANGES IN VERSION 1.3.1
 
 NEW FEATURES
 
@@ -20,6 +43,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 DEPRECATED AND DEFUNCT
 
    o seq_name is now deprecated
+
+   o export and normPerZscore are now defunct 
 
 BUG FIXES
 

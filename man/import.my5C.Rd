@@ -34,10 +34,10 @@
 }
 
 \value{
-  A list of \code{HTCexp} object(s)
+  A \code{HTClist} object(s)
 }
 \author{N. Servant}
-\seealso{\code{\link[genomeIntervals]{Genome_intervals-class}}, \code{\link{HTCexp-class}}}
+\seealso{\code{\link[rtracklayer]{import}}, code{\link{HTClist-class}}, }
 \examples{
 exDir <- system.file("extdata", package="HiTC")
 ## Load my5C matrix format

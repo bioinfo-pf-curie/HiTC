@@ -17,13 +17,15 @@
 \author{N. Servant}
 \seealso{\code{quantile}}
 \examples{
+\dontrun{
 data(Nora_5C)
 
 ## Data binning
-##E14bin<-binningC(E14$chrXchrX)
+E14bin<-binningC(E14$chrXchrX)
 
 ## Discretize matrix
-##dismat<-discretize(intdata(E14bin))
-##mapC(dismat)
+dismat<-discretize(intdata(E14bin))
+mapC(dismat)
+}
 }
 \keyword{manip}

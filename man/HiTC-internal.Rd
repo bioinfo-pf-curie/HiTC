@@ -1,9 +1,10 @@
 \name{HiTC-internal}
-\alias{myPalette}
+\alias{colorC}
 \alias{getDeltaRange}
 \alias{tricube}
 \alias{gdiag}
 \alias{addImageTracks}
+\alias{getData2Map}
 \alias{heatmapC}
 \alias{triViewC}
 \alias{pair.chrom}
@@ -15,5 +16,5 @@
   In theory, not called by the user.
 }
 \author{Nicolas Servant}
-\seealso{\code{\link{HTCexp-class}}}
+\seealso{\code{\link{HTCexp-class}}, \code{\link{HTClist-class}}}
 \keyword{internal}

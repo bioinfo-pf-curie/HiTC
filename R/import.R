@@ -3,51 +3,39 @@
 ##
 ## Import HTCexp object to standard format
 ##
-## con = name of outputfile to create
+## con = name of intput file to read
 ## chrA,startA,endA,nameA,strandA,chrB,startB,endB,nameB,strandB,countAB
 ###################################
 ## Import Method
-importC <- function(con, all.pairwise=TRUE){
 
-    alldata<-read.table(con, comment.char = "#", check.names=FALSE, sep=",")
-
-    rgr <- alldata[,1:5]
-    rgr <- rgr[which(!duplicated(rgr)),]
-    rownames(rgr) <- 1:nrow(rgr)
-    cgr <- alldata[,6:10]
-    cgr <- cgr[which(!duplicated(cgr)),]
-    rownames(cgr) <- 1:nrow(cgr)
-    data <- alldata[,c(4,9,11)]
-
-    ## Creating GRanges objects
-    ygi <- GRanges(seqnames=rgr[,1], ranges = IRanges(start=rgr[,2], end=rgr[,3], names=rgr[,4]), strand =rgr[,5])
-    xgi <- GRanges(seqnames=cgr[,1], ranges = IRanges(start=cgr[,2], end=cgr[,3], names=cgr[,4]), strand =cgr[,5])
-
-    chromPair <- pair.chrom(chromosome(c(xgi,ygi)), use.order=all.pairwise)
+importC <- function(con, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
+    ## Read data
+    stopifnot(!missing(con))
+    data <- read.table(con,comment.char = "#", check.names=FALSE)
     
+    xgi <- import(xgi.bed, format="bed", asRangedData=FALSE)
+    if (!is.null(ygi.bed)){
+        ygi <- import(ygi.bed, format="bed", asRangedData=FALSE)
+    }else{
+        ygi <- xgi
+    }
+    message("Genomic intervals loaded")
+    
+    chromPair <- pair.chrom(seqlevels(GRangesList(xgi, ygi)), use.order=all.pairwise)
     obj <- lapply(chromPair, function(chr){
-        xgi.subset <- subset(xgi, as.vector(seqnames(xgi)==chr[1]))
-        ygi.subset <- subset(ygi, as.vector(seqnames(ygi)==chr[2]))
-  
-      outs <- sapply(id(ygi.subset), function(fp){
-                 out <- rep(0,length(xgi.subset))
-                 subdata <- data[which(data[,1]==fp),]
+        xgi.subset <- xgi[which(seqnames(xgi)==chr[1]),]
+        seqlevels(xgi.subset)<-as.character(unique(seqnames(xgi.subset)))
+        ygi.subset <- ygi[which(seqnames(ygi)==chr[2]),]
+        seqlevels(ygi.subset)<-as.character(unique(seqnames(ygi.subset)))
         
-                 if(dim(subdata)[1] == 0)
-                     warning(fp," not found in the interaction data",call.=FALSE, immediate.=TRUE)
-                 else {
-                     ind.subdata <- which(subdata[,2]%in%id(xgi.subset))
-                     ind.intdata <- match(subdata[,2],id(xgi.subset))
-                     out[ind.intdata[which(!is.na(ind.intdata))]] <- subdata[ind.subdata,3]
-                 }
-                 out
-      }, USE.NAMES=TRUE)
-      intdata <- as.matrix(t(outs))
-      colnames(intdata) <- id(xgi.subset)
-      HTCexp(intdata, xgi.subset, ygi.subset)
-    })
-   return(obj[which(!unlist(lapply(obj, is.null)))])
-}##ImportC TO VALIDATE
+        if (length(xgi.subset)>0 && length(ygi.subset)>0){
+            message("Loading ",chr[1],"-",chr[2],"...")
+            intdata <- as.matrix(data[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
+            HTCexp(intdata, xgi.subset, ygi.subset)
+        }
+    })    
+    HTClist(unlist(obj))
+}##importC
 
 
 
@@ -81,8 +69,7 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
         }else{
             ygi <- xgi
         }
-        seqlevels(xgi) <- unique(c(seqlevels(xgi), seqlevels(ygi)))
-        seqlevels(ygi) <- unique(c(seqlevels(xgi), seqlevels(ygi)))
+
         message("Genomic intervals loaded")
         
         my5Cdata <- read.table(my5C.datafile,comment.char = "#", check.names=FALSE)
@@ -90,11 +77,14 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
         my5Cdata[,2] <- unlist(lapply(strsplit(as.character(my5Cdata[,2]),"|", fixed=TRUE),function(x){x[1]}))
         
         message("Convert my5C list file in HTCexp object(s)")
-        chromPair <- pair.chrom(chromosome(c(xgi,ygi)), use.order=all.pairwise)
+        chromPair <- pair.chrom(seqlevels(GRangesList(xgi,ygi)), use.order=all.pairwise)
         
         obj <- lapply(chromPair, function(chr){
             xgi.subset <- subset(xgi, as.vector(seqnames(xgi)==chr[1]))
+            seqlevels(xgi.subset)<-as.character(unique(seqnames(xgi.subset)))
             ygi.subset <- subset(ygi, as.vector(seqnames(ygi)==chr[2]))
+            seqlevels(ygi.subset)<-as.character(unique(seqnames(ygi.subset)))
+
             
             if (length(xgi.subset)>0 && length(ygi.subset)>0){
                 outs <- sapply(id(ygi.subset), function(fp){
@@ -126,11 +116,13 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
         rownames(my5Cdata) <- unlist(lapply(strsplit(rownames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
         colnames(my5Cdata) <- unlist(lapply(strsplit(colnames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
         
-        chromPair <- pair.chrom(chromosome(c(xgi, ygi)), use.order=all.pairwise)
+        chromPair <- pair.chrom(seqlevels(GRangesList(xgi, ygi)), use.order=all.pairwise)
         obj <- lapply(chromPair, function(chr){
             xgi.subset <- xgi[which(seqnames(xgi)==chr[1]),]
+            seqlevels(xgi.subset)<-as.character(unique(seqnames(xgi.subset)))
             ygi.subset <- ygi[which(seqnames(ygi)==chr[2]),]
-            
+            seqlevels(ygi.subset)<-as.character(unique(seqnames(ygi.subset)))
+
             if (length(xgi.subset)>0 && length(ygi.subset)>0){
                 message("Loading ",chr[1],"-",chr[2],"...")
                 intdata <- as.matrix(my5Cdata[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
@@ -140,8 +132,8 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
     }else{
         stop("Unknown my5C input")
     }
-    return(obj[which(!unlist(lapply(obj, is.null)))])
-} ##import.my5C
+    return(HTClist(unlist(obj[which(!unlist(lapply(obj, is.null)))])))
+}##import.my5C
 
 ###################################
 ## pair.chrom
@@ -174,11 +166,8 @@ my5C2gr <- function(my5Cdata){
     ## Create GRanges objects
     rgr <- GRanges(seqnames=rdata[,1], ranges = IRanges(start=as.numeric(rdata[,2]), end=as.numeric(rdata[,3]), names=rname))
     cgr <- GRanges(seqnames=cdata[,1], ranges = IRanges(start=as.numeric(cdata[,2]), end=as.numeric(cdata[,3]), names=cname))
-    seqlevels(rgr) <- unique(c(seqlevels(rgr), seqlevels(cgr)))
-    seqlevels(cgr) <- unique(c(seqlevels(rgr), seqlevels(cgr)))
- 
     return(list(cgr, rgr))
-}
+}##my5C2gr
 
 
     

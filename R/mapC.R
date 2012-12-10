@@ -10,7 +10,7 @@
 ##
 ##################################
 
-myPalette <- function (low="white", high=c("green", "red"), mid=NA, k = 50){
+colorC <- function (low="white", high=c("green", "red"), mid=NA, k = 50){
     low <- col2rgb(low)/255
     high <- col2rgb(high)/255
     if (is.na(mid)) {
@@ -27,171 +27,23 @@ myPalette <- function (low="white", high=c("green", "red"), mid=NA, k = 50){
     }
     rgb(r, g, b)
 }
+## see colorRampPalette(colors=c("white", "NA", "red"))(2)
 
 ###################################
-## gdiag
+## heatmapfunc
 ## INTERNAL FUNCTION
-## Extract the diagonal of a matrix - Generatlisation of diag function
+## alias to the function used to draw the heatmap
 ##
-## x = a matrix
-## w = step from the real diagonal. w=0 return the diagonal of the matrix.
+## x = color for minimal value
+## high = color for extreme values (up and down)
+## mid = color for medium values
+## k = number of color generated
 ##
 ##################################
 
-gdiag <- function(x, w=0){
-    if (is.matrix(x)) {
-        if ((m <- min(dim(x))) == 0L) 
-            return(vector(typeof(x), 0L))
-         if (w<m){
-            if (w>0)
-                y <- c(x)[1L + (0L+w):(m - 1L)* (dim(x)[1L] + 1L) - w]
-            else
-                y <- c(x)[1L + 0L:(m - 1L - abs(w))* (dim(x)[1L] + 1L) + abs(w)]
-            return(y)
-        }else{
-            return(vector(typeof(x), 0L)) 
-        }
-    }
+heatmapfunc <- function(...){
+    image(...,useRaster = TRUE)
 }
-###################################
-## getBlocsIndex
-## INTERNAL FUNCTION
-## Overlap between a GRanges objects (HTCexp vs tracks)
-## Return the index (start/end) of overlap region based on the HTCexp ranges
-##
-## gr = GRanges object, i.e. 'C' xgi for vertical view or ygi for horizontal view. 
-## track = GRangesList object, i.e. tracks information 
-##
-##################################
-
-
-getBlocsIndex <- function(gr, track){
-    suppressWarnings(r <- countOverlaps(gr, track, ignore.strand=TRUE))
-    ov <- cumsum(width(Rle(ifelse(r==0,0,1))))
-
-    if (!is.null(ov)){
-        if (r[length(r)]==0)
-            ov <- ov[-length(ov)]
-        if (r[1]!=0)
-            ov <- c(0,ov)
-        blocs <- matrix(ov, ncol=2, byrow=TRUE)
-        blocs[,1] <- blocs[,1]+1
-    }
-    blocs
-}
-
-###################################
-## addImageTracks
-## INTERNAL FUNCTION
-## Add a genome track information on interaction map
-##
-## x = 'HTCexp' object
-## giblocs = list of GRanges objects, i.e. tracks information 
-## orientation = plot vertical or horizontal tracks
-##
-##################################
-
-addImageTracks <- function(x, giblocs, orientation=c("h","v")){
-    stopifnot(inherits(x,"HTCexp"))
-    stopifnot(unlist(lapply(giblocs, inherits,"GRanges")))
-    ntrack <- length(giblocs)
-    suppressWarnings(colblocs <- brewer.pal(ntrack*2,"Paired"))
-    colblocs.minus <- colblocs[seq(1, ntrack*2, by=2)]
-    colblocs.plus <- colblocs[seq(2, ntrack*2, by=2)]
-    blocnames <- names(giblocs)
-   
-    if (orientation=="h"){
-        ypos <- 1
-        if (isBinned(x)){
-            par(mar=c(0,0,0,0))
-            plot(c(start(range(x_intervals(x))),end(range(x_intervals(x)))), c(-1, ntrack*3+1),type="n",axes=FALSE, frame=FALSE, xlab="", ylab="", xlim=c(start(range(x_intervals(x))), end(range(x_intervals(x)))), xaxs="i", yaxs="i")
-            for (t in 1:ntrack){
-                blocs <- giblocs[[t]]
-                ## keep only overlaping features between
-                blocs <- subsetByOverlaps(blocs,range(x_intervals(x)), ignore.strand=TRUE)
-                ## get strand information
-                blocs.plus <- blocs[which(strand(blocs)=="+" | strand(blocs)=="*")]
-                blocs.minus <- blocs[which(strand(blocs)=="-")]
-                ## draw features
-                if (length(blocs.plus)>0)
-                    rect(start(blocs.plus), ypos+.1, end(blocs.plus), ypos+.6, col=colblocs.plus[t], border=colblocs.plus[t])
-                if (length(blocs.minus)>0)
-                    rect(start(blocs.minus), ypos-.1, end(blocs.minus), ypos-0.6, col=colblocs.minus[t], border=colblocs.minus[t])
-                text(x=start(range(x_intervals(x)))+width(range(x_intervals(x)))/2, y=ypos+1, labels=blocnames[t], cex=.7, font=2, col=colblocs.plus[t])
-                ypos <- ypos+3
-            }
-        }else{
-            warning("The data are not binned, and the scale is not linear.\nOnly the HTCexp intervals overlapping with the track's feature are displayed.")
-            cset <- x_intervals(x)
-            par(mar=c(0,0,0,0))
-            plot(c(0,length(cset)), c(-1, ntrack*3+1),type="n", axes=FALSE, xlab="", ylab="", frame=FALSE, xlim=c(0,length(cset)), xaxs="i", yaxs="i")
-            for (t in 1:ntrack){
-                blocs <- giblocs[[t]]
-                ## keep only overlaping features between
-                suppressWarnings(blocs <- subsetByOverlaps(blocs,range(x_intervals(x)), ignore.strand=TRUE))
-                ## get strand information and index of cset overlapping with the annotation features
-                blocs.plus <- getBlocsIndex(cset, blocs[which(strand(blocs)=="+" | strand(blocs)=="*")])
-                blocs.minus <- getBlocsIndex(cset, blocs[which(strand(blocs)=="-")])
-                ## draw features
-                if (length(blocs.plus)>0)
-                    rect(blocs.plus[,1]-1, ypos+.1, blocs.plus[,2], ypos+.6, col=colblocs.plus[t], border=colblocs.plus[t])
-                if (length(blocs.minus)>0)
-                    rect(blocs.minus[,1]-1, ypos-.1, blocs.minus[,2], ypos-0.6, col=colblocs.minus[t], border=colblocs.minus[t])
-                text(x=length(cset)/2, y=ypos+1, labels=blocnames[t], cex=.7, font=2, col=colblocs.plus[t])
-                ypos <- ypos+3
-            }
-        }
-    }else{
-        ypos <- -1
-        if (isBinned(x)){
-            par(mar=c(0,0,0,0))
-            plot(c(1, -ntrack*3-1),c(start(range(y_intervals(x))),end(range(y_intervals(x)))), type="n",axes=FALSE, xlab="", ylab="", frame=FALSE, ylim=c(start(range(y_intervals(x))),end(range(y_intervals(x)))), xaxs="i", yaxs="i")
-            
-            for (t in 1:ntrack){
-                blocs <- giblocs[[t]]
-                ## keep only overlaping features between
-                blocs <- subsetByOverlaps(blocs,range(y_intervals(x)), ignore.strand=TRUE)
-                ## get strand information
-                blocs.plus <- blocs[which(strand(blocs)=="+" | strand(blocs)=="*")]
-                blocs.minus <- blocs[which(strand(blocs)=="-")]
-                                        # draw features    
-                if (length(blocs.plus)>0)
-                    rect(ypos-.1, (start(range(y_intervals(x)))+end(range(y_intervals(x))))-start(blocs.plus),
-                         ypos-.6, (start(range(y_intervals(x)))+end(range(y_intervals(x))))-end(blocs.plus),
-                         col=colblocs.plus[t], border=colblocs.plus[t])
-                if (length(blocs.minus)>0)
-                    rect(ypos+.1, (start(range(y_intervals(x)))+end(range(y_intervals(x))))-start(blocs.minus),
-                         ypos+.6, (start(range(y_intervals(x)))+end(range(y_intervals(x))))-end(blocs.minus),
-                         col=colblocs.minus[t], border=colblocs.minus[t])
-                
-                text(y=start(range(y_intervals(x)))+width(range(y_intervals(x)))/2, x=ypos-1, labels=blocnames[t], cex=.7, font=2, col=colblocs.plus[t], srt=90)
-                ypos <- ypos-3
-            }
-        }else{
-            warning("The data are not binned, and the scale is not linear.\nOnly the HTCexp intervals overlapping with the track's feature are displayed.")
-            cset <- y_intervals(x)
-            par(mar=c(0,0,0,0))
-            plot(c(0, -ntrack*3-1),c(0,length(cset)),type="n", axes=FALSE, xlab="", ylab="", frame=FALSE, ylim=c(0,length(cset)), xaxs="i", yaxs="i")
-            
-            for (t in 1:ntrack){
-                blocs <- giblocs[[t]]
-                ## keep only overlaping features between
-                suppressWarnings(blocs <- subsetByOverlaps(blocs,range(y_intervals(x)), ignore.strand=TRUE))
-                ## get strand information and index of cset overlapping with the annotation features
-                blocs.plus <- getBlocsIndex(cset, blocs[which(strand(blocs)=="+" | strand(blocs)=="*")])
-                blocs.minus <- getBlocsIndex(cset, blocs[which(strand(blocs)=="-")])
-                ##draw features
-                if (length(blocs.plus)>0)
-                    rect(ypos-.1, length(cset)-blocs.plus[,1]+1, ypos-.6, length(cset)-blocs.plus[,2], col=colblocs.plus[t], border=colblocs.plus[t])
-                if (length(blocs.minus)>0)
-                    rect( ypos+.1, length(cset)-blocs.minus[,1]+1,  ypos+.6,length(cset)- blocs.minus[,2], col=colblocs.minus[t], border=colblocs.minus[t])
-                text(y=length(cset)/2, x=ypos-1, labels=blocnames[t], cex=.7, font=2, col=colblocs.plus[t], srt=90)
-                ypos <- ypos-3
-            }
-        }
-    }
-}
-
 
 
 ###################################
@@ -223,16 +75,16 @@ heatmapC <- function(xdata,  names=FALSE,  value=FALSE,  show.na=TRUE, col.pos=c
     
     k <- length(unique(as.vector(abs(xdata))))
     if (length(unique(xdata.neg[xdata.neg<0 & !is.na(xdata.neg)]))>0){
-        col.neg <- myPalette(col.neg[3],col.neg[1],mid=col.neg[2], k=k)
-        image(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.neg,axes=FALSE,ylab="",xlab="",col=col.neg)
+        col.neg <- colorC(col.neg[3],col.neg[1],mid=col.neg[2], k=k)
+        heatmapfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.neg,axes=FALSE,ylab="",xlab="",col=col.neg)
         par(new = TRUE)
     }
     
     if (length(unique(xdata.pos[xdata.pos>0 & !is.na(xdata.pos)]))>0){
-        col.pos <- myPalette(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
-        image(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.pos,axes=FALSE,ylab="",xlab="",col=col.pos)
+        col.pos <- colorC(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
+        heatmapfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.pos,axes=FALSE,ylab="",xlab="",col=col.pos)
     }
-    
+
     if (names){
         axis(side=2, at=1:ncol(xdata), labels=colnames(xdata), lwd=0.5, las=1, cex.axis=0.7)  
         axis(side=1, at=1:nrow(xdata), labels=rownames(xdata), lwd=0.5, las=2, cex.axis=0.7)
@@ -263,7 +115,7 @@ heatmapC <- function(xdata,  names=FALSE,  value=FALSE,  show.na=TRUE, col.pos=c
             par(new = TRUE)
             na.xdata <- matrix(NA, ncol=ncol(xdata), nrow=nrow(xdata))
             na.xdata[which(is.na(xdata))] <- 1
-            image(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,axes=FALSE,ylab="",xlab="",col=col.na,add=TRUE)
+            heatmapfunc(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,axes=FALSE,ylab="",xlab="",col=col.na,add=TRUE)
         }
     }
     
@@ -277,14 +129,12 @@ heatmapC <- function(xdata,  names=FALSE,  value=FALSE,  show.na=TRUE, col.pos=c
     }
 }
 
-
 ###################################
 ## triViewC
 ## INTERNAL FUNCTION
 ## Draw triangle view of the C data
 ##
 ## xdata = 'C' interaction map as a matrix
-## names = logical, add axis with the bin/interval's names
 ## value = logical, add values on the matrix
 ## show.na = logical, na are shown in gray
 ## col.low = color used in mypalette for low count (low, mid, high)
@@ -296,7 +146,7 @@ heatmapC <- function(xdata,  names=FALSE,  value=FALSE,  show.na=TRUE, col.pos=c
 ##
 ##################################
 
-triViewC <- function(xdata, flip=FALSE, show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80"){
+triViewC <- function(xdata, flip=FALSE, value=FALSE, mask.data=NULL, show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80"){
     
     d <- min(dim(xdata))
     trimat <- matrix(NA, ncol=d*2, nrow=d)
@@ -305,11 +155,10 @@ triViewC <- function(xdata, flip=FALSE, show.na=TRUE, col.pos=c("white",NA,"red"
         ss <- c(s,s)[as.vector(sapply(1:length(s),function(x){return(c(x,x+length(s)))}))]
         trimat[w+1, (w+1):(d*2-w)] <- ss
     }
-
+    
     if (flip){
         trimat <- trimat[nrow(trimat):1,]
     }
-    
     trimat.pos <- trimat.neg <- trimat
     trimat.pos[trimat.neg<0] <- NA
     trimat.neg[trimat.pos>=0] <- NA
@@ -317,36 +166,223 @@ triViewC <- function(xdata, flip=FALSE, show.na=TRUE, col.pos=c("white",NA,"red"
     k <- length(unique(as.vector(abs(trimat))))
     
     if (length(unique(trimat.neg[trimat.neg<0 & !is.na(trimat.neg)]))>0){
-        col.neg <- myPalette(col.neg[3],col.neg[1],mid=col.neg[2],k=k)
-        image(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.neg),axes=FALSE,ylab="",xlab="",col=col.neg)
+        col.neg <- colorC(col.neg[3],col.neg[1],mid=col.neg[2],k=k)
+        heatmapfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.neg),axes=FALSE,ylab="",xlab="",col=col.neg)
         par(new = TRUE)
     }
-
     if (length(unique(trimat.pos[trimat.pos>0 & !is.na(trimat.pos)]))>0){
-        col.pos <- myPalette(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
-        image(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.pos),axes=FALSE,ylab="",xlab="",col=col.pos)
+        col.pos <- colorC(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
+        heatmapfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.pos),axes=FALSE,ylab="",xlab="",col=col.pos)
     }
- 
     if (show.na){
         if (length(which(is.na(trimat))>0)){
             par(new = TRUE)
             na.trimat <- matrix(NA, ncol=ncol(trimat), nrow=nrow(trimat))
             na.trimat[which(is.na(trimat))] <- 1
-            image(y=1:nrow(na.trimat),x=1:ncol(na.trimat),z=t(na.trimat),axes=FALSE,ylab="",xlab="",col=col.na)
+            heatmapfunc(y=1:nrow(na.trimat),x=1:ncol(na.trimat),z=t(na.trimat),axes=FALSE,ylab="",xlab="",col=col.na)
         }
-    }  
+    }
+  
+    if (!is.null(mask.data)){
+        value <- TRUE
+        if (ncol(xdata) != ncol(mask.data) || nrow(xdata) != nrow(mask.data)){
+            stop("Mask data have wrong dimension")
+        }
+        #mask.data <- t(mask.data)
+        #mask.data <- mask.data[,ncol(mask.data):1]
+        mat.lab <- matrix(NA, ncol=d*2, nrow=d)
+        for (w in 0:(d-1)){
+            s <- gdiag(mask.data, w=w)
+            ss <- c(s,s)[as.vector(sapply(1:length(s),function(x){return(c(x,x+length(s)))}))]
+            mat.lab[w+1, (w+1):(d*2-w)] <- ss
+        }
+    }else{
+        mat.lab <- trimat
+    }
+
+    if (value){
+        coordodd <- seq(.5,ncol(mat.lab), by=2)
+        coord <- seq(1.5,ncol(mat.lab), by=2)
+        for (i in 1:nrow(mat.lab)){
+            if (i%%2)
+                text(coord,y=i,labels=round(mat.lab[i,seq(1,ncol(mat.lab),2)],2), cex=.7)
+            else
+                text(coordodd,y=i,labels=round(mat.lab[i,seq(1,ncol(mat.lab),2)],2), cex=.7)
+        }
+    }
+
+}
+
+###################################
+## gdiag
+## INTERNAL FUNCTION
+## Extract the diagonal of a matrix - Generalisation of diag function
+##
+## x = a matrix
+## w = step from the real diagonal. w=0 return the diagonal of the matrix.
+##
+##################################
+
+gdiag <- function(x, w=0){
+    if (is.matrix(x)) {
+        if ((m <- min(dim(x))) == 0L) 
+            return(vector(typeof(x), 0L))
+         if (w<m){
+            if (w>0)
+                y <- c(x)[1L + (0L+w):(m - 1L)* (dim(x)[1L] + 1L) - w]
+            else
+                y <- c(x)[1L + 0L:(m - 1L - abs(w))* (dim(x)[1L] + 1L) + abs(w)]
+            return(y)
+        }else{
+            return(vector(typeof(x), 0L)) 
+        }
+    }
 }
 
 
 ###################################
-## mapC
+## setEnvDisplay
+## INTERNAL FUNCTION
+## Define the environment display for visualization
+## Based on the graphics package
 ##
-## Draw heatmap of the C data
+## x = HTCexp/HTClist object
+## y = HTCexp object
+## tracks = List of GRanges objects. Each object represent a genome track information
+##
+##################################
+setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
+
+  chrom <- seqlevels(x)
+  lc <- length(chrom)
+
+  if(!is.null(tracks)){
+      stopifnot(unlist(lapply(tracks, inherits,"GRanges")))
+      ntrack <- length(tracks)
+      sizeblocs <- .05
+  }
+
+  ## HTClist object
+  if (view==1){
+    w <- width(range(x))
+    if(length(tracks) > 0){
+      design <- matrix(NA, lc+1, lc+1)
+      design[1,] <- c(1,seq(lc^2+2,(lc+1)^2-1,2))
+      design[,1] <- c(1,seq(lc^2+3,(lc+1)^2,2))
+      design[2:(lc+1), 2:(lc+1)] <- matrix(2:(lc^2+1), lc, lc, byrow=FALSE)
+
+      heatspace <- 1-sizeblocs*ntrack
+      layout(design, widths=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)), heights=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)))
+
+      ##blank plot at position 1
+      par(mar=c(0,0,0,0))
+      plot(1, type="n", axes=FALSE, xlab="", ylab="")
+      
+    }else{
+      design <- matrix(1:lc^2, lc, lc, byrow=FALSE)
+      layout(design, widths=round(w/sum(w),3), heights=round(w/sum(w),3))
+    }
+    ## HTCexp object
+  }else if (view==2){
+    rx <- range(x)
+    ## Annotation
+    if(length(tracks) > 0){
+      if (!is.null(y)){
+        ry <- range(y)
+        if (width(rx)>=width(ry)){
+          design <- rbind(rep(2,3),rep(1,3), c(4,3,5))
+          lmar <- (start(ry)-start(rx))/width(rx)
+          rmar <- (end(rx)-end(ry))/width(rx)
+          layout(design, heights=c((1-sizeblocs*ntrack)/2, sizeblocs*ntrack,(1-sizeblocs*ntrack)/2), widths=c(lmar,(1-rmar-lmar), rmar))
+        }else{
+          design <- rbind( c(4,2,5), rep(1,3),rep(3,3)) 
+          lmar <- (start(rx)-start(ry))/width(ry)
+          rmar <- (end(ry)-end(rx))/width(ry)
+          layout(design, heights=c((1-sizeblocs*ntrack)/2, sizeblocs*ntrack,(1-sizeblocs*ntrack)/2), widths=c(lmar,(1-rmar-lmar), rmar))
+        }
+      }else{
+        design <- matrix(1:2, 2, 1, byrow=TRUE)
+        layout(design, heights=c(1-sizeblocs*ntrack, sizeblocs*ntrack))
+      }
+    }else{
+      if (!is.null(y)){
+        ry <- range(y)
+        ## Adjust position of x and y if with are not the same
+        if (width(rx)>=width(ry)){
+          design <- matrix(c(1,1,1,3,2,4), ncol=3, byrow=TRUE)
+          lmar <- (start(ry)-start(rx))/width(rx)
+          rmar <- (end(rx)-end(ry))/width(rx)
+          layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1,1))
+        }else{
+          design <- matrix(c(3,1,4,2,2,2), ncol=3, byrow=TRUE)
+          lmar <- (start(rx)-start(ry))/width(ry)
+          rmar <- (end(ry)-end(rx))/width(ry)
+          layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1,1))
+        }
+      }else{
+        design <- matrix(1:lc^2, lc, lc, byrow=TRUE)
+        layout(design, widths=rep(1/lc, lc), heights=rep(1/lc, lc))
+      }
+    }
+  }
+}
+
+###################################
+## getMapData
+## INTERNAL FUNCTION
+## Operations to apply to the data before the visualization
 ##
 ## x = HTCexp object
-## y = optional. HTCexp object or matrix data
-## view = 1 - heatmapC, 2 - triViewC
-## giblocs = List of GRanges objects. Each object represent a genome track information
+## y = HTCexp object
+## tracks = List of GRanges objects. Each object represent a genome track information
+##
+##################################
+getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
+
+    stopifnot(inherits(x,"HTCexp"))
+    xdata <- intdata(x)
+    
+    ## #####################
+    ## Data Transformation
+    ## #####################
+    if (log.data){
+        xdata[which(xdata<0)] <- NA
+        xdata[which(xdata>0)] <- log2(xdata[which(xdata>0)])
+    }
+
+    ## #################
+    ## Play with contrast
+    ## #################
+    if (trim.range <1 && is.na(maxrange) && is.na(minrange)){
+        xmaxrange <- quantile(abs(xdata[xdata!=0]), probs=trim.range, na.rm=TRUE)
+        xminrange <- quantile(abs(xdata[xdata!=0]), probs=1-trim.range, na.rm=TRUE)
+    }
+    else{
+        if (is.na(maxrange))
+            xmaxrange <- max(abs(xdata[xdata!=0]), na.rm=TRUE)
+        else
+            xmaxrange=maxrange
+        if (is.na(minrange))
+            xminrange <- min(abs(xdata[xdata!=0]), na.rm=TRUE)         
+        else
+            xminrange=minrange
+    }
+    xdata[which(xdata<=xminrange & xdata>0)] <- xminrange
+    xdata[which(xdata>=-xminrange & xdata<0)] <- -xminrange
+    xdata[which(xdata>=xmaxrange & xdata>0)] <- xmaxrange
+    xdata[which(xdata<=-xmaxrange & xdata<0)] <- -xmaxrange
+    print(paste("minrange=",round(xminrange,6)," - maxrange=", round(xmaxrange,6)))
+    xdata
+}
+    
+###################################
+## mapC methods
+## 
+## Visualization of HTCexp or HTClist objects
+##
+## x = HTCexp/HTClist object
+## y = optional. HTCexp/HTClist object or matrix data
+## tracks = List of GRanges objects. Each object represent a genome track information
 ## minrange = minimum value to draw
 ## maxrange = maximum value to draw
 ## trim.range = remove the outliers values by trimming the maxrange (quantile)
@@ -362,238 +398,120 @@ triViewC <- function(xdata, flip=FALSE, show.na=TRUE, col.pos=c("white",NA,"red"
 ##
 ##################################
 
+setMethod("mapC", signature="HTClist",
+          function(x, tracks=NULL,
+                   minrange=NA, maxrange=NA, trim.range=0.98, show.na=FALSE, log.data=FALSE, names=FALSE, value=FALSE,
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE, title=NULL){
+            
+            ## Set Graphical Environment
+            setEnvDisplay(x, tracks=tracks, view=1)
 
-mapC <- function(x, y=NULL, view=1, giblocs=NULL, minrange=NA, maxrange=NA, trim.range=0.98, names=FALSE, value=FALSE, show.na=FALSE, log.data=FALSE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE, title=NULL){
+            ## Get data to map and plots
+            tmp <- sapply(names(pair.chrom(seqlevels(x))), function(i){
+              if (is.element(i,names(x))){
+                obj <- x[[i]]
+                xdata <- getData2Map(obj, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
+                message("Plotting ",i,"...")
 
-    stopifnot(inherits(x,"HTCexp"))
-    xdata <- intdata(x)
-    
-    if (!is.null(y)){
-         view=2
-         if (inherits(y,"HTCexp")){
-             ydata <- intdata(y)
-         }
-         else if(is.matrix(y))
-             ydata <- y
-         else
-             stop("Input2 has to belong to 'HTCexp' or 'matrix' classes")
-     }
-    
-     ## Logged data
-     if (log.data){
-         xdata[which(xdata<0)] <- NA
-         xdata[which(xdata>0)] <- log2(xdata[which(xdata>0)])
-         if (!is.null(y)){
-             ydata[which(ydata<0)] <- NA
-             ydata[which(ydata>0)] <- log2(ydata[which(ydata>0)])
-         }
-     }
-    
-     ## Check binned data for sample comparison
-     if (!is.null(y)){
-       if (!isBinned(x) || !isBinned(y))
-         stop("x and y have to be binned to plot them on the same scale")
-     }
-    
-     ###################
-     ## Play with contrast
-     ###################
-     if (trim.range <1 && is.na(maxrange) && is.na(minrange)){
-         xmaxrange <- quantile(abs(xdata[xdata!=0]), probs=trim.range, na.rm=TRUE)
-         xminrange <- quantile(abs(xdata[xdata!=0]), probs=1-trim.range, na.rm=TRUE)
-         if (!is.null(y)){
-             ymaxrange <- quantile(abs(ydata[ydata!=0]), probs=trim.range, na.rm=TRUE)
-             yminrange <- quantile(abs(ydata[ydata!=0]), probs=1-trim.range, na.rm=TRUE)
-         }
-      
-     }
-     else{
-         if (is.na(maxrange)){
-             xmaxrange <- max(abs(xdata[xdata!=0]), na.rm=TRUE)
-             if (!is.null(y))
-                 ymaxrange <- max(abs(ydata[ydata!=0]), na.rm=TRUE)
-         }
-         else{
-             xmaxrange=maxrange
-             if (!is.null(y))
-                 ymaxrange=maxrange
-         }
-         if (is.na(minrange)){
-             xminrange <- min(abs(xdata[xdata!=0]), na.rm=TRUE)         
-             if (!is.null(y))
-                 yminrange <- min(abs(ydata[ydata!=0]), na.rm=TRUE)
-         }
-         else{
-             xminrange=minrange
-             if (!is.null(y))
-                 yminrange=minrange
-         }
-     }
-     print(paste("minrange=",round(xminrange,6)," - maxrange=", round(xmaxrange,6)))
-     xdata[which(xdata<=xminrange & xdata>0)] <- xminrange
-     xdata[which(xdata>=-xminrange & xdata<0)] <- -xminrange
-     xdata[which(xdata>=xmaxrange & xdata>0)] <- xmaxrange
-     xdata[which(xdata<=-xmaxrange & xdata<0)] <- -xmaxrange
+                if (!names)
+                    par(mar=c(0,0,0,0))
+                else
+                    par(mar=c(mean(sapply(rownames(xdata),nchar))/2,mean(sapply(colnames(xdata),nchar))/2,0,0))
+                
+                heatmapC(xdata, names=names, value=value, show.na=show.na, col.pos=col.pos,
+                         col.neg=col.neg, col.na=col.na, mask.data=mask.data, grid=grid, title=title)
+              }else{
+                plot(1, type="n", axes=FALSE, xlab="", ylab="")
+              }
+            })
+          
+            ## Add annotation based on intrachromosomal maps
+            if (!is.null(tracks)){
+              tmp <- sapply(paste(seqlevels(x), seqlevels(x), sep=""), function(i){
+                if (is.element(i,names(x))){
+                  obj <- x[[i]]
+                  addImageTracks(obj, tracks, orientation="h", names=FALSE)
+                  addImageTracks(obj, tracks, orientation="v", names=FALSE)
+                }else{
+                  warning("Intrachromosomal map for ",i," not found. Annotation skipped.")
+                  plot(1, type="n", axes=FALSE, xlab="", ylab="")
+                  plot(1, type="n", axes=FALSE, xlab="", ylab="")
+                }
+              })
+            }
+          }
+)
 
-    if (!is.null(y)){
-        print(paste("minrange=",round(yminrange,6)," - maxrange=", round(ymaxrange,6)))
-        ydata[which(ydata<=yminrange & ydata>0)] <- yminrange
-        ydata[which(ydata>=-yminrange & ydata<0)] <- -yminrange
-        ydata[which(ydata>=ymaxrange & ydata>0)] <- ymaxrange
-        ydata[which(ydata<=-ymaxrange & ydata<0)] <- -ymaxrange
-    }
 
-     ###################
-     ##Graphical design
-     ###################
-     if(!is.null(giblocs)){
-         if (!inherits(x,"HTCexp")){
-             warning("Cannot diplay GRanges blocs. 'x' has to be a HTCexp object.")
-         }else{
-             if (names){
-                 names <- FALSE
-                 warning("Cannot diplay names and GRanges blocs.")
-             }
+setMethod("mapC", signature="HTCexp",
+          function(x, tracks=NULL,
+                   minrange=NA, maxrange=NA, trim.range=0.98, value=FALSE, show.na=FALSE, log.data=FALSE,
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE, title=NULL){
 
-             stopifnot(unlist(lapply(giblocs, inherits,"GRanges")))
-             ntrack <- length(giblocs)
-             sizeblocs <- .1#.05
-             ygi <- y_intervals(x)
-             xgi <- x_intervals(x)
-         }
-     }
-     
-    
-     ## View
-     if (view==1){
-         if(length(giblocs) > 0){
-             design <- matrix(1:4, 2, 2, byrow=TRUE)
-             layout(design, widths=c(sizeblocs*ntrack,1-sizeblocs*ntrack), heights=c(sizeblocs*ntrack,1-sizeblocs*ntrack))
-             
-             ##blank plot at position 1
-             par(mar=c(0,0,0,0))
-             plot(1, type="n", axes=FALSE, xlab="", ylab="")
-             
-             addImageTracks(x, giblocs, orientation="h")
-             addImageTracks(x, giblocs, orientation="v")
-         }else{
-             layout(matrix(1, 1, 1, byrow=TRUE), heights=c(1))
-         }
-     }else if (view == 2){
-         if (!isIntraChrom(x))
-             stop("The triangle view is available for intrachromosomal data only")
-         
-         if (!is.null(y)){
-             ## Get common overlap
-             xinter <- intersect(range(x_intervals(x)), range(x_intervals(y)), ignore.strand=TRUE)
-             yinter <- intersect(range(y_intervals(x)), range(y_intervals(y)), ignore.strand=TRUE)
-             
-             if (length(xinter) != 1 || length(yinter) != 1)
-                 stop("Objects x and y are not on the same space. Something wrong in range intersection")
-             
-             x <- extractRegion(x, 1, chr=seqlevels(xinter), from=start(xinter), to=end(xinter), exact=TRUE)
-             y <- extractRegion(y, 1, chr=seqlevels(xinter), from=start(xinter), to=end(xinter), exact=TRUE)
-             x <- extractRegion(x, 2, chr=seqlevels(yinter), from=start(yinter), to=end(yinter), exact=TRUE)
-             y <- extractRegion(y, 2, chr=seqlevels(yinter), from=start(yinter), to=end(yinter), exact=TRUE)
-         }
-         
-         ## Annotation
-         if(length(giblocs) > 0){
-             rx <- range(x)
-             if (!is.null(y)){
-                 ry <- range(y)
-                 
-                 if (width(rx)>=width(ry)){
-                     design <- rbind(rep(2,3),rep(1,3), c(4,3,5))
-                     ## TO CHANGE !!!!!!!!!!
-                     lmar <- (start(ry)-start(rx))/width(rx)
-                     rmar <- (end(rx)-end(ry))/width(rx)
-                     layout(design, heights=c((1-sizeblocs*ntrack)/2, sizeblocs*ntrack,(1-sizeblocs*ntrack)/2), widths=c(lmar,(1-rmar-lmar), rmar))
-                    
-                     addImageTracks(x, giblocs, orientation="h")
-                 }else{
-                     design <- rbind( c(4,2,5), rep(1,3),rep(3,3)) 
-                     lmar <- (start(rx)-start(ry))/width(ry)
-                     rmar <- (end(ry)-end(rx))/width(ry)
-                     layout(design, heights=c((1-sizeblocs*ntrack)/2, sizeblocs*ntrack,(1-sizeblocs*ntrack)/2), widths=c(lmar,(1-rmar-lmar), rmar))
-                     addImageTracks(x, giblocs, orientation="h")
-                 }
-             }else{
-                 design <- matrix(2:1, 2, 1, byrow=TRUE)
-                 layout(design, heights=c(1-sizeblocs*ntrack, sizeblocs*ntrack))
-                 addImageTracks(x, giblocs, orientation="h")
-             }
-         }else{
-             rx <- range(x)
-             if (!is.null(y)){
-                 ry <- range(y)
-                 if (width(rx)>=width(ry)){
-                     design <- matrix(c(1,1,1,3,2,4), ncol=3, byrow=TRUE)
-                     lmar <- (start(ry)-start(rx))/width(rx)
-                     rmar <- (end(rx)-end(ry))/width(rx)
-                     layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1,1))
-                 }else{
-                     design <- matrix(c(3,1,4,2,2,2), ncol=3, byrow=TRUE)
-                     lmar <- (start(rx)-start(ry))/width(ry)
-                     rmar <- (end(ry)-end(rx))/width(ry)
-                     layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1,1))
-                 }
-             }else{
-                 layout(matrix(1, 1, 1, byrow=TRUE), heights=c(1))
-             }
-         }
-     }
-    
-     ## #################
-     ## Graphical view
-     ## ###################
-    
-     if (!names)
-         par(mar=c(0,0,0,0))
-     else
-         par(mar=c(mean(sapply(rownames(xdata),nchar))/2,mean(sapply(colnames(xdata),nchar))/2,0,0))
-    
-     if (view==1)
-         heatmapC(xdata, names=names, value=value, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, mask.data=mask.data, grid=grid, title=title)
-     else{
-         triViewC(xdata, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na)
-         if (!is.null(y))
-             triViewC(ydata, flip=TRUE, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na) 
-     }
-}
+              if (!isIntraChrom(x))
+                  stop("The triangle view is available for intrachromosomal data only")
+
+              ## Set Graphical Environment
+              setEnvDisplay(x, tracks=tracks, view=2)
+
+              ## Get data to map
+              xdata <- getData2Map(x, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
+
+              ## Plots tracks and C map
+              par(mar=c(0,0,0,0))
+              triViewC(xdata, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, mask.data=mask.data, value=value)
+              if (!is.null(tracks))
+                addImageTracks(x, tracks, orientation="h")
+          }
+)
+
+
+setMethod("mapC", signature=c("HTCexp","HTCexp"),
+          function(x, y, tracks=NULL,
+                   minrange=NA, maxrange=NA, trim.range=0.98, value=FALSE, show.na=FALSE, log.data=FALSE,
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE, title=NULL){
+
+              if (!isBinned(x) || !isBinned(y))
+                  stop("x and y have to be binned to plot them on the same scale")
+
+              if (seqlevels(x) != seqlevels(y))
+                  stop("x and y have to come from the same chromosome")
+              
+              ## Set Graphical Environment
+              setEnvDisplay(x, y, tracks=tracks, view=2)
+           
+              ## Get data to map and plots
+              xdata <- getData2Map(x, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
+              ydata <- getData2Map(y, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
+
+              ## Plots tracks and C map
+              if (!is.null(tracks))
+                addImageTracks(x, tracks, orientation="h")
+              par(mar=c(.5,0,0,0))
+              triViewC(xdata, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na)
+              par(mar=c(0,0,.5,0))
+              triViewC(ydata, flip=TRUE, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na)
+            }
+)
 
 ###################################
-## discretize
-##
-## Transform matrix of counts data into discrete matrix
-##
-## x = data matrix with 5C interactions (counts)
-## quant = if true, use quantile, else just split into equals 'nb.lev' levels
-## nb.lev = number of level
-##
-###################################
+## plot Alias
+##################################
 
-discretize <- function (x, nb.lev = 4, quant=TRUE) {
+setMethod("plot", signature="HTClist",
+          function(x, ...){
+              mapC(x, ...)
+          }
+)
 
-    stopifnot(is.matrix(x))
-    out <- x
-    if (quant) {
-        lev <- quantile(x, seq(0, 1, by = 1/nb.lev), na.rm=TRUE)
-    }else{
-        mind <- min(x, na.rm=TRUE)
-        maxd <- max(x, na.rm=TRUE)
-        diff <- (maxd - mind)/nb.lev
-        lev=seq(0, maxd, by=diff)
-    }
-    
-    if (length(which(duplicated(lev)))>0){
-        lev <- unique(lev)
-        warning(paste("Find only ",length(lev)-1," levels (nb.lev=",nb.lev,")", sep=""))
-    }
+setMethod("plot", signature="HTCexp",
+          function(x, ...){
+              mapC(x, ...)
+          }
+)
 
-    for (k in 1:length(lev)){
-        out[which(x>=lev[k] & x<=lev[k+1])] <- k
-    }
-    out
-}
-
+setMethod("plot", signature=c("HTCexp","HTCexp"),
+          function(x, y, ...){
+              mapC(x, y, ...)
+          }
+)

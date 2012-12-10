@@ -200,7 +200,7 @@ getDeltaRange <- function(delta, xdata){
         if (max(ind)<length(xdata)){
             ind <- c(ind, length(xdata))
         }
-        message("Calculating stdev for",xdata[ind],"bps")
+        message("Calculating stdev ... ")
     }else{
         ind <- 1:length(xdata)
     }

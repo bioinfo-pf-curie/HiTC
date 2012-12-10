@@ -8,8 +8,8 @@
 \usage{CQC(x,  cis.trans.ratio = TRUE, hist.interac=TRUE, scat.interac.dist=TRUE,
 hist.dist=TRUE, trim.range=0.98, dev.new=FALSE)}
 \arguments{
-  \item{x}{object or list of objects that inherits from class
-    \code{HTCexp}}
+  \item{x}{object that inherits from class
+    \code{HTCexp} or \code{HTClist}}
   \item{cis.trans.ratio}{logical; barplot of percentage of
     inter-intrachromsomal interactions}
   \item{hist.interac}{logical; histogram of the interaction frequency}
@@ -22,12 +22,12 @@ hist.dist=TRUE, trim.range=0.98, dev.new=FALSE)}
     graphical device}
 }
 \details{
-If \code{x} is a list, all \code{HTCexp} objects are merged.
+If \code{x} is a \code{HTClist} object, all \code{HTCexp} objects are merged.
 The zero values are not used to compute the descriptive statistics and to display the data.
 If \code{trim.range} are lower than 1. The highest values (quantile probability is equal to \code{trim.range}) are discarded.
 }
 \value{
-    Return a \code{matrix}; Create quality plots and return a matrix with some simple statistics on all, cis and trans data.
+  Create quality plots and return a \code{matrix} with some simple statistics on all, cis and trans data.
 }
 \author{N. Servant, B. Lajoie}
 \seealso{\code{\link{HTCexp-class}}}

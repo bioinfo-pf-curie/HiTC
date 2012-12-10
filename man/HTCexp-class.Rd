@@ -24,9 +24,6 @@
 \alias{id}
 \alias{id-methods}
 \alias{id,GRanges-method}
-\alias{id<-}
-\alias{id<--methods}
-\alias{id<-,GRanges,factor-method}
 \alias{normPerReads}
 \alias{normPerReads-methods}
 \alias{normPerReads,HTCexp-method}
@@ -36,16 +33,14 @@
 \alias{normPerTrans}
 \alias{normPerTrans-methods}
 \alias{normPerTrans,HTCexp,HTCexp,HTCexp-method}
-\alias{plot}
-\alias{plot-methods}
 \alias{plot,HTCexp,ANY-method}
 \alias{plot,HTCexp,HTCexp-method}
 \alias{range}
-\alias{range-methods}
+\alias{range-method}
 \alias{range,HTCexp-method}
-\alias{seq_name}
-\alias{seq_name-methods}
-\alias{seq_name,HTCexp-method}
+\alias{seqlevels}
+\alias{seqlevels-method}
+\alias{seqlevels,HTCexp-method}
 \alias{show}
 \alias{show-methods}
 \alias{show,HTCexp-method}
@@ -65,14 +60,14 @@
 \alias{y_intervals<-}
 \alias{y_intervals<--methods}
 \alias{y_intervals<-,HTCexp,GRanges-method}
+\alias{xy_intervals,HTCexp-method}
+\alias{xy_intervals}
+\alias{xy_intervals-methods}
 
 % Old stuff (deprecated or defunct).
-\alias{export}
-\alias{export-methods}
-\alias{export,HTCexp,character,ANY-method}
-\alias{normPerZscore}
-\alias{normPerZscore-methods}
-\alias{normPerZscore,HTCexp-method}
+\alias{export-defunct}
+\alias{normPerZscore-defunct}
+\alias{seq_name-deprecated}
 
 \title{Class 'HTCexp'}
 \description{
@@ -100,37 +95,47 @@
 
 \section{Methods}{
   \describe{
-    \item{detail}{\code{signature("HTCexp")}: a more
+    \item{detail(x)}{\code{signature("HTCexp")}: a more
       detailed output of the experiment than provided by \code{show}.}
-    \item{divide}{comparison of two \code{signature("HTCexp")}
+    \item{divide(x)}{comparison of two \code{signature("HTCexp")}
       objects. Perform the division of the two interaction matrices on the
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
-      to zero, the divided value will be NA.}
-    \item{export}{Deprecated. See exportC function}
+      to zero, the divided value will be NA}
+    \item{intdata(x)}{return the \code{intdata} matrix counts}
+    \item{export(x)}{Defunct. See exportC method}
     \item{isBinned}{return TRUE if the data are binned. The method tests
-      if the 'x' and 'y' genome intervals are the same, if each bin has the
+      if the 'x' and 'y' genome intervals are the same, if 90\% of the bins have the
       same size and if the full genomic range is covered}
-    \item{isIntraChrom}{return TRUE if the current
+    \item{isIntraChrom(x)}{return TRUE if the current
       \code{signature("HTCexp")} object contains intrachromosomal interaction data}
-    \item{normPerReads}{normalize the interaction matrix by the total
+    \item{normPerReads(x)}{normalize the interaction matrix by the total
       number of reads of the matrix.}
-    \item{normPerExpected}{normalize the interaction matrix by the expected
-      number of reads based on the distance between two loci.}
-    \item{normPerZscore}{Depracted. See normPerExpected}
-    \item{normPerTrans}{Normalize cis interaction map based on the trans
-      interactions. see details.}
-    \item{plot}{visualization method; Display an heatmap of the
+    \item{normPerExpected(x)}{normalize the interaction matrix by the expected
+      number of reads based on the distance between two loci}
+    \item{normPerZscore(x)}{Defunct. See normPerExpected method}
+    \item{normPerTrans(x)}{Normalize cis interaction map based on the trans
+      interactions. see details}
+    \item{plot(x)}{visualization method; Display an heatmap of the
       interaction data. Refer to the documentation of
-      \code{\link{mapC}} for more details of the plotting function.}
-    \item{range}{return the genomic range of the \code{signature("HTCexp")} object} 
-    \item{show}{summarized output of the experiment, with informations
-      about the data dimension and the genomic region studied.}
-    \item{substract}{comparison of two \code{signature("HTCexp")}
+      \code{\link{mapC}} for more details of the plotting function}
+    \item{range(x)}{return the genomic range of the
+      \code{signature("HTCexp")} object} 
+    \item{seq_name(x)}{Defunct. See seqlevels method} 
+    \item{seqlevels(x)}{return the sequence levels of the \code{signature("HTCexp")} object} 
+    \item{show(x)}{summarized output of the experiment, with informations
+      about the data dimension and the genomic region studied}
+    \item{substract(x)}{comparison of two \code{signature("HTCexp")}
       objects. Perform the substraction of the two interaction matrices on the
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
-      to zero, the divided value will be NA.}
+      to zero, the divided value will be NA}
+    \item{x_intervals(x)}{return the \code{xgi} GRanges object defining the
+      x intervals}
+    \item{y_intervals(x)}{return the \code{ygi} GRanges object defining the
+      y intervals}
+    \item{xy_intervals(x)}{return both \code{xgi} and \code{ygi} objects as a
+      \code{GRangesList} object}
   }
 }
 \author{Nicolas Servant}
@@ -149,7 +154,7 @@
 }
 
 \seealso{
-  \code{\link[GenomicRanges]{GRanges-class}},
+  \code{\link[GenomicRanges]{GRanges-class}},\code{\link[GenomicRanges]{GRangesList-class}}
 }
 
 \examples{
@@ -165,11 +170,6 @@ isBinned(E14$chrXchrX)
 ## Is a inter or intrachromsomal experiment ?
 isIntraChrom(E14$chrXchrX)
 
-## ## Plotting
-## plot(E14$chrXchrX)
-## plot(E14$chrXchrX, view=2)
-## plot(binningC(E14$chrXchrX), binningC(MEF$chrXchrX), maxrange=20)
-
 ## Divide by expected interaction counts
 E14norm<-normPerExpected(E14$chrXchrX)
 
@@ -180,7 +180,7 @@ E14_s_MEF<-substract(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))
 ## Overlap with genomic annotation
 require(rtracklayer)
 gene <- import(file.path(system.file("extdata", package="HiTC"),"refseq_mm9_chrX_98831149_103425150.bed"), format="bed", asRangedData=FALSE)
-plot(E14$chrXchrX, giblocs=GRangesList(RefSeqGene=gene))
+plot(E14$chrXchrX, tracks=list(RefSeqGene=gene))
 
 \dontrun{
 ## normPerTrans data normalization applied on \href{http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeUmassDekker5C}{ENCODE data}.
