@@ -264,7 +264,7 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
 
   ## HTClist object
   if (view==1){
-    w <- width(range(x))
+    w <- as.numeric(width(range(x)))
     if(length(tracks) > 0){
       design <- matrix(NA, lc+1, lc+1)
       design[1,] <- c(1,seq(lc^2+2,(lc+1)^2-1,2))
@@ -276,29 +276,32 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
 
       ##blank plot at position 1
       par(mar=c(0,0,0,0))
-      plot(1, type="n", axes=FALSE, xlab="", ylab="")
-      
+      plot(1, type="n", axes=FALSE, xlab="", ylab="")     
     }else{
       design <- matrix(1:lc^2, lc, lc, byrow=FALSE)
       layout(design, widths=round(w/sum(w),3), heights=round(w/sum(w),3))
     }
     ## HTCexp object
-  }else if (view==2){
+  }else if (view==2L){
     rx <- range(x)
     ## Annotation
-    if(length(tracks) > 0){
+    if(length(tracks) > 0L){
       if (!is.null(y)){
         ry <- range(y)
         if (width(rx)>=width(ry)){
-          design <- rbind(rep(2,3),rep(1,3), c(4,3,5))
+          design <- rbind(rep(2L,3),rep(1L,3),c(4L,3L,5L),rep(6L,3))
           lmar <- (start(ry)-start(rx))/width(rx)
           rmar <- (end(rx)-end(ry))/width(rx)
-          layout(design, heights=c((1-sizeblocs*ntrack)/2, sizeblocs*ntrack,(1-sizeblocs*ntrack)/2), widths=c(lmar,(1-rmar-lmar), rmar))
+          h <- (1-sizeblocs*ntrack)/2
+          hy <- width(ry)/width(rx)
+          layout(design, heights=c(h, sizeblocs*ntrack,h*hy,h*(1-hy)), widths=c(lmar,(1-rmar-lmar), rmar))
         }else{
-          design <- rbind( c(4,2,5), rep(1,3),rep(3,3)) 
+          design <- rbind(rep(6L,3), c(4L,2L,5L), rep(1L,3),rep(3L,3)) 
           lmar <- (start(rx)-start(ry))/width(ry)
           rmar <- (end(ry)-end(rx))/width(ry)
-          layout(design, heights=c((1-sizeblocs*ntrack)/2, sizeblocs*ntrack,(1-sizeblocs*ntrack)/2), widths=c(lmar,(1-rmar-lmar), rmar))
+          h <- (1-sizeblocs*ntrack)/2
+          hx <- width(rx)/width(ry)
+          layout(design, heights=c(h*(1-hx), h*hx, sizeblocs*ntrack,h), widths=c(lmar,(1-rmar-lmar), rmar))
         }
       }else{
         design <- matrix(1:2, 2, 1, byrow=TRUE)
@@ -309,15 +312,18 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
         ry <- range(y)
         ## Adjust position of x and y if with are not the same
         if (width(rx)>=width(ry)){
-          design <- matrix(c(1,1,1,3,2,4), ncol=3, byrow=TRUE)
+          design <- matrix(c(1L,1L,1L,3L,2L,4L,5L,5L,5L), ncol=3, byrow=TRUE)
           lmar <- (start(ry)-start(rx))/width(rx)
           rmar <- (end(rx)-end(ry))/width(rx)
-          layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1,1))
+          hy <- width(ry)/width(rx)
+          layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1L, hy, 1-hy))
+          
         }else{
-          design <- matrix(c(3,1,4,2,2,2), ncol=3, byrow=TRUE)
+          design <- matrix(c(5L,5L,5L,3L,1L,4L,2L,2L,2L), ncol=3, byrow=TRUE)
           lmar <- (start(rx)-start(ry))/width(ry)
           rmar <- (end(ry)-end(rx))/width(ry)
-          layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1,1))
+          hx <- width(rx)/width(ry)
+          layout(design, widths=c(lmar,(1-rmar-lmar), rmar), heights=c(1-hx, hx ,1L))
         }
       }else{
         design <- matrix(1:lc^2, lc, lc, byrow=TRUE)
@@ -485,8 +491,13 @@ setMethod("mapC", signature=c("HTCexp","HTCexp"),
               ydata <- getData2Map(y, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
 
               ## Plots tracks and C map
-              if (!is.null(tracks))
-                addImageTracks(x, tracks, orientation="h")
+              if (!is.null(tracks)){
+                if (width(range(x))>=width(range(y))){
+                  addImageTracks(x, tracks, orientation="h")
+                }else{
+                  addImageTracks(y, tracks, orientation="h")
+                }
+              }
               par(mar=c(.5,0,0,0))
               triViewC(xdata, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na)
               par(mar=c(0,0,.5,0))

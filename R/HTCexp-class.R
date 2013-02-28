@@ -15,7 +15,7 @@ setClass("HTCexp",
 
 setValidity("HTCexp",
             function(object){
-                fails <- character(0)
+                fails <- character(0L)
                 
                 ## Format
                 if(class(object@intdata)!="matrix") {
@@ -38,20 +38,20 @@ setValidity("HTCexp",
                 }
                 
                 ## Content
-                if (length(object@xgi) == 0 || length(object@ygi) == 0){
+                if (length(object@xgi) == 0L || length(object@ygi) == 0L){
                     fails <- c(fails, "Inervals xgi or ygi are of size 0")
                 }
-                if (length(seqlevels(object@xgi)) > 1 || length(seqlevels(object@ygi)) > 1){
+                if (length(seqlevels(object@xgi)) > 1L || length(seqlevels(object@ygi)) > 1L){
                     fails <- c(fails, "Multiple chromosome found in xgi or ygi object")
                 }
-                if (length(setdiff(rownames(object@intdata), id(object@ygi)))>0){
+                if (length(setdiff(rownames(object@intdata), id(object@ygi)))>0L){
                     fails <- c(fails, "The 'ygi' intervals from the interaction matrix are different from those defined in the GRanges object")
                 }
-                if (length(setdiff(colnames(object@intdata), id(object@xgi)))>0){
+                if (length(setdiff(colnames(object@intdata), id(object@xgi)))>0L){
                     fails <- c(fails, "The 'xgi' intervals from the interaction matrix are different from those defined in the GRanges object")
                 }
                 
-                if (length(fails) > 0) return(fails)
+                if (length(fails) > 0L) return(fails)
                 return(TRUE)
             }
 )
@@ -60,7 +60,7 @@ setValidity("HTCexp",
 HTCexp <- function(intdata, xgi, ygi)
 {
     ## check xgi/ygi length
-    if (length(xgi)==0 || length(ygi)==0){
+    if (length(xgi)==0L || length(ygi)==0L){
         stop("Cannot create HTCexp object of size 0")
     }
     
@@ -73,7 +73,8 @@ HTCexp <- function(intdata, xgi, ygi)
     xgi <- sort(xgi)
     ygi <- sort(ygi)
 
-    intdata <- intdata[id(ygi), id(xgi)]
+    intdata <- matrix(intdata[rownames(intdata),colnames(intdata)],
+                      nrow=length(ygi), ncol=length(xgi), dimnames=list(id(ygi), id(xgi)))
     new("HTCexp", intdata, xgi, ygi)
 }
 
@@ -128,7 +129,7 @@ extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE)
                 ir <- IRanges(start=from, end=min(start(xgi))-1)
                 edata <- elementMetadata(xgi)[1,]
                 if (is.element("score",colnames(edata)))
-                    edata$score <- 0
+                    edata$score <- 0L
                 if (is.element("name",colnames(edata)))
                     edata$name <- paste(chr,":",from,"-",min(start(xgi))-1, sep="")
                 if (is.element("thick",colnames(edata)))
@@ -147,7 +148,7 @@ extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE)
                 ir <- IRanges(start=max(end(xgi))+1, end=to)
                 edata <- elementMetadata(xgi)[length(xgi),]
                 if (is.element("score",colnames(edata)))
-                    edata$score <- 0
+                    edata$score <- 0L
                 if (is.element("name",colnames(edata)))
                     edata$name <- paste(chr,":",max(end(xgi))+1,"-",to, sep="")
                 if (is.element("thick",colnames(edata)))
@@ -172,7 +173,7 @@ extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE)
                 ir <- IRanges(start=from, end=min(start(ygi))-1)
                 edata <- elementMetadata(ygi)[1,]
                 if (is.element("score",colnames(edata)))
-                    edata$score <- 0
+                    edata$score <- 0L
                 if (is.element("name",colnames(edata)))
                     edata$name <- paste(chr,":",from,"-",min(start(ygi))-1, sep="")
                 if (is.element("thick",colnames(edata)))
@@ -191,7 +192,7 @@ extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE)
                 ir <- IRanges(start=max(end(ygi))+1, end=to)
                 edata <- elementMetadata(ygi)[length(ygi),]
                 if (is.element("score",colnames(edata)))
-                    edata$score <- 0
+                    edata$score <- 0L
                 if (is.element("name",colnames(edata)))
                     edata$name <- paste(chr,":",max(end(ygi))+1,"-",to, sep="")
                 if (is.element("thick",colnames(edata)))
@@ -263,8 +264,8 @@ setMethod("detail",signature(x="HTCexp"),
               }
               data <- as.vector(intdata(x))
               cat("Total Reads = ",sum(data, na.rm=TRUE),"\n")
-              cat("Number of Interactions = ",length(data[which(data>0)]),"\n")
-              cat("Median Frequency = ",median(data[which(data>0)]),"\n")
+              cat("Number of Interactions = ",length(data[which(data>0L)]),"\n")
+              cat("Median Frequency = ",median(data[which(data>0L)]),"\n")
               invisible(NULL)
           }
 ) 
@@ -275,14 +276,14 @@ setMethod("divide", signature=c("HTCexp","HTCexp"),
               xgi <- subsetByOverlaps(x@xgi, y@xgi, type="equal")
               ygi <- subsetByOverlaps(x@ygi, y@ygi, type="equal")
               
-              if (length(xgi) == 0 || length(ygi) == 0){
+              if (length(xgi) == 0L || length(ygi) == 0L){
                   stop("No equal intervals found in x and y objects")
               }
               
               a <- x@intdata[id(ygi),id(xgi)]
               b <- y@intdata[id(ygi), id(xgi)]
-              a[which(a==0 | b==0)]<-NA
-              b[which(a==0 | b==0)]<-NA
+              a[which(a==0L | b==0L)]<-NA
+              b[which(a==0L | b==0L)]<-NA
               data <- a/b
               HTCexp(data, xgi , ygi)
           }
@@ -321,15 +322,19 @@ setMethod("isBinned", signature(x="HTCexp"),
               
               ## Same bins for intra chromosomal
               if(isIntraChrom(x)){
-                  if (length(setdiff(ranges(x@xgi),ranges(x@ygi))) != 0)
+                  if (length(setdiff(ranges(x@xgi),ranges(x@ygi))) != 0L)
                       ret <- FALSE
               }
               ## Same width (exept for last bins - checked in 90% of bins)
-              if (length(unique(width(x@xgi)[1:round(length(x@xgi)*.9)])) != 1 || length(unique(width(x@ygi)[1:round(length(x@ygi)*.9)])) != 1)
+              excl <- round(length(x@xgi)*.05)
+              if (length(unique(width(x@xgi)[excl:(length(x@xgi)-excl)])) != 1 || length(unique(width(x@ygi)[excl:(length(x@xgi)-excl)])) != 1)
                   ret <- FALSE
+
               ## no gaps
-              if (isDisjoint(x@xgi) || isDisjoint(x@ygi))
-                  ret <- FALSE
+              ##if (isDisjoint(x@xgi) || isDisjoint(x@ygi))
+              if (length(reduce(x@xgi)) != 1 || length(reduce(x@ygi)) != 1)
+                ret <- FALSE
+
               ret
           }
 )
@@ -400,8 +405,8 @@ setMethod("substract", signature(x="HTCexp",y="HTCexp"),
               
               a <- x@intdata[id(ygi),id(xgi)]
               b <- y@intdata[id(ygi), id(xgi)]
-              a[which(a==0 | b==0)]<-NA
-              b[which(a==0 | b==0)]<-NA
+              a[which(a==0L | b==0L)]<-NA
+              b[which(a==0L | b==0L)]<-NA
               data <- a-b
               
               HTCexp(data, xgi , ygi)

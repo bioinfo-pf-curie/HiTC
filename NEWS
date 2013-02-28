@@ -1,4 +1,18 @@
 ***********************************
+CHANGES IN VERSION 1.3.3
+
+NEW FEATURES
+
+   o Add PCA function on Hi-C interaction map as in Lieberman-Aiden et al. 2009
+
+BUG FIXES
+
+   o HTCexp. Error in constructor when the interaction map has a dim = 1
+
+   o mapC. Bug fixed in the visualization of two interaction maps of different sizes. The scale was updated, and the annotation tracks is always drawn from the larger map.
+
+
+***********************************
 CHANGES IN VERSION 1.3.2
 
 NEW FEATURES

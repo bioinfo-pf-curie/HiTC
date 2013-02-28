@@ -105,6 +105,7 @@ Whereas a 5C dataset can be composed of a single cis interaction map (i.e. \Rcla
 <<head>>=
 library(HiTC)
 showClass("HTCexp")
+showClass("HTClist")
 @ 
 
 \section{Working with 'C' Data}
@@ -173,16 +174,6 @@ isIntraChrom(hiC)
 seqlevels(hiC)
 @
 
-\subsection{Attached 5C data}
-The HiTC package includes a 5C dataset (\href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE35721}{GSE35721}) published by \cite{Nora2012a}, from which we choose two different Mouse samples, male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). This dataset is mainly used to describe the available functionalities of the package.
-
-<<importNora, echo=TRUE>>=
-## Load Nora et al 5C dataset
-data(Nora_5C)
-show(E14)
-show(MEF)
-@ 
-
 \section{Quality Control}
 The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random collisions. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qcc.png}).
 
@@ -195,12 +186,20 @@ CQC(hiC)
 graphics.off()
 @ 
 
-\myincfig{HiTC-qcc.png}{0.6\textwidth}{Quality Control of \Robject{hiC} data. Top-left : proportion of inter/intra chromosomal interactions. Top-right : scatter-plot of interaction counts versus genomic distance between two loci. Bottom-rigth : histogram of interaction counts. Bottom-left : histogram of distances between two loci.}
+\myincfig{HiTC-qcc.png}{0.6\textwidth}{Quality Control of \Robject{hiC} data. From top-left to bottom-right : proportion of intra/inter chromosomal interactions, scatter-plot of interaction counts versus genomic distance between two loci, histogram of interaction counts for intra (CIS) and inter (TRANS) interactions, histogram of distances between two intrachromosomal loci.}
 \newpage
 
 \section{HTCexp : single 'C' map experiment}
 
-In the following, the main functionnalities of the \Rclass{HTCexp} class are illustrated using the 5C dataset (Nora et al, 2012).
+\subsection{Attached 5C data}
+The HiTC package includes a 5C dataset (\href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE35721}{GSE35721}) published by \cite{Nora2012a}, from which we choose two different Mouse samples, male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). This dataset is mainly used to describe the available functionalities of the package.
+
+<<importNora, echo=TRUE>>=
+## Load Nora et al 5C dataset
+data(Nora_5C)
+show(E14)
+show(MEF)
+@ 
 
 \subsection{Visualization of Interaction Maps}
 The interaction map represents the frequency at which each pair of restriction fragments have been ligated together during the 3C procedure. The goal is to visualize at once these counts for many pairs of restriction fragments across a large genomic region. Each entry in the matrix corresponds to a count information, i.e., number of times two restriction fragments have been sequenced as a pair.\\
@@ -292,7 +291,7 @@ mapC(E14.binned, MEF.binned,
 \myincfig{HiTC-comp5C}{0.7\textwidth}{Comparison of two binned interaction maps, and visualization with genomic annotations.}
 
 
-\section{HTClist : Multiple 'C experiments}
+\section{HTClist : Multiple 'C' experiments}
 \label{section:hic}
 
 Basically, 5C and Hi-C data can be described in the same way. Thus, most of the functions and methods described for the 5C data can be applied to the Hi-C data.
@@ -309,7 +308,7 @@ mapC(hiC, maxrange=100)
 
 \subsection{Hi-C analysis}
 
-In this section, we present how, using a few command lines, we can reproduce some analyses of the \cite{Lieberman-Aiden2009} paper (see Figures~\ref{HiTC-mapChic}-\ref{HiTC-mapCorhic}) on the chromosome 14.
+In this section, we present how, using a few command lines, we can reproduce some analyses of the \cite{Lieberman-Aiden2009} paper (see Figures~\ref{HiTC-mapChic}-\ref{HiTC-mapCorhic}) on the chromosome 14, from visualization of maps to Principal Component Analysis (PCA).
 
 <<mapChic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Extract region of interest and plot the interaction map
@@ -333,6 +332,18 @@ mapC(HTClist(hiC14norm), maxrange=1, minrange=-1,
      col.pos=c("black", NA, "red"), col.neg=c("black",NA, "blue"))
 @ 
 \myincfig{HiTC-mapCorhic}{0.5\textwidth}{Correlation map of chromosome 14}
+
+
+<<mapPCAhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+## Principal Component Analysis
+pc <- pca.hic(hiC14, npc=1)
+plot(start(pc$PC1), score(pc$PC1), type="h", 
+     xlab="chr14", ylab="PC1vec", frame=FALSE)
+
+@
+\myincfig{HiTC-mapPCAhic}{0.5\textwidth}{Results of the PCA (eigenvector), which reflect the compartmentalization inherent in the heatmap.}
+
+
 
 \newpage
 \section{A word about speed}

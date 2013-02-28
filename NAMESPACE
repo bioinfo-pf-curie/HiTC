@@ -12,6 +12,7 @@ import("IRanges")
 ##Package used in HiTC
 importFrom("graphics", "plot", "image", "abline", "axis", "text")
 importFrom("grDevices", "col2rgb")
+importFrom("stats", "prcomp")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
 
@@ -30,6 +31,7 @@ export(
        "extractRegion",
        "getExpectedCounts",
        "HTCexp","HTClist",
+       "pca.hic",
        "removeIntervals", "setIntervalScale")
 
 ##Export classes

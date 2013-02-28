@@ -111,11 +111,11 @@
       \code{signature("HTCexp")} object contains intrachromosomal interaction data}
     \item{normPerReads(x)}{normalize the interaction matrix by the total
       number of reads of the matrix.}
-    \item{normPerExpected(x)}{normalize the interaction matrix by the expected
-      number of reads based on the distance between two loci}
+    \item{normPerExpected(x, stdev=TRUE)}{normalize the interaction matrix by the expected
+      number of reads based on the distance between two loci. See details.}
     \item{normPerZscore(x)}{Defunct. See normPerExpected method}
-    \item{normPerTrans(x)}{Normalize cis interaction map based on the trans
-      interactions. see details}
+    \item{normPerTrans(x, xtrans, ytrans, method="sum")}{Normalize cis interaction map based on the trans
+      interactions. See details}
     \item{plot(x)}{visualization method; Display an heatmap of the
       interaction data. Refer to the documentation of
       \code{\link{mapC}} for more details of the plotting function}
@@ -141,8 +141,9 @@
 \author{Nicolas Servant}
 \details{
   The \code{normPerExpected} method estimates the expected interactions based on a the dependency on the genomic
-  proximity between two loci. Look at the
-  \code{\link{getExpectedCounts}} function for details.\cr
+  proximity between two loci. If \code{stdev} is false, the ratio observed/expected is returned,
+  otherwise, the zscore ((observed-expected)/stdev) is returned
+  Look at the   \code{\link{getExpectedCounts}} function for details.\cr
   
   The \code{normPerTrans} method is based on the assumption that all trans interactions should be the same. Thus, the cis interactions can be normalized by the interaction level of trans data.
   The \code{xtrans} trans map has to share its 'xgi' ranges with the

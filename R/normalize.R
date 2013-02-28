@@ -14,6 +14,8 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, stdev
     }else{
         x@intdata <- x@intdata/expCounts$exp.interaction
     }
+    ## Remove NaN or Inf values for further analyses
+    intdata(x)[which(intdata(x)=="NaN" | intdata(x)=="Inf")]<-NA
     x
 })
 
