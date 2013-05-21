@@ -28,7 +28,7 @@
       be a vectore of size 3. mid can be NA}
     \item{col.na}{color for NA values}
       \item{grid}{logical; add a grid on the heatmap}
-      \item{title}{character; add a title to the heatmap}
+      \item{title}{character; add a title to the \code{HTCexp} plot(s)}
       \item{value}{logical; display the interaction values on the
 	matrix. Useful for small matrices}
       \item{mask.data}{matrix to add to the heatmap as a mask. Must have the

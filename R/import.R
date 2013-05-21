@@ -125,7 +125,9 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
 
             if (length(xgi.subset)>0 && length(ygi.subset)>0){
                 message("Loading ",chr[1],"-",chr[2],"...")
-                intdata <- as.matrix(my5Cdata[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
+                intdata <- as.matrix(my5Cdata[id(ygi.subset), id(xgi.subset)])
+                colnames(intdata) <- id(xgi.subset)
+                rownames(intdata) <- id(ygi.subset)
                 HTCexp(intdata, xgi.subset, ygi.subset)
             }
         })

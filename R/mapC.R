@@ -146,7 +146,7 @@ heatmapC <- function(xdata,  names=FALSE,  value=FALSE,  show.na=TRUE, col.pos=c
 ##
 ##################################
 
-triViewC <- function(xdata, flip=FALSE, value=FALSE, mask.data=NULL, show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80"){
+triViewC <- function(xdata, flip=FALSE, value=FALSE, mask.data=NULL, show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", title=NULL){
     
     d <- min(dim(xdata))
     trimat <- matrix(NA, ncol=d*2, nrow=d)
@@ -210,7 +210,9 @@ triViewC <- function(xdata, flip=FALSE, value=FALSE, mask.data=NULL, show.na=TRU
                 text(coordodd,y=i,labels=round(mat.lab[i,seq(1,ncol(mat.lab),2)],2), cex=.7)
         }
     }
-
+    if (!is.null(title)){
+        text(x=1, y=nrow(trimat), adj=c(0,1), title, col="darkgray", font=2)
+    }
 }
 
 ###################################
@@ -264,7 +266,11 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
 
   ## HTClist object
   if (view==1){
-    w <- as.numeric(width(range(x)))
+      rx <- range(x)
+      w <- as.numeric(width(rx))
+      names(w) <- as.vector(seqnames(rx))
+      w <- w[chrom]
+    
     if(length(tracks) > 0){
       design <- matrix(NA, lc+1, lc+1)
       design[1,] <- c(1,seq(lc^2+2,(lc+1)^2-1,2))
@@ -407,7 +413,7 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
 setMethod("mapC", signature="HTClist",
           function(x, tracks=NULL,
                    minrange=NA, maxrange=NA, trim.range=0.98, show.na=FALSE, log.data=FALSE, names=FALSE, value=FALSE,
-                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE, title=NULL){
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", mask.data=NULL, grid=FALSE){
             
             ## Set Graphical Environment
             setEnvDisplay(x, tracks=tracks, view=1)
@@ -425,7 +431,7 @@ setMethod("mapC", signature="HTClist",
                     par(mar=c(mean(sapply(rownames(xdata),nchar))/2,mean(sapply(colnames(xdata),nchar))/2,0,0))
                 
                 heatmapC(xdata, names=names, value=value, show.na=show.na, col.pos=col.pos,
-                         col.neg=col.neg, col.na=col.na, mask.data=mask.data, grid=grid, title=title)
+                         col.neg=col.neg, col.na=col.na, mask.data=mask.data, grid=grid)
               }else{
                 plot(1, type="n", axes=FALSE, xlab="", ylab="")
               }
@@ -465,7 +471,7 @@ setMethod("mapC", signature="HTCexp",
 
               ## Plots tracks and C map
               par(mar=c(0,0,0,0))
-              triViewC(xdata, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, mask.data=mask.data, value=value)
+              triViewC(xdata, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, mask.data=mask.data, value=value, title=title)
               if (!is.null(tracks))
                 addImageTracks(x, tracks, orientation="h")
           }
@@ -499,9 +505,9 @@ setMethod("mapC", signature=c("HTCexp","HTCexp"),
                 }
               }
               par(mar=c(.5,0,0,0))
-              triViewC(xdata, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na)
+              triViewC(xdata, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, title=title[1])
               par(mar=c(0,0,.5,0))
-              triViewC(ydata, flip=TRUE, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na)
+              triViewC(ydata, flip=TRUE, value=value, mask.data=mask.data, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, title=title[2])
             }
 )
 

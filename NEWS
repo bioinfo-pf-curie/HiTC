@@ -1,4 +1,19 @@
 ***********************************
+CHANGES IN VERSION 1.4.1
+
+BUG FIXES
+
+   o Fix bug in HTCexp contructor for matrix of dim 1
+
+   o Fix bug in import.my5C for matrix of dim 1
+
+   o Fix bug for title display on HTCexp plots
+
+   o Fix bug in HiTClist plot due to chromosome order 
+
+   o Correct errors in the man pages
+
+***********************************
 CHANGES IN VERSION 1.3.3
 
 NEW FEATURES
@@ -7,9 +22,7 @@ NEW FEATURES
 
 BUG FIXES
 
-   o HTCexp. Error in constructor when the interaction map has a dim = 1
-
-   o mapC. Bug fixed in the visualization of two interaction maps of different sizes. The scale was updated, and the annotation tracks is always drawn from the larger map.
+   o Error in constructor when the interaction map has a dim = 1
 
 
 ***********************************

@@ -17,9 +17,7 @@
   \item{all.pairwise}{logical; generate all pairwise chromosomal interaction maps, i.e chr1-chr2, chr2-chr1}
 }
 \details{
-  This function import high-throughput data from a csv file.
-  The expected format is the following :\cr
-  chrA,startA,endA,nameA,strandA,chrB,startB,endB,nameB,strandB,countAB
+  This function import high-throughput data from a matrix file.
 }
 
 \value{

@@ -63,18 +63,20 @@ HTCexp <- function(intdata, xgi, ygi)
     if (length(xgi)==0L || length(ygi)==0L){
         stop("Cannot create HTCexp object of size 0")
     }
-    
-    ## check format
-    stopifnot(is.matrix(intdata))
-    stopifnot(inherits(ygi,"GRanges"))
-    stopifnot(inherits(xgi,"GRanges"))
 
     ## sort xgi and ygi data
     xgi <- sort(xgi)
     ygi <- sort(ygi)
 
-    intdata <- matrix(intdata[rownames(intdata),colnames(intdata)],
-                      nrow=length(ygi), ncol=length(xgi), dimnames=list(id(ygi), id(xgi)))
+    intdata <- matrix(intdata, ncol=length(xgi), nrow=length(ygi), dimnames=list(id(ygi), id(xgi)))
+    colnames(intdata) <- id(xgi)
+    rownames(intdata) <- id(ygi)
+
+    ## check format
+    stopifnot(is.matrix(intdata))
+    stopifnot(inherits(ygi,"GRanges"))
+    stopifnot(inherits(xgi,"GRanges"))
+
     new("HTCexp", intdata, xgi, ygi)
 }
 
@@ -220,7 +222,7 @@ extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE)
          
          if (is.element(c(2), MARGIN))
              ygi <- subsetByOverlaps(ygi, fromto, type="within", ignore.strand=TRUE)
-         
+
          data <-  x@intdata[id(ygi), id(xgi)]
          HTCexp(data, xgi, ygi)
      }
@@ -422,7 +424,12 @@ setMethod(f="x_intervals", signature(x="HTCexp"),
 setReplaceMethod(f="x_intervals", signature(x="HTCexp",value="GRanges"),
                  function(x, value){
                      x@xgi <- value
-                     x@intdata<-x@intdata[,id(x@xgi)]
+                     intdata <- as.matrix(x@intdata[,as.vector(id(x@xgi))])
+                     colnames(intdata) <-as.vector(id(x@xgi))
+                     rownames(intdata) <- rownames(x@intdata)
+                     
+                     #x@intdata<-x@intdata[,id(x@xgi)]
+                     x@intdata <- intdata
                      x
                  }
 )
@@ -435,7 +442,12 @@ setMethod(f="y_intervals", signature(x="HTCexp"),
 setReplaceMethod(f="y_intervals", signature(x="HTCexp",value="GRanges"),
                  function(x, value){
                      x@ygi <- value
-                     x@intdata<-x@intdata[id(x@ygi),]
+                     intdata <- as.matrix(x@intdata[as.vector(id(x@ygi)),])
+                     rownames(intdata) <-as.vector(id(x@ygi))
+                     colnames(intdata) <- colnames(x@intdata)
+ 
+                     #x@intdata<-x@intdata[id(x@ygi),]
+                     x@intdata <- intdata
                      x
                  }
 )
