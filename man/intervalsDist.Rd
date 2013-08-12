@@ -26,6 +26,6 @@
 data(Nora_5C)
 
 ## Calculate distances between primers/intervals
-intervalsDist(E14$chrXchrX)
+d<-intervalsDist(E14$chrXchrX)
 }
 \keyword{manip}

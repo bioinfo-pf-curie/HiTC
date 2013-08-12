@@ -15,6 +15,7 @@ importFrom("grDevices", "col2rgb")
 importFrom("stats", "prcomp")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
+importMethodsFrom("Matrix", "colMeans", "crossprod")
 
 
 #############################
@@ -40,9 +41,10 @@ exportClasses("HTCexp", "HTClist")
 ##Export Methods
 exportMethods(
               "as.list",
+              "c",
               "detail","show",
               "intdata", "intdata<-",
-              "isBinned", "isIntraChrom",
+              "isBinned", "isIntraChrom", "isSymmetric",
               "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
               "id",
               "mapC","plot",

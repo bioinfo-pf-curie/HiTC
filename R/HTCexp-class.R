@@ -7,7 +7,7 @@
 ## class definition
 setClass("HTCexp",
          representation = representation(
-         "intdata"="matrix",
+         "intdata"="Matrix",
          "xgi"="GRanges",
          "ygi"="GRanges")
          )
@@ -18,10 +18,10 @@ setValidity("HTCexp",
                 fails <- character(0L)
                 
                 ## Format
-                if(class(object@intdata)!="matrix") {
-                    fails <- c(fails, "Expected matrix for the data slot!\n")
+                if(!inherits(object@intdata,"Matrix")) {
+                    fails <- c(fails, "Expected Matrix for the data slot!\n")
                 }
-                if(class(object@ygi)!="GRanges" || class(object@xgi)!="GRanges") {
+                if(!inherits(object@ygi,"GRanges") || !inherits(object@xgi,"GRanges")) {
                     fails <- c(fails, "Intervals 'xgi' and 'ygi' objects must be two GRanges objects!\n")
                 }
                 if (dim(object@intdata)[1] != length(object@ygi)){
@@ -57,7 +57,7 @@ setValidity("HTCexp",
 )
 
 ## constructor
-HTCexp <- function(intdata, xgi, ygi)
+HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
 {
     ## check xgi/ygi length
     if (length(xgi)==0L || length(ygi)==0L){
@@ -67,18 +67,25 @@ HTCexp <- function(intdata, xgi, ygi)
     ## sort xgi and ygi data
     xgi <- sort(xgi)
     ygi <- sort(ygi)
-
-    intdata <- matrix(intdata, ncol=length(xgi), nrow=length(ygi), dimnames=list(id(ygi), id(xgi)))
+    indata <- intdata[id(ygi), id(xgi)]
     colnames(intdata) <- id(xgi)
     rownames(intdata) <- id(ygi)
 
     ## check format
-    stopifnot(is.matrix(intdata))
+    if (!inherits(intdata, "Matrix")){
+      intdata <- as(intdata, "Matrix")
+    }
+
+    if (forceSymmetric){
+        intdata <- forceSymmetric(intdata)
+    }
+    
     stopifnot(inherits(ygi,"GRanges"))
     stopifnot(inherits(xgi,"GRanges"))
 
     new("HTCexp", intdata, xgi, ygi)
 }
+
 
 ################
 ##
@@ -235,6 +242,15 @@ extractRegion <- function(x, MARGIN=c(1,2), chr, from, to, exact=FALSE)
 ##
 ################
 
+setMethod("c", "HTCexp", function(x, ...){
+    if (missing(x))
+        args <- unname(list(...))
+    else
+        args <- unname(list(x, ...))
+    HTClist(args)
+})
+
+
 setMethod("detail",signature(x="HTCexp"),
           function(x){
               stopifnot(validObject(x))
@@ -255,7 +271,7 @@ setMethod("detail",signature(x="HTCexp"),
               }else{
                   cat("TRANS Interaction Map\n")
               }
-              cat("Matrix of Interaction data: [", dim(intdata(x))[1],"-",dim(intdata(x))[2], "]\n", sep="")
+              cat("Matrix of Interaction data: [", dim(x@intdata)[1],"-",dim(x@intdata)[2], "]\n", sep="")
               if (isBinned(x)){
                   cat("Binned data - window size =", width(x_intervals(x))[1],"\n")
                   cat(length(x_intervals(x)),"genome intervals\n")
@@ -264,11 +280,15 @@ setMethod("detail",signature(x="HTCexp"),
                   cat(length(x_intervals(x))," genomic ranges from 'xgi' object\n")
                   cat(length(y_intervals(x))," genomic ranges from 'ygi' object\n")
               }
-              data <- as.vector(intdata(x))
-              cat("Total Reads = ",sum(data, na.rm=TRUE),"\n")
-              cat("Number of Interactions = ",length(data[which(data>0L)]),"\n")
-              cat("Median Frequency = ",median(data[which(data>0L)]),"\n")
-              invisible(NULL)
+	      
+           
+              xdata <- x@intdata
+              cat("Total Reads = ",sum(xdata, na.rm=TRUE),"\n")
+              cat("Number of Interactions = ",nnzero(xdata),"\n")
+              cat("Median Frequency = ",median(xdata@x[xdata@x>0L]),"\n")
+              cat("Sparsity = ",round((length(xdata)-nnzero(xdata))/length(xdata),3),"\n")
+
+	      invisible(NULL)
           }
 ) 
 
@@ -297,11 +317,20 @@ setMethod(f="intdata", signature(x="HTCexp"),
           function(x){x@intdata}
 )
 
-setReplaceMethod(f="intdata", signature(x="HTCexp",value="matrix"),
+setReplaceMethod(f="intdata", signature(x="HTCexp",value="Matrix"),
                  function(x, value){
                      x@intdata <- value
+                     stopifnot(validObject(x))
                      return(x)
                  }
+)
+
+## Symetric interaction maps
+setMethod("isSymmetric", signature(object="HTCexp"),
+	  function(object){
+              ##isSymmetric(intdata(x))
+              all(object@intdata-t(object@intdata)==0)
+          }
 )
 
 ## Initialize method
@@ -394,6 +423,9 @@ setMethod("show",signature="HTCexp",
                       seqlevels(r)[2], ":", start(r)[2], "-", end(r)[2],"]\n", sep="")
               }
               cat("Matrix of Interaction data: [", dim(intdata(object))[1],"-",dim(intdata(object))[2], "]\n", sep="")
+              gf <- union(names(elementMetadata(x_intervals(object))), names(elementMetadata(y_intervals(object))))
+              if (length(gf)>1)
+                  cat("Genomic Features : ", paste(gf, collapse="-"),"\n")
               invisible(NULL)
           }
 )
@@ -424,11 +456,9 @@ setMethod(f="x_intervals", signature(x="HTCexp"),
 setReplaceMethod(f="x_intervals", signature(x="HTCexp",value="GRanges"),
                  function(x, value){
                      x@xgi <- value
-                     intdata <- as.matrix(x@intdata[,as.vector(id(x@xgi))])
+                     intdata <- as(as.matrix(x@intdata[,as.vector(id(x@xgi))]), "Matrix")
                      colnames(intdata) <-as.vector(id(x@xgi))
                      rownames(intdata) <- rownames(x@intdata)
-                     
-                     #x@intdata<-x@intdata[,id(x@xgi)]
                      x@intdata <- intdata
                      x
                  }
@@ -442,12 +472,10 @@ setMethod(f="y_intervals", signature(x="HTCexp"),
 setReplaceMethod(f="y_intervals", signature(x="HTCexp",value="GRanges"),
                  function(x, value){
                      x@ygi <- value
-                     intdata <- as.matrix(x@intdata[as.vector(id(x@ygi)),])
+                     intdata <- as(as.matrix(x@intdata[as.vector(id(x@ygi)),]), "Matrix")
                      rownames(intdata) <-as.vector(id(x@ygi))
                      colnames(intdata) <- colnames(x@intdata)
- 
-                     #x@intdata<-x@intdata[id(x@ygi),]
-                     x@intdata <- intdata
+                      x@intdata <- intdata
                      x
                  }
 )

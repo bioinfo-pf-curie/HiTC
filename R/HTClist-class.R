@@ -13,17 +13,17 @@ setValidity("HTClist",
                 fails <- character(0)
                 
                 ## Check Chromosome Pairs Data
-                chrom <- sapply(object, function(x){
-                    paste(seqlevels(x_intervals(x)), seqlevels(y_intervals(x)), sep="")
-                })
-                if (any(duplicated(chrom))){
-                    fails <- c(fails, "Multiple 'HTCexp' found from the same chromosome pairs")
-                }
+                 chrom <- sapply(object, function(x){
+                     paste(seqlevels(x_intervals(x)), seqlevels(y_intervals(x)), sep="")
+                 })
+                 if (any(duplicated(chrom))){
+                     fails <- c(fails, "Multiple 'HTCexp' found from the same chromosome pairs")
+                 }
 
                 ## Check Chromosome bounderies
-                if (length(unique(unlist(ranges(object)))) > length(seqlevels(object))){
-                  fails <- c(fails, "Same chromosome found with different ranges")
-                }
+                ##if (length(unique(unlist(ranges(object)))) > length(seqlevels(object))){
+                ##    fails <- c(fails, "Same chromosome found with different ranges")
+                ##}
                 
                 if (length(fails) > 0) return(fails)
                 return(TRUE)
@@ -34,18 +34,18 @@ setValidity("HTClist",
 HTClist <- function(...)
 {
   listData <- list(...)
-  if (length(listData) == 0L) {
-    unlistData <- HTCexp()
-  } else {
-    if (length(listData) == 1L && is.list(listData[[1L]]))
+  stopifnot(length(listData) > 0L)
+  
+  if (length(listData) == 1L && is.list(listData[[1L]]))
       listData <- listData[[1L]]
-    if (!all(sapply(listData, is, "HTCexp")))
+  if (!all(sapply(listData, is, "HTCexp")))
       stop("all elements in '...' must be HTCexp objects")
-    listData <- unname(listData)
-  }
+  listData <- unname(listData)
+
   names(listData) <- sapply(listData, function(x){
     paste(seqlevels(x_intervals(x)), seqlevels(y_intervals(x)), sep="")
   })
+  
   new("HTClist", listData)
 }
 
@@ -55,6 +55,28 @@ HTClist <- function(...)
 ## Methods
 ##
 ################
+
+setMethod("c", "HTClist", function(x, ...){
+    if (missing(x))
+        args <- unname(list(...))
+    else{
+        l <- list(...)
+        l <- sapply(l, function(x){
+            if (inherits(x,"HTClist"))
+                x <- as.list(x)
+            x
+        })
+        args <- unname(c(as.list(x), l))
+    }
+    HTClist(args)
+})
+
+setMethod("detail",signature(x="HTClist"),
+          function(x){
+              stopifnot(validObject(x))
+              unlist(x)
+          }
+)
 
 setMethod(f="isBinned", signature(x="HTClist"),
           function(x){
@@ -87,6 +109,16 @@ setMethod(f="seqlevels", signature(x="HTClist"),
           }
 )
 
+setMethod("show",signature="HTClist",
+          function(object){
+              stopifnot(validObject(object))
+              cat("HTClist object of length",length(object),"\n")
+              im <- isIntraChrom(object)
+              cat(length(which(im)),"intra /", length(which(!im)), "inter-chromosomal maps\n")
+              invisible(NULL)
+          }
+)
+
 setMethod("[", "HTClist",
     function(x, i, ...)
     {
@@ -100,6 +132,6 @@ setMethod("[", "HTClist",
 setMethod("as.list", "HTClist",
     function(x)
     {
-        list(unlist(x))
+        as.list(unlist(x))
     }
 )          

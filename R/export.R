@@ -19,7 +19,7 @@ exportC <- function(x, file="HiTCexport"){
 
     message("Export interaction maps as matrix file ...")
     data2export <- t(intdata(x))
-    write.table(data2export, file=paste(file,".mat", sep=""), quote=FALSE, sep="\t")
+    write.table(as.data.frame(as.matrix(data2export)), file=paste(file,".mat", sep=""), quote=FALSE, sep="\t")
 }##exportC
 
 
@@ -34,15 +34,31 @@ exportC <- function(x, file="HiTCexport"){
 ##
 ###################################
 
-export.my5C <- function(x, file){
+export.my5C <- function(x, file, format=c("mat", "list"), genome="mm9", header=TRUE){
 
     stopifnot(inherits(x,"HTCexp"))
-
-    write("##HiTC - export.my5C",file=file)
-    write(paste("##",date(), sep=""),file=file, append=TRUE)
-
+    format <- match.arg(format)
+    
+    if (header){
+        write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=file)
+        write(paste("##",date(), sep=""),file=file, append=TRUE)
+    }
+    
     data2export <- t(intdata(x))
-    primers <- sapply(colnames(data2export), function(x){paste(x,rownames(data2export), sep="\t")})
-    primers <- primers[which(data2export>0)]
-    write(paste(primers,as.vector(data2export[which(data2export>0)]),sep="\t"), file=file, append=TRUE)
-}
+
+    if (format=="list"){
+        primers <- sapply(colnames(data2export), function(x){paste(x,rownames(data2export), sep="\t")})
+        primers <- primers[which(data2export>0)]
+        write(paste(primers,as.vector(data2export[which(data2export>0)]),sep="\t"), file=file, append=TRUE)
+    }else{
+        xgi <- x_intervals(x)
+        xnames <- paste(id(xgi),"|",genome,"|",seqnames(xgi),":",start(xgi),"-",end(xgi), sep="")
+        ygi <- y_intervals(x)
+        ynames <- paste(id(ygi),"|",genome,"|",seqnames(ygi),":",start(ygi),"-",end(ygi), sep="")
+
+        ## Inversion because of t(intdata(x))
+        colnames(data2export) <- ynames
+        rownames(data2export) <- xnames
+        write.table(as.data.frame(as.matrix(data2export)), file=file, quote=FALSE, sep="\t")
+    }
+}##export.my5C

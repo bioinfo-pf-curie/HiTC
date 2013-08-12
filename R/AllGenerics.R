@@ -2,6 +2,8 @@
 setGeneric(name="intdata", def=function(x) standardGeneric("intdata"))
 setGeneric(name="intdata<-", def=function(x,value) standardGeneric("intdata<-"))
 
+#setGeneric(name="isSymmetric", def=function(x) standardGeneric("isSymmetric"))
+
 setGeneric(name="id", def=function(x) standardGeneric("id"))
 setGeneric(name="id<-", def=function(x,value) standardGeneric("id<-"))
 

@@ -28,12 +28,13 @@ pca.hic <- function(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE){
                  names(which(apply(intdata(x), 2, function(x) all(is.na(x))))))
     x <- removeIntervals(x,idx)
 
-
     ## Calculate correlation
     ## use="pairwise.complete.obs" means that the correlation between two vectors is calculated using only the paired non-NAs values.
     ## It means that two correlations can be calculated using a different set of points ...
     ## In theory this never appends because bins with NAs values should be removed earlier
-    xdata.cor <- cor(intdata(x), use="pairwise.complete.obs")
+    
+    xdata.cor <- sparseCor(intdata(x))##, use="pairwise.complete.obs")
+    ##xdata.cor <- cor(as.matrix(intdata(x)), use="pairwise.complete.obs")
 
     ## Perform PCA
     pca <- prcomp(xdata.cor, scale=TRUE)
@@ -51,7 +52,26 @@ pca.hic <- function(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE){
         for (i in 1:npc){
             pca.res[[eval(paste("PC",i, sep=""))]] <- GRanges(seqnames(xgi), ranges=ranges(xgi), strand=strand(xgi), score=round(pca$rotation[,i],3))
         }
-    }
-    
+    }  
     return(pca.res)
-} 
+}
+
+###################################
+## sparseCor
+##
+## Correlation methods for sparse Matrix
+##
+## x = Matrix object
+##################################
+
+sparseCor <- function(x){
+    n <- nrow(x)
+    cMeans <- colMeans(x)
+    covmat <- (as.matrix(crossprod(x)) - n*tcrossprod(cMeans))/(n-1)
+    sdvec <- sqrt(diag(covmat)) 
+    cormat <- covmat/tcrossprod(sdvec)
+       
+    colnames(cormat) <- colnames(x)
+    rownames(cormat) <- rownames(x)
+    as(cormat, "Matrix")
+}

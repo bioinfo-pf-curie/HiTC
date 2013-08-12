@@ -1,5 +1,27 @@
 ***********************************
-CHANGES IN VERSION 1.4.1
+CHANGES IN VERSION 1.5.2
+
+NEW FEATURES
+
+    o Efficient memory matrix representation using the Matrix package. The memory usage for big sparse matrix is improved by a factor 7. However, some operation are much slower based on the Matrix implementation. Thus, for some task as the plotting function, the Matrix are converted in standard matrix based object
+
+    o 'show' and 'detail' method for HTClist object
+
+    o 'c(x, ...)' method for HTCexp and HTClist objects
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o The option mask.data from the mapC function is deprecated
+
+    o Update of parallel computation for some functions (import, normalize)
+
+BUG FIXES
+
+    o Bug Fixe in import.my5C for ChrM
+    
+
+***********************************
+CHANGES IN VERSION 1.5.1
 
 BUG FIXES
 

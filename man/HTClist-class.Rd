@@ -3,6 +3,8 @@
 \docType{class}
 \alias{HTClist-class}
 \alias{HTClist}
+\alias{c,HTClist-method}
+\alias{detail,HTClist-method}
 \alias{as.list,HTClist-method}
 \alias{isBinned,HTClist-method}
 \alias{isIntraChrom,HTClist-method}
@@ -11,8 +13,10 @@
 \alias{ranges}
 \alias{ranges-methods}
 \alias{ranges,HTClist-method}
+\alias{show,HTClist-method}
 \alias{seqlevels,HTClist-method}
 \alias{[,HTClist,ANY,ANY-method}
+\alias{[,HTClist,ANY,ANY,ANY-method}
 
 
 \title{Class 'HTClist'}
@@ -32,6 +36,11 @@
 
 \section{Methods}{
   \describe{
+    \item{c(x, ...)}{Combines a \code{signature("HTClist")} object 'x'
+      with \code{signature("HTClist")} or \code{signature("HTCexp")} 
+      objects in '...'. The results is an object of class \code{signature("HTCList")}}
+    \item{detail(x)}{\code{signature("HTClist")}: a more
+      detailed output of the experiment than provided by \code{show}.}
     \item{isBinned(x)}{applies 'isBinned' to each element in 'x'}
     \item{isIntraChrom(x)}{applies 'isIntraChrom' to each element in 'x'}
     \item{ranges(x)}{applies 'range' to each element in 'x'}
@@ -39,6 +48,8 @@
     \item{seqlevels(x)}{return the sequence levels of all elements in 'x'}
     \item{as.list(x)}{coercion to simple \code{list} object}
     \item{names(x)}{get the names of the elements}
+    \item{show(x)}{summarized output of the experiment, with informations
+      about the data dimension}
     \item{x[i]}{Get elements \code{i} from \code{x}. Can be the
     positional index or its name.} 
   }
@@ -50,7 +61,17 @@
 }
 
 \examples{
-## TODO on Hi-C data
+exDir <- system.file("extdata", package="HiTC")
+l <- sapply(list.files(exDir, pattern=paste("HIC_gm06690_"), full.names=TRUE),
+            import.my5C)
+hiC <- HTClist(l)
+names(hiC)
 
+## Methods
+ranges(hiC)
+range(hiC)
+isBinned(hiC)
+isIntraChrom(hiC)
+seqlevels(hiC)
 }
 \keyword{classes}

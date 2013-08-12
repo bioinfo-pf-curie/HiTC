@@ -6,7 +6,7 @@
   Windowing of 'C' interaction map
 }
 \usage{binningC(x, binsize=100000, bin.adjust=TRUE, upa=TRUE,
-method="median", use.zero=TRUE, step=1)}
+method=c("median","mean","sum"), use.zero=TRUE, step=1, optimize.by = c("speed", "memory"))}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{binsize}{size of the bin to consider for windowing}
@@ -17,7 +17,10 @@ method="median", use.zero=TRUE, step=1)}
   \item{method}{the method used to combine the counts. Must be
     \sQuote{mean}, \sQuote{median} or \sQuote{sum}}
   \item{use.zero}{logical; use the zero values in the \code{method} calculation}
-  \item{step}{numeric; binning step size in \code{n} coverage \emph{i.e.} window step}
+  \item{step}{numeric; binning step size in \code{n} coverage
+    \emph{i.e.} window step}
+  \item{optimize.by}{"speed" will use faster methods but more RAM, and
+          "memory" will be slower, but require less RAM}
 }
 
 \details{

@@ -4,7 +4,8 @@
 \title{Set x and y interval of the HTCexp object}
 \description{Set x and y interval of the HTCexp object and update the
   interaction map accordingly}
-\usage{setIntervalScale(x, xgi, ygi, upa=TRUE, method="mean", use.zero=TRUE)}
+\usage{setIntervalScale(x, xgi, ygi, upa=TRUE, method=c("median","mean","sum"),
+use.zero=TRUE, optimize.by = c("speed", "memory"))}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{ygi}{y intervals;
@@ -15,7 +16,10 @@
     belong to one or several bins}
   \item{method}{the method used to combine the counts. Must be
     \sQuote{mean}, \sQuote{median} or \sQuote{sum}}
-  \item{use.zero}{logical; use the zero values in the \code{method} calculation}
+  \item{use.zero}{logical; use the zero values in the \code{method}
+    calculation}
+  \item{optimize.by}{"speed" will use faster methods but more RAM, and
+      "memory" will be slower, but require less RAM}
 }
 
 \details{

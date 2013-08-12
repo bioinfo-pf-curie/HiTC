@@ -4,15 +4,13 @@
 ## Import HTCexp object to standard format
 ##
 ## con = name of intput file to read
-## chrA,startA,endA,nameA,strandA,chrB,startB,endB,nameB,strandB,countAB
 ###################################
 ## Import Method
 
-importC <- function(con, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
+importC <- function(con, xgi.bed, ygi.bed=NULL, all.pairwise=TRUE){
     ## Read data
     stopifnot(!missing(con))
     data <- read.table(con,comment.char = "#", check.names=FALSE)
-    
     xgi <- import(xgi.bed, format="bed", asRangedData=FALSE)
     if (!is.null(ygi.bed)){
         ygi <- import(ygi.bed, format="bed", asRangedData=FALSE)
@@ -22,7 +20,7 @@ importC <- function(con, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
     message("Genomic intervals loaded")
     
     chromPair <- pair.chrom(seqlevels(GRangesList(xgi, ygi)), use.order=all.pairwise)
-    obj <- lapply(chromPair, function(chr){
+    obj <- mclapply(chromPair, function(chr){
         xgi.subset <- xgi[which(seqnames(xgi)==chr[1]),]
         seqlevels(xgi.subset)<-as.character(unique(seqnames(xgi.subset)))
         ygi.subset <- ygi[which(seqnames(ygi)==chr[2]),]
@@ -30,7 +28,7 @@ importC <- function(con, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
         
         if (length(xgi.subset)>0 && length(ygi.subset)>0){
             message("Loading ",chr[1],"-",chr[2],"...")
-            intdata <- as.matrix(data[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
+	      intdata <- Matrix(data[as.vector(id(ygi.subset)), as.vector(id(xgi.subset))])
             HTCexp(intdata, xgi.subset, ygi.subset)
         }
     })    
@@ -53,12 +51,12 @@ importC <- function(con, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
 ##
 ##################################
 
-import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE){
+import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE, forceSymmetric=FALSE){
     
     ## Read data
     stopifnot(!missing(my5C.datafile))
     my5Cdata <- read.table(my5C.datafile,comment.char = "#", check.names=FALSE)
-    
+
     if (ncol(my5Cdata)==3){
         if(is.null(xgi.bed) || is.null(ygi.bed))
             stop("BED files of x/y intervals are required for my5C list format")
@@ -79,7 +77,7 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
         message("Convert my5C list file in HTCexp object(s)")
         chromPair <- pair.chrom(seqlevels(GRangesList(xgi,ygi)), use.order=all.pairwise)
         
-        obj <- lapply(chromPair, function(chr){
+        obj <- mclapply(chromPair, function(chr){
             xgi.subset <- subset(xgi, as.vector(seqnames(xgi)==chr[1]))
             seqlevels(xgi.subset)<-as.character(unique(seqnames(xgi.subset)))
             ygi.subset <- subset(ygi, as.vector(seqnames(ygi)==chr[2]))
@@ -100,13 +98,15 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
                     }
                     out
                 }, USE.NAMES=TRUE)
-                intdata <- as.matrix(t(outs))
+                intdata <- Matrix(t(outs))
                 colnames(intdata) <- as.character(id(xgi.subset))
-                HTCexp(intdata, xgi.subset, ygi.subset)
+                HTCexp(intdata, xgi.subset, ygi.subset, forceSymmetric=forceSymmetric)
             }
         })
     } else if (is.data.frame(my5Cdata)){
         message("Convert my5C matrix file in HTCexp object(s)")
+        my5Cdata <- as(as.matrix(my5Cdata),"Matrix")
+
         ## Create xgi and ygi object
         gr <- my5C2gr(my5Cdata)
         xgi <- gr[[1]]
@@ -115,9 +115,10 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
         ## Create objects
         rownames(my5Cdata) <- unlist(lapply(strsplit(rownames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
         colnames(my5Cdata) <- unlist(lapply(strsplit(colnames(my5Cdata),"|", fixed=TRUE),function(x){x[1]}))
-        
+
         chromPair <- pair.chrom(seqlevels(GRangesList(xgi, ygi)), use.order=all.pairwise)
-        obj <- lapply(chromPair, function(chr){
+
+        obj <- mclapply(chromPair, function(chr){
             xgi.subset <- xgi[which(seqnames(xgi)==chr[1]),]
             seqlevels(xgi.subset)<-as.character(unique(seqnames(xgi.subset)))
             ygi.subset <- ygi[which(seqnames(ygi)==chr[2]),]
@@ -125,10 +126,14 @@ import.my5C <- function(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=
 
             if (length(xgi.subset)>0 && length(ygi.subset)>0){
                 message("Loading ",chr[1],"-",chr[2],"...")
-                intdata <- as.matrix(my5Cdata[id(ygi.subset), id(xgi.subset)])
+                if (length(ygi.subset)==1 || length(xgi.subset)==1){
+                  intdata <- Matrix(my5Cdata[id(ygi.subset), id(xgi.subset)], nrow=length(ygi.subset), ncol=length(xgi.subset))
+                }else{
+                  intdata <- my5Cdata[id(ygi.subset), id(xgi.subset)]
+                }
                 colnames(intdata) <- id(xgi.subset)
                 rownames(intdata) <- id(ygi.subset)
-                HTCexp(intdata, xgi.subset, ygi.subset)
+                HTCexp(intdata, xgi.subset, ygi.subset, forceSymmetric=forceSymmetric)
             }
         })
     }else{

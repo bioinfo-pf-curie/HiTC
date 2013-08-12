@@ -6,7 +6,7 @@
   Import 5C or Hi-C data from csv file
 }
 
-\usage{importC(con, xgi.bed = NULL, ygi.bed = NULL, all.pairwise=TRUE)}
+\usage{importC(con, xgi.bed, ygi.bed = NULL, all.pairwise=TRUE)}
 
 \arguments{
   \item{con}{input csv file. See details}

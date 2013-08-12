@@ -3,6 +3,7 @@
 \docType{class}
 \alias{HTCexp-class}
 \alias{HTCexp}
+\alias{c,HTCexp-method}
 \alias{detail}
 \alias{detail-methods}
 \alias{detail,HTCexp-method}
@@ -14,13 +15,16 @@
 \alias{intdata,HTCexp-method}
 \alias{intdata<--methods}
 \alias{intdata<-}
-\alias{intdata<-,HTCexp,matrix-method}
+\alias{intdata<-,HTCexp,Matrix-method}
 \alias{isBinned}
 \alias{isBinned-methods}
 \alias{isBinned,HTCexp-method}
 \alias{isIntraChrom}
 \alias{isIntraChrom-methods}
 \alias{isIntraChrom,HTCexp-method}
+\alias{isSymmetric}
+\alias{isSymmetric-methods}
+\alias{isSymmetric,HTCexp-method}
 \alias{id}
 \alias{id-methods}
 \alias{id,GRanges-method}
@@ -41,8 +45,6 @@
 \alias{seqlevels}
 \alias{seqlevels-method}
 \alias{seqlevels,HTCexp-method}
-\alias{show}
-\alias{show-methods}
 \alias{show,HTCexp-method}
 \alias{substract}
 \alias{substract-methods}
@@ -79,12 +81,12 @@
     \item calls of the form
     \code{new("HTCexp", intdata, GRanges, GRanges)}.
     \item using the auxiliary function \code{HTCexp} and supplying
-    interaction matrix with x and y intervals definition.
+    interaction Matrix with x and y intervals definition.
   }
 }
 \section{Slots}{
 	 \describe{
-    \item{\code{intdata}:}{Integer matrix, holding the
+    \item{\code{intdata}:}{Dense or Sparse Matrix, holding the
       interaction level between each pairs of 'x-y' intervals. The 'y' intervals must be in rows, and the 'x' in columns.}
     \item{\code{ygi}:}{Genomic ranges of y intervals;
       see class \code{granges} for details}
@@ -95,6 +97,8 @@
 
 \section{Methods}{
   \describe{
+    \item{c(x, ...)}{Combines 'x' and the \code{signature("HTCexp")}
+  objects in '...' together. The results is an object of class  \code{signature("HTCList")}}
     \item{detail(x)}{\code{signature("HTCexp")}: a more
       detailed output of the experiment than provided by \code{show}.}
     \item{divide(x)}{comparison of two \code{signature("HTCexp")}
@@ -102,13 +106,15 @@
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
       to zero, the divided value will be NA}
-    \item{intdata(x)}{return the \code{intdata} matrix counts}
+    \item{intdata(x)}{return the \code{intdata} Matrix counts}
     \item{export(x)}{Defunct. See exportC method}
     \item{isBinned}{return TRUE if the data are binned. The method tests
       if the 'x' and 'y' genome intervals are the same, if 90\% of the bins have the
       same size and if the full genomic range is covered}
     \item{isIntraChrom(x)}{return TRUE if the current
       \code{signature("HTCexp")} object contains intrachromosomal interaction data}
+    \item{isSymmetric(x)}{return TRUE if the interaction map is
+      symmetrical, i.e inherits the \code{symmetricMatrix} class}
     \item{normPerReads(x)}{normalize the interaction matrix by the total
       number of reads of the matrix.}
     \item{normPerExpected(x, stdev=TRUE)}{normalize the interaction matrix by the expected
@@ -155,7 +161,7 @@
 }
 
 \seealso{
-  \code{\link[GenomicRanges]{GRanges-class}},\code{\link[GenomicRanges]{GRangesList-class}}
+  \code{\link[GenomicRanges]{GRanges-class}},\code{\link[GenomicRanges]{GRangesList-class}},\code{\link[Matrix]{Matrix-class}}
 }
 
 \examples{

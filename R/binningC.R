@@ -14,18 +14,26 @@
 ###################################
 
 
-binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="median", use.zero=TRUE, step=1){
+binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("median", "mean", "sum"), use.zero=TRUE, step=1, optimize.by=c("speed","memory")){
 
     stopifnot(inherits(x,"HTCexp"))
 
-    met.agglo <- c("mean", "median", "sum")
-    method <- met.agglo[pmatch(method, met.agglo)]
-    if (is.na(method)) 
-        stop("Error :Unknown method.")
+    #met.agglo <- c("mean", "median", "sum")
+    #method <- met.agglo[pmatch(method, met.agglo)]
+    met <- match.arg(method)
+    optim <- match.arg(optimize.by)
+        
+    #if (is.na(method)) 
+    #    stop("Error :Unknown method.")
   
     ygi <- y_intervals(x)
     xgi <- x_intervals(x)
+
+    ## Optimization
     mat.data <- intdata(x)
+    if (optim=="speed")
+        mat.data <- as.matrix(mat.data)
+
     xmin <- start(range(xgi))
     xmax <- end(range(xgi))
     ymin <- start(range(ygi))
@@ -81,8 +89,12 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
     xy.bin.over <- as.list(findOverlaps(x.bin.set, ygi))
     yy.bin.over <- as.list(findOverlaps(y.bin.set, ygi))
     yx.bin.over <- as.list(findOverlaps(y.bin.set, xgi))
-    
-    mat.bin <- matrix(NA, ncol=x.nb.bin, nrow=y.nb.bin)
+
+    if (optim=="speed")
+        mat.bin <- matrix(0, ncol=x.nb.bin, nrow=y.nb.bin)
+    else
+        mat.bin <- Matrix(0, ncol=x.nb.bin, nrow=y.nb.bin)
+
     colnames(mat.bin) <- paste(seqlevels(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
     rownames(mat.bin) <- paste(seqlevels(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
 
@@ -95,14 +107,14 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
             rB <-xx.bin.over[[j]]
 
             if ((length(fA>0) || length(rA)>0) && (length(fB>0) || length(rB)>0)){
-                if (method=="sum"){
+                if (met=="sum"){
                     mat.bin[i,j] <- sum(mat.data[fA,rB], na.rm=TRUE)+sum(mat.data[fB,rA], na.rm=TRUE)
                     if (rownames(mat.bin)[i]==colnames(mat.bin)[j]){
                         mat.bin[i,j] <- mat.bin[i,j]/2
                     }
                 }
-                else if(method=="mean"){
-                    sdata <- c(mat.data[fA,rB], mat.data[fB,rA])
+                else if(met=="mean"){
+                    sdata <- c(as.vector(mat.data[fA,rB]), as.vector(mat.data[fB,rA]))
                     if (!use.zero && length(sdata[sdata!=0]>0)){
                         mat.bin[i,j] <- mean(sdata[sdata!=0], na.rm=TRUE)
                     }
@@ -110,19 +122,24 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
                         mat.bin[i,j] <- mean(sdata, na.rm=TRUE)
                     }
                 }
-                else if (method=="median"){
-                    sdata <- c(mat.data[fA,rB], mat.data[fB,rA])
+                else if (met=="median"){
+                    sdata <- c(as.vector(mat.data[fA,rB]), as.vector(mat.data[fB,rA]))
                     if (!use.zero && length(sdata[sdata!=0]>0)){
                         mat.bin[i,j] <-  median(sdata[sdata!=0], na.rm=TRUE)
                     }
                     else{
                         mat.bin[i,j] <-  median(sdata, na.rm=TRUE)
                     }
+                    a <- median(sdata, na.rm=TRUE)
                 }
             }
         }
-    }   
-    return(HTCexp(mat.bin, x.bin.set, y.bin.set))
+    }
+
+    if (optim=="speed")
+        mat.bin <- as(mat.bin, "Matrix")
+ 
+    return(HTCexp(mat.bin, x.bin.set, y.bin.set))  
 }
 
 ###################################
@@ -139,20 +156,24 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method="media
 ##
 ##################################
 
-setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method="mean", use.zero=TRUE){
+setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method=c("median","mean","sum"), use.zero=TRUE, optimize.by=c("speed","memory")){
     
     stopifnot(inherits(x,"HTCexp"))
 
-    met.agglo <- c("mean", "median", "sum")
-    method <- met.agglo[pmatch(method, met.agglo)]
-    if (is.na(method)) 
-        stop("Error :Unknown method.")
-  
+    #met.agglo <- c("mean", "median", "sum")
+    #method <- met.agglo[pmatch(method, met.agglo)]
+    #if (is.na(method)) 
+    #    stop("Error :Unknown method.")
+    met <- match.arg(method)
+    optim <- match.arg(optimize.by)
+
     x.ygi <- y_intervals(x)
     x.xgi <- x_intervals(x)
+
     mat.data <- intdata(x)
-
-
+    if (optim=="speed")
+       mat.data <- as.matrix(mat.data)
+    
     ## Unique Primer Assignment
     if (upa){
         start(ranges(x.xgi)) <- end(ranges(x.xgi)) <- mean(ranges(x.xgi))
@@ -165,18 +186,22 @@ setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method="mean", use.zero=TRUE
     bin.over.y <- as.list(findOverlaps(ygi, x.ygi))
     bin.over.x <- as.list(findOverlaps(xgi, x.xgi))
   
-    mat.bin <- matrix(NA, ncol=x.nb.bin, nrow=y.nb.bin)
+    if (optim=="speed")
+        mat.bin <- matrix(0, ncol=x.nb.bin, nrow=y.nb.bin)
+    else
+        mat.bin <- Matrix(0, ncol=x.nb.bin, nrow=y.nb.bin)
+
     colnames(mat.bin) <- id(xgi)
     rownames(mat.bin) <- id(ygi)
-     
+ 
     for (i in 1:(x.nb.bin)){
         rA <-bin.over.x[[i]]
         for (j in 1:(y.nb.bin)){
             fB <-bin.over.y[[j]]
             if (length(rA)>0 && length(fB)>0){
-                if (method=="sum"){
+                if (met=="sum"){
                     mat.bin[j,i] <- sum(mat.data[fB,rA], na.rm=TRUE)
-                } else if(method=="mean"){
+                } else if(met=="mean"){
                     sdata <- c(mat.data[fB,rA])
                     if (!use.zero && length(sdata[sdata!=0]>0)){
                         mat.bin[j,i] <- mean(sdata[sdata!=0], na.rm=TRUE)
@@ -185,7 +210,7 @@ setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method="mean", use.zero=TRUE
                         mat.bin[j,i] <- mean(sdata, na.rm=TRUE)
                     }
                 }
-                else if (method=="median"){
+                else if (met=="median"){
                     sdata <- c(mat.data[fB,rA])
                     if (!use.zero && length(sdata[sdata!=0]>0)){
                         mat.bin[j,i] <- median(sdata[sdata!=0], na.rm=TRUE)
@@ -197,6 +222,10 @@ setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method="mean", use.zero=TRUE
             }
         }
     }
+
+    if (optim=="speed")
+        mat.bin <- as(mat.bin,"Matrix")
+    
     return(HTCexp(mat.bin, xgi, ygi))
 }
 

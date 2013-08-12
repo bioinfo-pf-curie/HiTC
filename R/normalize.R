@@ -15,7 +15,7 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, stdev
         x@intdata <- x@intdata/expCounts$exp.interaction
     }
     ## Remove NaN or Inf values for further analyses
-    intdata(x)[which(intdata(x)=="NaN" | intdata(x)=="Inf")]<-NA
+    intdata(x)[which(is.na(x@intdata) | is.infinite(x@intdata))]<-NA
     x
 })
 
@@ -92,12 +92,7 @@ setMethod("normPerTrans", signature=c("HTCexp","HTCexp","HTCexp"), definition=fu
 
 getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     stopifnot(inherits(x,"HTCexp"))
-    if ("package:parallel" %in% search()){
-        lFun <- mclapply
-    } else {
-        lFun <- lapply
-    }
-    
+        
     ydata <- as.vector(intdata(x))
     ydata[which(is.na(ydata))] <- 0
     xdata.dist <- as.vector(intervalsDist(x))
@@ -124,7 +119,7 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
         plot(x=xdata.dist, y=ydata,  xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="5C counts", main="", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, col="gray", frame=FALSE)
         points(x=xdata.dist[order(lowess.fit)], y=sort(lowess.fit), type="l", col="red")
     }
-    lowess.mat <- matrix(lowess.fit[order(o)], nrow=length(y_intervals(x)), byrow=FALSE)
+    lowess.mat <- Matrix(lowess.fit[order(o)], nrow=length(y_intervals(x)), byrow=FALSE)
     rownames(lowess.mat) <- id(y_intervals(x))
     colnames(lowess.mat) <- id(x_intervals(x))
 
@@ -138,7 +133,7 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
         ind <- getDeltaRange(delta, xdata.dist)
         lx <- length(xdata.dist)
         Q <- floor(lx*span)
-        stdev.delta <- unlist(lFun(1:length(ind), function(k){
+        stdev.delta <- unlist(mclapply(1:length(ind), function(k){
             i <- ind[k]
             x1 <- xdata.dist[i]
             

@@ -18,7 +18,8 @@
     \item{minrange}{the minimum range of values used to define the color palette}
     \item{maxrange}{the maximum range of values used to define the color palette}
     \item{trim.range}{define the maxrange and minrange values using the
-      percentile of the interaction matrix.}
+      percentile of the interaction matrix}
+    \item{show.zero}{logical; plot the zero values}
     \item{show.na}{logical; show the NA values in gray}
     \item{log.data}{logical; do you want to log the data before plotting
       the heatmap}
@@ -31,9 +32,7 @@
       \item{title}{character; add a title to the \code{HTCexp} plot(s)}
       \item{value}{logical; display the interaction values on the
 	matrix. Useful for small matrices}
-      \item{mask.data}{matrix to add to the heatmap as a mask. Must have the
-      same dimension as the interaction matrix}
-  }
+    }
 }
 \section{For \code{HTCexp} objects only}{
 \describe{
