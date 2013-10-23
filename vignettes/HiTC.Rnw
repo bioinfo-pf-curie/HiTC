@@ -376,7 +376,6 @@ Many thanks to Joern Toedling and Pierre Gestraud for useful discussion and help
 \newpage
 \small
 %%% BIBLIOGRAPHY STARTS HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{abbrvnat}
 \bibliography{HiTC}
 
 %\begin{thebibliography}{}
