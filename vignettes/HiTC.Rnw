@@ -8,7 +8,7 @@
 \documentclass[11pt, a4paper, fleqn]{article}
 
 <<style, eval=TRUE, echo=FALSE, results=tex>>=
-BiocStyle::latex()
+BiocStyle::latex(bibstyle="abbrvnat")
 @ 
 
 \usepackage{geometry}
