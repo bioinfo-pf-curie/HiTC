@@ -8,7 +8,7 @@
 \documentclass[11pt, a4paper, fleqn]{article}
 
 <<style, eval=TRUE, echo=FALSE, results=tex>>=
-BiocStyle::latex(bibstyle="abbrvnat")
+BiocStyle::latex(use.unsrturl=FALSE)
 @ 
 
 \usepackage{geometry}
@@ -376,6 +376,7 @@ Many thanks to Joern Toedling and Pierre Gestraud for useful discussion and help
 \newpage
 \small
 %%% BIBLIOGRAPHY STARTS HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{abbrvnat}
 \bibliography{HiTC}
 
 %\begin{thebibliography}{}
