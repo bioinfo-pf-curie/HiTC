@@ -283,10 +283,12 @@ setMethod("detail",signature(x="HTCexp"),
 	      
            
               xdata <- x@intdata
+              
               cat("Total Reads = ",sum(xdata, na.rm=TRUE),"\n")
               cat("Number of Interactions = ",nnzero(xdata),"\n")
               cat("Median Frequency = ",median(xdata@x[xdata@x>0L]),"\n")
-              cat("Sparsity = ",round((length(xdata)-nnzero(xdata))/length(xdata),3),"\n")
+              #cat("Sparsity = ",round((length(xdata)-nnzero(xdata))/length(xdata),3),"\n")
+              cat("Sparsity = ",round(length(xdata@x)/length(xdata),3),"\n")
 
 	      invisible(NULL)
           }
@@ -446,6 +448,19 @@ setMethod("substract", signature(x="HTCexp",y="HTCexp"),
               HTCexp(data, xgi , ygi)
           }
 )
+
+## Summary
+setMethod("summary", signature=c(object="HTCexp"),
+          function(object){           
+              ## Force cohersion to dgTMatrix to have @x equal of non zero values
+              xdata <- as(as(intdata(object), "sparseMatrix"),"dgTMatrix")
+              mx <- mean(xdata@x, na.rm=TRUE)
+              mdx <- median(xdata@x, na.rm=TRUE)
+              
+              dstat <- c(sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round(length(xdata@x)/length(xdata),3))
+              names(dstat) <- c("nbreads","nbinteraction","averagefreq","medfreq","sparsity")
+              dstat
+          })
 
 
 

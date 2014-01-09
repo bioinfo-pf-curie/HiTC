@@ -6,11 +6,9 @@
 ## x = an object of class HTCexp.
 ##
 ##
-## TODO : improve apply loop
-##
 ###################################
 
-intervalsDist<-function(x){
+intervalsDist<-function(x, use.zero=TRUE){
 
     stopifnot(inherits(x,"HTCexp"))
     if (! isIntraChrom(x)){
@@ -19,24 +17,206 @@ intervalsDist<-function(x){
 
     xgi <- x_intervals(x)
     ygi <- y_intervals(x)
-    dist.mat <- apply(cbind(start(xgi),end(xgi)), 1, function(xgi){
-      apply(cbind(start(ygi),end(ygi)), 1, function(ygi,xgi){
-        ## Check if overlap
-        if ((xgi[2]>=ygi[1] && xgi[2]<=ygi[2]) || (ygi[2]>=xgi[1] && ygi[2]<=xgi[2])){
-          z <- abs(mean(ygi, na.rm=TRUE)-mean(xgi, na.rm=TRUE))
-        }else{
-          ##abs(ygi[2]-xgi[2])
-          z <- min(abs(ygi[2]-xgi[1]),abs(ygi[1]- xgi[2]))
+    xdata <- intdata(x)
+    
+    dist.mat <- apply(cbind(as.matrix(ranges(xgi)), id(xgi)), 1, function(xi, yi){
+        sxi <- as.numeric(xi[1])
+        exi <- sxi+as.numeric(xi[2])-1
+        nxi <- xi[3]
+        
+        mxi <- (exi-sxi)/2L
+        sygi <- start(yi)
+        eygi <- end(yi)
+
+        ##over <- yi %over% IRanges(start=xi[1], end=xi[2]) ## !!
+        over <- (exi>=sygi & exi<=eygi) | (sxi>=sygi & sxi<eygi)
+        id.over <- which(over)
+        id.nover <- which(!over)
+                
+        d <- rep(NA_integer_, length(ygi))
+        if (length(id.nover)>0){
+            aft <- abs(eygi[id.nover]-sxi)
+            bef <- abs(sygi[id.nover]- exi)
+            di <- bef
+            di[which(bef>aft)] <- aft[which(bef>aft)]
+            d[id.nover] <- di
+            ##d[id.nover] <- apply(cbind(abs(eygi[id.nover]-sxi), abs(sygi[id.nover]- exi)), 1, min) ## !!
         }
-        return(z)
-      }, xgi=xgi)
-    })
-    
-    rownames(dist.mat) <- id(y_intervals(x))
-    colnames(dist.mat) <- id(x_intervals(x))
-    
+        if (length(id.over)>0){
+            myi <- (eygi[id.over] - sygi[id.over])/2
+            d[id.over] <- abs(myi - mxi)
+        }
+        d
+    }, yi=ranges(ygi))
+
+    rownames(dist.mat) <- id(ygi)
+    colnames(dist.mat) <- id(xgi)
+
+    ## report only non-zero values
+    if (!use.zero){
+        dist.mat <- dist.mat + 1 ## zero distance are different from zero values
+        sl.xdata <- xdata!=0
+        dist.mat[which(!sl.xdata)] <- 0
+        dist.mat <- as(dist.mat, "dgTMatrix")
+    }
     dist.mat
 }##intervalsDist
+
+## Cis/Trans ratio
+plotInterIntraRatio <- function(xdata.intra, xdata.inter, ...){
+    sintra <- sum(xdata.intra, na.rm=TRUE)
+    sinter <- sum(xdata.inter, na.rm=TRUE)
+    sall <- sintra+sinter
+    
+    barplot(c(sintra/sall, sinter/sall), ylab="Fraction of Reads", names.arg=c("Intra","Inter"),main="Intra/Inter Chromosomal Interaction", ...)
+}
+
+## Scatter plot of interaction distance for intrachromosomal interactions
+slidingWindow <- function(mydata=consV, win=c(1, 100), start=1, end=length(consV)) {
+        mydata <- mydata[start:end]
+        windex <- t(sapply(0:length(mydata), function(x) win+x))
+        mywind <- sapply(seq(along=mydata), function(x) mean(mydata[windex[x,1]:windex[x,2]],
+        na.rm=TRUE))
+        mywind <- mywind[1:(length(mywind)-win[2])]
+        return(mywind)
+}
+
+
+plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize=NA, add=FALSE, log=FALSE, fit=FALSE, fit.lim=NA, ...){
+    stopifnot(length(xdata.intra)==length(xdata.intra.dist))
+    r <- range(xdata.intra.dist)
+
+    ## Remove zeros
+    idx <- which(xdata.intra>0)
+    xdata.intra <- xdata.intra[idx]
+    xdata.intra.dist <- xdata.intra.dist[idx]
+    
+    ## Windowing
+    if (!is.na(winsize)){
+        win <- seq.int(from=r[1], to=r[2], by=winsize)
+        xp <- yp <- rep(NA, length(win)-1)
+      
+        tmp <- sapply(1L:(length(win)-1L), function(i){
+            idx <- which(xdata.intra.dist>=win[i] & xdata.intra.dist<win[i+1])
+
+            sub <- xdata.intra.dist[idx]
+            x <- mean(xdata.intra.dist[idx], na.rm=TRUE)
+            y <- mean(xdata.intra[idx], na.rm=TRUE)
+            return(c(x, y))
+        })
+       
+        xp <- tmp[1,]
+        yp <- tmp[2,]
+        ptype <- "b"
+    }else{
+        xp <- xdata.intra.dist
+        yp <- xdata.intra
+        ptype <- "p"
+    }
+
+    ## Trim on interaction counts
+    if (trim.range<1){
+        qt <- quantile(yp, probs=c((1-trim.range),trim.range), na.rm=TRUE)
+        idx <- which(yp>=qt[1] & yp<=qt[2])
+        yp <- yp[idx]
+        xp <- xp[idx]
+    }
+    
+    ## Log
+    if (log){
+        xp <- log2(xp)
+        yp <- log2(yp)
+    }
+
+    if (fit){
+        ## remove extreme distances
+        qt <- quantile(xp, probs=c(0.1,0.8), na.rm=TRUE)
+        idx <- which(xp>=qt[1] & xp<=qt[2])
+        xp <- xp[idx]
+        yp <- yp[idx]
+        if (length(fit.lim)==2){
+            res.fit <- lm(yp[which(xp>fit.lim[1] & xp<fit.lim[2])]~xp[which(xp>fit.lim[1] & xp<fit.lim[2])])
+        }else{
+            res.fit <- lm(yp~xp)
+        }
+    }
+
+    ## Plotting function
+    if (!add){
+        plot(x=c(min(xp), max(xp)), y=c(min(yp), max(yp)),  xlab="Genomic Distance (log2)", ylab="Interaction Counts (log2)",
+              frame=FALSE, type="n", ...)
+    }
+    
+    if (fit){
+        pcol <- brewer.pal(8, "Pastel2")
+        if (length(fit.lim)==2)
+            rect(fit.lim[1], min(yp)-1, fit.lim[2], max(yp), col=pcol[5], border=pcol[5])
+        abline(res.fit, ...)
+        #text(x=max(xp), y=max(yp), labels=paste("a=", round(res.fit$coefficients[2],6)), font=2, cex=.7)
+    }
+    points(x=xp, y=yp, type=ptype, ...)
+    if (fit)
+        return(res.fit)
+    else
+        invisible(NULL)
+}
+
+plotHistCounts <- function(x, trim.range=.98, ...){
+    if (trim.range<1)
+        x <- x[which(x<quantile(x, probs=trim.range, na.rm=TRUE))]
+    histdens<-sort(hist(x,breaks=500, plot=FALSE)$density)
+    ymax <- histdens[floor(length(histdens)*.995)]
+    hist(x,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main="Interaction Frequency Histogram\nInteraction Counts",ylab="Probability Density",xlab="Interaction Frequency")
+    lines(density(x), col="red")
+}
+
+plotHistDist <- function(xdata.intra.dist, trim.range=.98, ...){
+    x <- xdata.intra.dist
+    if (trim.range<1)
+        xdata.intra.dist <- xdata.intra.dist[which(x<quantile(x, probs=trim.range, na.rm=TRUE))]
+    
+    histdens<-sort(hist(xdata.intra.dist,breaks=500, plot=FALSE)$density)
+    ymax <- histdens[floor(length(histdens)*.995)]
+    hist(xdata.intra.dist,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main="Histogram of Distances Between \nX & Y intervals",ylab="Probability Density",xlab="CIS Interaction Distance",...)
+    lines(density(x), col="red")
+}
+
+extractCounts <- function(x){
+  x.intra <- x.inter <- NULL
+  xdata.intra <- xdata.inter <- NULL
+  
+  if (inherits(x,"HTClist")){
+      ## Separate Intra/Inter chromosomal interaction
+      if (length(which(isIntraChrom(x)))>0){
+          x.intra <- x[isIntraChrom(x)]
+          xdata.intra <- unlist(lapply(x.intra,function(x){
+              return(as(as(intdata(x), "sparseMatrix"),"dgTMatrix")@x)
+          }))
+          xdata.intra.dist <- unlist(lapply(x.intra,function(x){
+              return(intervalsDist(x, use.zero=FALSE)@x)}))
+      }
+      if (length(which(!isIntraChrom(x)))>0){
+          x.inter <- x[!isIntraChrom(x)]
+          xdata.inter <- unlist(lapply(x.inter,function(x){
+              return(intdata(x)@x)
+          }))
+      }
+  } else if(inherits(x,"HTCexp")){
+      if (isIntraChrom(x)){
+          x.intra <- x
+          xdata.intra <- as(as(intdata(x.intra), "sparseMatrix"),"dgTMatrix")@x
+          xdata.intra.dist <- intervalsDist(x.intra, use.zero=FALSE)@x
+      }else {
+          x.inter <- x
+          xdata.inter <- intdata(x.inter)@x
+          xdata.intra.dist <- NULL
+      }
+  }else{
+      stop("Wrong input type. 'HTCexp' or 'HTClist' objects expected.")
+  }
+  return(list(intra=xdata.intra, intra.dist=xdata.intra.dist, inter=xdata.inter))
+}
+
 
 ###################################
 ## CQC
@@ -48,132 +228,66 @@ intervalsDist<-function(x){
 ## hist.interac = if true, plot the interaction frequency. How many interaction have n reads 
 ## scat.interac.dist = if true, plot the scatter plot of counts vs genomic distances. Interaction Distance vs interaction frequency
 ## hist.dist = if true, plot an histogram of distances between y and x intervals. How many interaction have n distance
-## trim.range = remove the extreme values by trimming the counts. Only use for plotting functions
+## trim.range = remove the extreme values by trimming the counts. Only used for plotting functions
 ## dev.new = if true, draw each plot in a new view
 ##
 ###################################
 
-
-CQC <- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRUE, hist.dist=TRUE, trim.range=0.98, dev.new=FALSE){
+CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRUE, hist.dist=TRUE, trim.range=0.98, winsize=NA){
   
-  x.intra <- x.inter <- NULL
-  xdata.intra <- xdata.inter <- NULL
-
-  if (inherits(x,"HTClist")){
-    ## Separate Intra/Inter chromosomal interaction
-    if (length(which(isIntraChrom(x)))>0){
-      x.intra <- x[isIntraChrom(x)]
-      xdata.intra <- unlist(lapply(x.intra,function(x){
-        return(as.vector(intdata(x)))
-      }))
-      xdata.intra.dist <- unlist(lapply(x.intra,function(x){
-        return(as.vector(intervalsDist(x)))}))
-    }
-    if (length(which(!isIntraChrom(x)))>0){
-      x.inter <- x[!isIntraChrom(x)]
-      xdata.inter <- unlist(lapply(x.inter,function(x){
-        return(as.vector(intdata(x)))
-      }))
-    }
-  } else if(inherits(x,"HTCexp")){
-    if (isIntraChrom(x)){
-      x.intra <- x
-      xdata.intra <- as.vector(intdata(x.intra))
-      xdata.intra.dist <- as.vector(intervalsDist(x.intra))
-    }else {
-      x.inter <- x
-      xdata.inter <- as.vector(intdata(x.inter))
-      xdata.intra.dist <- NULL
-    }
-  }else{
-    stop("Wrong input type. 'HTCexp' or 'HTClist' objects expected.")
-  }
-  
-  ## Remove zero-values
-  xdata.intra.dist <- xdata.intra.dist[xdata.intra>0]
-  xdata.intra <- xdata.intra[xdata.intra>0]
-  xdata.inter <- xdata.inter[xdata.inter>0]
-  xdata <- c(xdata.inter, xdata.intra)
-  
-  ## Basic Descriptive Statistics
-  dstat <- matrix(0,ncol=4,nrow=3)
-  colnames(dstat) <- c("nbreads","nbinteraction","averagefreq","medfreq")
-  rownames(dstat) <- c("all","cis","trans")
-  
-  dstat["all",]<-c(sum(xdata, na.rm=TRUE), sum(length(xdata), na.rm=TRUE), round(mean(xdata, na.rm=TRUE),3), median(xdata, na.rm=TRUE))
-  if (!is.null(xdata.intra))
-    dstat["cis",]<-c(sum(xdata.intra, na.rm=TRUE), sum(length(xdata.intra), na.rm=TRUE),  round(mean(xdata.intra, na.rm=TRUE),3), median(xdata.intra, na.rm=TRUE))
-  if (!is.null(xdata.inter))
-    dstat["trans",]<-c(sum(xdata.inter, na.rm=TRUE), sum(length(xdata.inter), na.rm=TRUE),  round(mean(xdata.inter, na.rm=TRUE),3), median(xdata.inter, na.rm=TRUE))
-  
-  nbplot <- length(which(c(cis.trans.ratio, scat.interac.dist, hist.dist, hist.interac)))
-  if (length(x.inter)>0){
-    nbplot <- nbplot+1
-  }
-  if (!dev.new){
-    par(mfrow=c(ceiling(nbplot/2),2), mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
-  }
-  
+    message("Get data ...")
+    data <- extractCounts(x)
+    xdata.inter <- data$inter
+    xdata.intra <- data$intra
+    xdata <- c(xdata.inter, xdata.intra)
+    xdata.intra.dist <- data$intra.dist
+    
+  message("Generate quality control plots ...")
+  #nbplot <- length(which(c(cis.trans.ratio, scat.interac.dist, hist.dist, hist.interac)))
+  #if (!is.null(xdata.inter)){
+  #    nbplot <- nbplot+1
+  #}
+   
   ## Cis/Trans ratio
   if (cis.trans.ratio && length(xdata)>0){
-    if (dev.new){
       dev.new()
       par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
-    }
-    barplot(c(sum(xdata.intra, na.rm=TRUE)/sum(xdata, na.rm=TRUE), sum(xdata.inter, na.rm=TRUE)/sum(xdata, na.rm=TRUE)), ylab="Fraction of Reads", names.arg=c("CIS","TRANS"),main="Intra/Inter Chromosomal Interaction", col=c("#FBB4AE","#B3CDE3"), cex.lab=0.7,cex.axis=0.7, cex.main=0.9)
+      plotInterIntraRatio(xdata.intra, xdata.inter,
+                          cex.lab=0.7, cex.axis=0.7, cex.main=0.9,
+                          col=c("#FBB4AE","#B3CDE3"))
   }
-  
+   
   ## Scatter plot of interaction distance for intrachromosomal interactions
-  if(scat.interac.dist && length(x.intra)>0){
-    if (dev.new){
+  if(scat.interac.dist && !is.null(xdata.intra)>0){
       dev.new()
       par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
-    }
-    y1 <- sort(xdata.intra)
-    y1 <-  quantile(y1[which(y1>1)], probs=trim.range, na.rm=TRUE)
-    plot(x=xdata.intra.dist, y=xdata.intra,  xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="Interaction Counts", main="Scatter Plot (Frequency(Y) vs Distance(X))\nCIS Interaction Counts", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, cex.main=0.9, frame=FALSE)
+      plotIntraDist(xdata.intra, xdata.intra.dist, trim.range, winsize=winsize,
+                    cex=0.5, cex.lab=0.7, pch=20,
+                    cex.axis=0.7, cex.main=0.9, main="Scatter Plot (Frequency(Y) vs Distance(X))\nCIS Interaction Counts")
   }
-  
+ 
   ## Histogram of interaction counts for intra and/or interchromosomal interaction
   if (hist.interac){
-    if (length(x.intra)>0){
-      if (dev.new){
-        dev.new()
-        par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
-      }
-      x <- xdata.intra
-      x <- x[which(x<quantile(x, probs=trim.range, na.rm=TRUE))]
-      histdens<-sort(hist(x,breaks=500, plot=FALSE)$density)
-      ymax <- histdens[floor(length(histdens)*.995)]
-      hist(x,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main="Interaction Frequency Histogram\nCIS Interaction Counts",ylab="Probability Density",xlab="Interaction Frequency",cex.lab=0.7, cex.axis=0.7, pch=20, cex.main=0.9)
-      lines(density(x), col="red")
-    }
-    if (length(x.inter)>0){
-      if (dev.new){
-        dev.new()
-        par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
-      }
-      x <- xdata.inter
-      x <- x[which(x<quantile(x, probs=trim.range, na.rm=TRUE))]
-      histdens<-sort(hist(x,breaks=500, plot=FALSE)$density)
-      ymax <- histdens[floor(length(histdens)*.995)]
-      hist(x,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main="Interaction Frequency Histogram\nTRANS Interaction Counts",ylab="Probability Density",xlab="Interaction Frequency",cex.lab=0.7, cex.axis=0.7, pch=20, cex.main=0.9)
-      lines(density(x), col="red")
-    }
-  }
-  
-  ## Histogram of Distance for intrachromosomal interactions
-  if (hist.dist && length(x.intra)>0){
-    if (dev.new){
       dev.new()
       par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
-    }
-    x <- xdata.intra.dist
-    x <- xdata.intra.dist[which(x<quantile(x, probs=trim.range, na.rm=TRUE))]
-    histdens<-sort(hist(x,breaks=500, plot=FALSE)$density)
-    ymax <- histdens[floor(length(histdens)*.995)]
-    hist(x,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main="Histogram of Distances Between \nX & Y intervals",ylab="Probability Density",xlab="CIS Interaction Distance",cex.lab=0.7, cex.axis=0.7, pch=20, cex.main=0.9)
-    lines(density(x), col="red")
+      plotHistCounts(xdata.intra, trim.range,
+                     cex.lab=0.7, cex.axis=0.7,
+                     pch=20, cex.main=0.9)
+      if (!is.null(xdata.inter)){
+          dev.new()
+          par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+          plotHistCounts(xdata.inter, trim.range,
+                         ,cex.lab=0.7, cex.axis=0.7,
+                         pch=20, cex.main=0.9)
+      }
   }
-  return(dstat)
+ 
+  ## Histogram of Distance for intrachromosomal interactions
+  if (hist.dist && !is.null(xdata.intra)){
+      dev.new()
+      par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      plotHistDist(xdata.intra.dist, trim.range,
+                   cex.lab=0.7, cex.axis=0.7,
+                   pch=20, cex.main=0.9)
+  }
 }

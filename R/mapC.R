@@ -80,11 +80,11 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
 
     xdata.pos <- xdata.neg <- NULL
    
-    if (max(xdata)>0){
+    if (max(xdata, na.rm=TRUE)>0){
         xdata.pos <- xdata
         xdata.pos[xdata<0] <- 0
     }
-    if (min(xdata)<0){
+    if (min(xdata, na.rm=TRUE)<0){
         xdata.neg <- xdata
         xdata.neg[xdata>=0] <- 0
     }
@@ -99,7 +99,6 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
     
     if (!is.null(xdata.pos)){   
         col.pos <- colorC(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
-
         xdata <- as(xdata,"sparseMatrix")
         plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.pos,show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=col.pos)
     }
@@ -269,7 +268,7 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
   if (view==1){
       rx <- range(x)
       w <- as.numeric(width(rx))
-      names(w) <- as.vector(seqnames(rx))
+      names(w) <- seqlevels(rx)
       w <- w[chrom]
     
     if(length(tracks) > 0){
@@ -280,7 +279,7 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
 
       heatspace <- 1-sizeblocs*ntrack
       layout(design, widths=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)), heights=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)))
-
+      
       ##blank plot at position 1
       par(mar=c(0,0,0,0))
       plot(1, type="n", axes=FALSE, xlab="", ylab="")     

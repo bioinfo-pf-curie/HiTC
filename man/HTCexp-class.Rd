@@ -49,6 +49,7 @@
 \alias{substract}
 \alias{substract-methods}
 \alias{substract,HTCexp,HTCexp-method}
+\alias{summary,HTCexp-method}
 \alias{x_intervals}
 \alias{x_intervals-methods}
 \alias{x_intervals,HTCexp-method}
@@ -136,6 +137,7 @@
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
       to zero, the divided value will be NA}
+    \item{summary(x)}{return descriptive summary statistics about the interaction map}
     \item{x_intervals(x)}{return the \code{xgi} GRanges object defining the
       x intervals}
     \item{y_intervals(x)}{return the \code{ygi} GRanges object defining the

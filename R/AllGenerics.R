@@ -30,4 +30,5 @@ setGeneric(name="mapC", def=function(x, y, ...) standardGeneric("mapC"))
 setGeneric(name="normPerZscore", def=function(x, ...) standardGeneric("normPerZscore"))
 setGeneric(name="seq_name", def=function(x,...) standardGeneric("seq_name"))
 
-
+## standard generics
+setGeneric("summary")

@@ -1,4 +1,27 @@
 ***********************************
+CHANGES IN VERSION 1.7.3
+
+NEW FEATURES
+   
+   o Add new normalization method for Hi-C data from Hu et al (HiCNorm). This method is based on linear regression model between interaction counts and sources of bias such as GC content, mappability, fragment length, etc. See normLGF(), setGenomicFeatures(), getAnnotatedRestrictionSites().
+
+   o Add new normalization method for Hi-C data from Imakaev et al.(ICE). The ICE procedure is an iterative normalization method used to remove any bias from HiC data.
+
+   o Add 'summary' method for HTCexp and HTClist objects
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Improve quality control methods based using sparse data
+
+   o Change method option for normPerTrans methods. The 'mean' method is in fact a 'max' method
+
+   o Update of the export.my5C list format
+
+BUG FIXES
+
+   o max (na.rm=TRUE) in mapC function
+
+***********************************
 CHANGES IN VERSION 1.5.2
 
 NEW FEATURES

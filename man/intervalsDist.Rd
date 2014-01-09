@@ -5,9 +5,11 @@
 \description{
    Compute the distance of intrachromosomal interactions of a 'C' experiment
 }
-\usage{intervalsDist(x)}
+\usage{intervalsDist(x, use.zero=TRUE)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
+  \item{use.zero}{if FALSE, the distance for non interacting
+    regions (zero counts) are not reported}
 }
 
 \details{

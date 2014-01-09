@@ -13,9 +13,10 @@ import("IRanges")
 importFrom("graphics", "plot", "image", "abline", "axis", "text")
 importFrom("grDevices", "col2rgb")
 importFrom("stats", "prcomp")
+importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
-importMethodsFrom("Matrix", "colMeans", "crossprod")
+importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
 
 
 #############################
@@ -23,6 +24,7 @@ importMethodsFrom("Matrix", "colMeans", "crossprod")
 ## EXPORT
 ##
 #############################
+
 ##Export functions and generics
 export(
        "binningC",
@@ -31,9 +33,13 @@ export(
        "exportC", "export.my5C", "importC", "import.my5C",
        "extractRegion",
        "getExpectedCounts",
+       "getAnnotatedRestrictionSites",
        "HTCexp","HTClist",
+       "normLGF","normICE",
        "pca.hic",
-       "removeIntervals", "setIntervalScale")
+       "removeIntervals", "setIntervalScale",
+       "setGenomicFeatures", 
+       "summary")
 
 ##Export classes
 exportClasses("HTCexp", "HTClist")

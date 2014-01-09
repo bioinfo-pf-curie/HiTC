@@ -6,7 +6,7 @@
   Quality Control for high-throughput 'C' experiment
 }
 \usage{CQC(x,  cis.trans.ratio = TRUE, hist.interac=TRUE, scat.interac.dist=TRUE,
-hist.dist=TRUE, trim.range=0.98, dev.new=FALSE)}
+hist.dist=TRUE, trim.range=0.98, winsize=NA)}
 \arguments{
   \item{x}{object that inherits from class
     \code{HTCexp} or \code{HTClist}}
@@ -18,8 +18,8 @@ hist.dist=TRUE, trim.range=0.98, dev.new=FALSE)}
   \item{hist.dist}{logical; histogram of the distance between the 'x'
     and 'y' intervals}
   \item{trim.range}{remove the extreme values by trimming the counts. Only use for plotting functions. [0,1]}
-  \item{dev.new}{logical; specifying if each plots must be in a separate
-    graphical device}
+  \item{winsize}{used for the scat.interac.dist. If specify, the data
+    are windowed before plotting}
 }
 \details{
 If \code{x} is a \code{HTClist} object, all \code{HTCexp} objects are merged.

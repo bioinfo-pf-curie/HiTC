@@ -15,6 +15,7 @@
 \alias{ranges,HTClist-method}
 \alias{show,HTClist-method}
 \alias{seqlevels,HTClist-method}
+\alias{summary,HTClist-method}
 \alias{[,HTClist,ANY,ANY-method}
 \alias{[,HTClist,ANY,ANY,ANY-method}
 
@@ -50,6 +51,7 @@
     \item{names(x)}{get the names of the elements}
     \item{show(x)}{summarized output of the experiment, with informations
       about the data dimension}
+    \item{summary(x)}{return descriptive summary statistics for each interaction map}
     \item{x[i]}{Get elements \code{i} from \code{x}. Can be the
     positional index or its name.} 
   }
