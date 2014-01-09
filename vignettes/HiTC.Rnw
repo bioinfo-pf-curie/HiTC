@@ -76,7 +76,7 @@ BiocStyle::latex(use.unsrturl=FALSE)
     \fcolorbox{black}{mygray}{
      \begin{minipage}[c]{1\textwidth}
       \textbf{HiTC - Major Release}\\\\ Since version 1.5.2 the HiTC package now depends on the \Rpackage{Matrix} package. The main reason of this change is an improvment of the memory usage of the package in order to deal with recent high resolution Hi-C data. See section~\ref{sec:speedandmem} for details.
-      
+    
      \end{minipage}}
 \end{center}
 
@@ -181,22 +181,18 @@ range(hiC)
 isBinned(hiC)
 isIntraChrom(hiC)
 seqlevels(hiC)
+summary(hiC)
 @
 
 \section{Quality Control}
-The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random collisions. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qcc.png}).
+The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random collisions. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qcc}).
 
-<<qcc, eval=FALSE, echo=TRUE>>=
-CQC(hiC)
+<<qcc, include=FALSE, fig=TRUE, width=7, height=7>>=
+par(mfrow=c(2,2))
+CQC(hiC, winsize = 1e+06, dev.new=FALSE, hist.dist=FALSE)
 @
 
-<<QCeval, echo=FALSE, results=verbatim>>=
-png(file="HiTC-qcc.png", res=300, units="in", width=5, height=5)
-CQC(hiC)
-graphics.off()
-@
-
-\incfig{HiTC-qcc.png}{0.6\textwidth}{Quality Control of \Robject{hiC} data.}{From top-left to bottom-right : proportion of intra/inter chromosomal interactions, scatter-plot of interaction counts versus genomic distance between two loci, histogram of interaction counts for intra (CIS) and inter (TRANS) interactions, histogram of distances between two intrachromosomal loci.}
+\incfig{HiTC-qcc}{0.6\textwidth}{Quality Control of \Robject{hiC} data.}{From top-left to bottom-right : proportion of intra/inter chromosomal interactions, scatter-plot of interaction counts versus genomic distance between two loci, histogram of interaction counts for intra (CIS) and inter (TRANS) interactions, histogram of distances between two intrachromosomal loci.}
 
 
 \newpage

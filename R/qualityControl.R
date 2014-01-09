@@ -233,7 +233,7 @@ extractCounts <- function(x){
 ##
 ###################################
 
-CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRUE, hist.dist=TRUE, trim.range=0.98, winsize=NA){
+CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRUE, hist.dist=TRUE, trim.range=0.98, winsize=NA, dev.new=TRUE){
   
     message("Get data ...")
     data <- extractCounts(x)
@@ -250,8 +250,10 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
    
   ## Cis/Trans ratio
   if (cis.trans.ratio && length(xdata)>0){
-      dev.new()
-      par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      if (dev.new){
+          dev.new()
+          par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      }
       plotInterIntraRatio(xdata.intra, xdata.inter,
                           cex.lab=0.7, cex.axis=0.7, cex.main=0.9,
                           col=c("#FBB4AE","#B3CDE3"))
@@ -259,8 +261,10 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
    
   ## Scatter plot of interaction distance for intrachromosomal interactions
   if(scat.interac.dist && !is.null(xdata.intra)>0){
-      dev.new()
-      par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      if (dev.new){
+          dev.new()
+          par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      }
       plotIntraDist(xdata.intra, xdata.intra.dist, trim.range, winsize=winsize,
                     cex=0.5, cex.lab=0.7, pch=20,
                     cex.axis=0.7, cex.main=0.9, main="Scatter Plot (Frequency(Y) vs Distance(X))\nCIS Interaction Counts")
@@ -268,14 +272,18 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
  
   ## Histogram of interaction counts for intra and/or interchromosomal interaction
   if (hist.interac){
-      dev.new()
-      par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      if (dev.new){
+          dev.new()
+          par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      }
       plotHistCounts(xdata.intra, trim.range,
                      cex.lab=0.7, cex.axis=0.7,
                      pch=20, cex.main=0.9)
       if (!is.null(xdata.inter)){
-          dev.new()
-          par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+          if (dev.new){
+              dev.new()
+              par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+          }
           plotHistCounts(xdata.inter, trim.range,
                          ,cex.lab=0.7, cex.axis=0.7,
                          pch=20, cex.main=0.9)
@@ -284,8 +292,10 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
  
   ## Histogram of Distance for intrachromosomal interactions
   if (hist.dist && !is.null(xdata.intra)){
-      dev.new()
-      par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      if (dev.new){
+          dev.new()
+          par(mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+      }
       plotHistDist(xdata.intra.dist, trim.range,
                    cex.lab=0.7, cex.axis=0.7,
                    pch=20, cex.main=0.9)
