@@ -21,7 +21,7 @@
   systematic biases (effective fragment length, GC content, mappability)
   in a Hi-C contact map.
 
-  Note : v1.7.1. works only for intrachromosome data
+  Note : v1.7.3. works only for intrachromosome data
 }
 \value{
   Returns a \code{HTCexp} object with a normalized contact map.
@@ -29,7 +29,7 @@
 \references{
 Hu M, Deng K, Selvaraj S, Qin Z, Ren B, Liu JS. HiCNorm: removing biases in Hi-C data via Poisson regression. Bioinformatics. 2012;28(23):3131-3.
 }
-\author{N. Servant, M. Hu, }
+\author{N. Servant, M. Hu, S. Selvaraj}
 \seealso{\code{\link{getAnnotatedRestrictionSites}}, \code{\link{setGenomicFeatures}}}
 \examples{
 \dontrun{

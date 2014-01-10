@@ -18,6 +18,9 @@
 \details{
   The imakaev normalization of Hi-C data consists of iteratively
   estimating the bias using the l1 norm.
+  Note that the original method is applied on the genome-wide Hi-C
+  map. For computation reason, we will applied the normalization to
+  each chromosome separatly.
 }
 \value{
   Returns a \code{HTCexp} object with a corrected contact map.
