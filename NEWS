@@ -1,4 +1,19 @@
 ***********************************
+CHANGES IN VERSION 1.7.4
+
+NEW FEATURES
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Change the parameters of getAnnotatedRestrictionSites and setGenomicFeatures fucntions
+  o Update of the setGenomicAnnotation function to fit with the original HiCNorm method
+
+BUG FIXES
+
+  o isSymmetrix - NA values
+  o Bug in definition of upstream and downstream flanking region for a restriction site in getAnnotatedRestrictionSites
+
+***********************************
 CHANGES IN VERSION 1.7.3
 
 NEW FEATURES

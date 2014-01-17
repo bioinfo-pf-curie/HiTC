@@ -331,7 +331,7 @@ setReplaceMethod(f="intdata", signature(x="HTCexp",value="Matrix"),
 setMethod("isSymmetric", signature(object="HTCexp"),
 	  function(object){
               ##isSymmetric(intdata(x))
-              all(object@intdata-t(object@intdata)==0)
+              all(object@intdata-t(object@intdata)==0, na.rm=TRUE)
           }
 )
 

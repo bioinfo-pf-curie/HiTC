@@ -5,7 +5,7 @@
 
 \title{Local Genomic Feature (LGF) normalization}
 \description{
-  Parametric model to remove systematic biases in the raw interaction maps
+  Parametric model to remove systematic biases in the raw contact maps
 }
 
 \usage{normLGF(x, family=c("poisson", "nb"))}

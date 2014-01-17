@@ -6,9 +6,9 @@
 \alias{mapC,HTCexp,ANY-method}
 \alias{mapC,HTCexp,HTCexp-method}
 
-\title{Visualize 'C' interaction map}
+\title{Visualize 'C' ontact map}
 \description{
-  Visualize 'C' interaction map
+  Visualize 'C' contact map
 }
 
 \section{For \code{HTCexp} and \code{HTClist} objects}{
@@ -23,14 +23,14 @@
     \item{show.na}{logical; show the NA values in gray}
     \item{log.data}{logical; do you want to log the data before plotting
       the heatmap}
-    \item{col.pos}{color for (low,mid,high) positive interaction counts. Must
+    \item{col.pos}{color for (low,mid,high) positive contact counts. Must
       be a vectore of size 3. mid can be NA}
-    \item{col.neg}{color for (low,mid,high) negative interaction counts. Must
+    \item{col.neg}{color for (low,mid,high) negative contact counts. Must
       be a vectore of size 3. mid can be NA}
     \item{col.na}{color for NA values}
       \item{grid}{logical; add a grid on the heatmap}
       \item{title}{character; add a title to the \code{HTCexp} plot(s)}
-      \item{value}{logical; display the interaction values on the
+      \item{value}{logical; display the contact values on the
 	matrix. Useful for small matrices}
     }
 }
@@ -63,7 +63,7 @@
   The triangle view is used for \code{HTCexp} only and represent
   the top-right part the interaction matrix. If two \code{HTCexp}
   objects are specified, they will be displayed in order to compare both
-  interaction maps. The two maps have to be binned to ensure comparison
+  contact maps. The two maps have to be binned to ensure comparison
   between genomic ranges.
 
   Annotation tracks can be added to both views. In case of binned data,
@@ -80,7 +80,7 @@
 \examples{
 data(Nora_5C)
 
-## Interaction map
+## Contact map
 ## HTClist view
 mapC(E14)
 

@@ -1,9 +1,9 @@
 \name{binningC}
 \Rdversion{1.1}
 \alias{binningC}
-\title{Windowing of high-throughput 'C' interaction matrix}
+\title{Windowing of high-throughput 'C' contact matrix}
 \description{
-  Windowing of 'C' interaction map
+  Windowing of 'C' contact map
 }
 \usage{binningC(x, binsize=100000, bin.adjust=TRUE, upa=TRUE,
 method=c("median","mean","sum"), use.zero=TRUE, step=1, optimize.by = c("speed", "memory"))}
@@ -37,7 +37,7 @@ method=c("median","mean","sum"), use.zero=TRUE, step=1, optimize.by = c("speed",
 \value{
   An \code{HTCexp-class} object with binned intraction data. In this
   case, the genomic intervals are converted into bins of fixed size.
-  The interaction matrix is symetric.
+  The contact matrix is symetric.
 }
 \seealso{\code{\link{HTCexp-class}}}
 \author{N. Servant, B. Lajoie}

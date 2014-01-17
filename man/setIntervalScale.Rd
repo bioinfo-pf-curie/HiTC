@@ -3,7 +3,7 @@
 \alias{setIntervalScale}
 \title{Set x and y interval of the HTCexp object}
 \description{Set x and y interval of the HTCexp object and update the
-  interaction map accordingly}
+  contact map accordingly}
 \usage{setIntervalScale(x, xgi, ygi, upa=TRUE, method=c("median","mean","sum"),
 use.zero=TRUE, optimize.by = c("speed", "memory"))}
 \arguments{
@@ -23,11 +23,11 @@ use.zero=TRUE, optimize.by = c("speed", "memory"))}
 }
 
 \details{
-  Define new interaction map based on the specified xgi and ygi
+  Define new contact map based on the specified xgi and ygi
   intervals.
 
   This function has to be used carefully and can has important impact on
-  the interaction map. 
+  the contact map. 
   It is important to note that the \code{setIntervalScale} function is different from the \code{binningC} function in the way that the output
   is not symetrical.
 }

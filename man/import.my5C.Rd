@@ -11,11 +11,11 @@
 \arguments{
   \item{my5C.datafile}{input file from the my5C webtool}
   \item{xgi.bed}{BED file describing the 'x' Intervals (i.e. column
-  names) of the interaction map. Required for the my5C list format}
+  names) of the contact map. Required for the my5C list format}
   \item{ygi.bed}{BED file describing the 'y' intervals (i.e. row names) of the
-  interaction map. Required for the my5C list format}
+  contact map. Required for the my5C list format}
   \item{all.pairwise}{logical; generate all pairwise chromosomal
-    interaction maps, i.e chr1-chr2, chr2-chr1}
+    contact maps, i.e chr1-chr2, chr2-chr1}
   \item{forceSymmetric}{Force the Matrix to be symmetrical}
 }
 \details{
@@ -28,10 +28,10 @@
   files} describing the genomic coordinates are required.
   
   - The matrix format is a tab-delimited format, corresponding to the
-  interaction map. The rownames and columnames are splitted to created
+  contact map. The rownames and columnames are splitted to created
   the genome intervals (example : REV_2|mm9|chrX:98831149-98834145). 
   
-  The \code{all.pairwise} option is not necessary in case of symetric design. Otherwise, it will return all the pairwise interaction maps.
+  The \code{all.pairwise} option is not necessary in case of symetric design. Otherwise, it will return all the pairwise contact maps.
 
   The matrix will be stored as a matrix inheriting from \code{Matrix} class. If forcesymmetrical=TRUE, the matrix as forced to
   \code{symmetricMatrix} class allowing a much more efficient memory usage.

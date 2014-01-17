@@ -257,32 +257,27 @@ normLGF <- function(x,  family=c("poisson", "nb")){
 ## 
 ##
 ## x = HTCexp/HTClist object
-## ... = see getAnnotatedRestrictionSites
-##
-## TODO
-## - check the effective fragment length distribution
-## - what about HTCexp ?
+## cutSites = GRanges object ir GRangesList from getAnnotatedRestrictionSites function
+## minFragMap = Discard restriction with mappability lower the this threshold (and NA)
+## effFragLen = Effective fragment length
 ##################################
 
-setGenomicFeatures <- function(x, ...){
+setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
     stopifnot(inherits(x,"HTCexp"))
-
-    allchr <- seqlevels(x)
-    allchrAnnot <- lapply(allchr, function(x, ...){getAnnotatedRestrictionSites(chromosome=x, ...)}, ...)
-    names(allchrAnnot) <- allchr
-  
-     ##Annotated x and y genome intervals
-    #hicAnnot <- lapply(x, function(obj){
+    if (inherits(cutSites, "GRangesList"))
+        cutSites <- cutSites[[seqlevels(xgi)]]
+    stopifnot(seqlevels(x)==seqlevels(cutSites))
+    
     obj <- x
-    xgi <- x_intervals(obj)
-    xgi <- HiTC:::annotateIntervals(xgi, allchrAnnot[[seqlevels(xgi)]])
+    xgi <- x_intervals(x)
+    xgi <- annotateIntervals(xgi, cutSites, minfragmap=minFragMap, efffraglen=effFragLen)
     x_intervals(obj) <- xgi
     
-    if (isIntraChrom(obj) && isBinned(obj)){
+    if (isIntraChrom(x) && isBinned(x)){
         y_intervals(obj) <- xgi
     }else{
-        ygi <- y_intervals(obj)
-        ygi <- HiTC:::annotateIntervals(ygi, allchrAnnot[[seqlevels(ygi)]])
+        ygi <- y_intervals(x)
+        ygi <- annotateIntervals(ygi, cutSites, minfragmap=minFragMap, efffraglen=effFragLen)
         y_intervals(obj) <- ygi
     }
    obj
@@ -298,29 +293,59 @@ setGenomicFeatures <- function(x, ...){
 ##
 ##################################
 
-annotateIntervals <- function(gi, annot){
+annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
 
-    if (!is.null(annot$map)){
-        annot <- annot[which(annot$map_U>.5)] ## hicnorm
-        annot <- annot[which(annot$map_D>.5)] ## hicnorm
+    ## Preprocess, keep fragments ends with mappability score larger than .5.
+    ## Depends on the data processing (see Yaffe and Tanay, 2011). These fragments will be exclude from the analysis.
+    if (!is.na(minfragmap)){
+        idxmap <- which(annot$map_U<minfragmap | is.na(annot$map_U))
+        elementMetadata(annot)[idxmap,c("len_U", "GC_U", "map_U")]<-NA_real_
+        idxmap <- which(annot$map_D<minfragmap | is.na(annot$map_D))
+        elementMetadata(annot)[idxmap,c("len_D", "GC_D", "map_D")]<-NA_real_
     }
-    outl <- as.list(findOverlaps(gi, annot))
-    tags <- unique(gsub("_[UD]","",(names(elementMetadata(annot)))))
 
-    for (t in tags){
-        mdata <-  as.matrix(elementMetadata(annot)[c(paste(t,"_U", sep=""),paste(t,"_D",sep=""))])
-        if (t=="len"){
-            res <- sapply(outl, function(idx){ ## hicnorm
-                lenv <- unique(as.vector(mdata[idx,])) ## hicnorm
-                sum(lenv>1000)*1000 + sum(lenv[lenv<1000]) ## hicnorm
-            }) ## hicnorm
-            ##res <- sapply(outl, function(idx){mean(mdata[idx,], na.rm=TRUE)})
-        }else{
-            res <- sapply(outl, function(idx){mean(mdata[idx,], na.rm=TRUE)})
-        }
-        res[is.na(res)] <- NA
-        elementMetadata(gi)[[t]] <- round(res,3)
-    }
+    ## Get all restriction sites which overlap with the bins
+    ## Slip upstream and downstream bins to deal with restriction sites which overlap the start or end of a fragment
+    annot_up <- annot
+    end(annot_up)<-start(annot)
+    elementMetadata(annot_up) <- NULL
+    annot_up$len=annot$len_U
+    annot_up$GC=annot$GC_U
+    annot_up$map=annot$map_U
+    annot_down <- annot
+    start(annot_down) <- end(annot)
+    elementMetadata(annot_down) <- NULL
+    annot_down$len=annot$len_D
+    annot_down$GC=annot$GC_D
+    annot_down$map=annot$map_D
+
+    outl_up<- as.list(findOverlaps(gi, annot_up))
+    outl_dw<- as.list(findOverlaps(gi, annot_down))
+    
+    annotscores <- t(sapply(1:length(outl_up), function(i){
+
+        id_up <- outl_up[[i]]
+        id_dw <- outl_dw[[i]]
+        temp <-  c(annot_up[id_up], annot_down[id_dw])
+
+        ## len - effective length" is the fragment length truncated by 1000 bp, which is the number of bases with specific ligation.
+        ## In Yaffe & Tanay's paper Figure 1b, they define specific ligation as sum of distance to cutter sites (d1+d2) <= 500 bp. Such criterion implies that d1<=500 bp and d2 <= 500 bp. So for each fragment end, only reads mapped within 500 bp to cutter sites are used for downstream analysis. 
+        lenv <- unique(temp$len)
+        if (!is.na(efffraglen))
+            lenscore <- sum(lenv>efffraglen, na.rm=TRUE)*efffraglen + sum(lenv[lenv<efffraglen], na.rm=TRUE)
+        else
+            lenscore <- sum(lenv, na.rm=TRUE)
+        
+        ##GC
+        gcscore <- mean(temp$GC, na.rm=TRUE)
+
+        ##map
+        mapscore <- mean(temp$map, na.rm=TRUE)
+
+        c(lenscore, gcscore, mapscore)
+    }))
+    colnames(annotscores) <- c("len", "GC", "map")
+    elementMetadata(gi)<-round(annotscores,3)
     gi
 }
 
@@ -332,7 +357,7 @@ annotateIntervals <- function(gi, annot){
 ##
 ## resSite = Cutting site of the restriction enzyme used (default HindIII)
 ## overhangs5 =  Cleavage 5 overhang
-## chromosome = chromosome to focus on
+## chromosome = chromosomes list to focus on. If NULL, all genome chromosome are investigated
 ## genomePack = name of the BSgenome package to load
 ## w = size of the downstream/upstream window to use around the restriction site to calculate the GC content. Default is 200. See Yaffe and Tanay for more details
 ## mappability = GRanges object of the mappability (see the ENCODE mappability tracks)
@@ -340,60 +365,71 @@ annotateIntervals <- function(gi, annot){
 ## D = downstream / U = upstream the restriction site
 ##################################
 
-getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromosome="chr1", genomePack="BSgenome.Mmusculus.UCSC.mm9", wingc=200, mappability=NULL, winmap=500){
+getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9",  mappability=NULL, wingc=200, winmap=500){
 
     if(genomePack %in% loadedNamespaces()==FALSE){
         stopifnot(require(genomePack, character.only=TRUE))
     }
     genome <- eval(as.name(genomePack))
 
-    message("Get restriction sites for ", chromosome, " ...")
-    cutSites <- getRestrictionSitesPerChromosome(resSite, overhangs5, genome, chromosome)
-    
-    message("Calculate fragment length ...")
-    ## Add chromosome start/end
-    len_D <- c(end(cutSites)[-1], length(genome[[chromosome]])) - start(cutSites)
-    len_U <- end(cutSites) - c(0, start(cutSites)[-length(cutSites)])
-    cutSites$len_U <- len_U
-    cutSites$len_D <- len_D
-
-    message("Calculate GC content ...")
-    ## Downstream GC content
-    win <- start(cutSites)-wingc+1
-    win[win<0] <- 1
-    seq <- Biostrings::getSeq(genome, chromosome, win, start(cutSites))
-    cutSites$GC_U<- round(Biostrings::letterFrequency(seq, as.prob=FALSE, letters="CG")/Biostrings::letterFrequency(seq, as.prob=FALSE, letters="ACGT"),3)
-    
-    ## Upstream GC content
-    win <- start(cutSites)+wingc
-    win[win>length(genome[[chromosome]])] <- length(genome[[chromosome]])
-    seq <- Biostrings::getSeq(genome, chromosome, start(cutSites)+1, win)
-    cutSites$GC_D<- round(Biostrings::letterFrequency(seq, as.prob=FALSE, letters="CG")/Biostrings::letterFrequency(seq, as.prob=FALSE, letters="ACGT"),3)
-      
-    if (!is.null(mappability)){
-        message("Calculate mappability ...")
-        stopifnot(inherits(mappability,"GRanges"))
-
-        mappability <- mappability[seqnames(mappability)==chromosome]
-        win <- start(cutSites)-winmap+1
-        win[win<0] <- 1
-        gr <- GRanges(seqnames = chromosome, ranges = IRanges(start=win, end=start(cutSites)))
-        overl <- as.list(findOverlaps(gr, mappability))
-        mscore <- mappability$score
-        cutSites$map_U<- unlist(lapply(overl, function(idx){
-            round(mean(mscore[idx], na.rm=TRUE),3)
-        }))
-        
-        win <- start(cutSites)+winmap
-        win[win>length(genome[[chromosome]])] <- length(genome[[chromosome]])
-        gr <- GRanges(seqnames = chromosome, ranges = IRanges(start=start(cutSites)+1, end=win))
-        overl <- as.list(findOverlaps(gr, mappability))
-        mscore <- mappability$score
-        cutSites$map_D<- unlist(lapply(overl, function(idx){
-            round(mean(mscore[idx], na.rm=TRUE),3)
-        }))
+    if (length(chromosomes)==0){
+        chromosomes <- seqlevels(genome)
     }
-    cutSites
+    
+    genomeCutSites <- mclapply(chromosomes, function(chr){
+        message("Get restriction sites for ", chr, " ...")
+        cutSites <- getRestrictionSitesPerChromosome(resSite, overhangs5, genome, chr)
+        
+        message("Calculate fragment length ...")
+        ## Add chromosome start/end
+        len_D <- c(end(cutSites)[-1], length(genome[[chr]])) - start(cutSites)
+        len_U <- end(cutSites) - c(0, start(cutSites)[-length(cutSites)])
+        cutSites$len_U <- len_U
+        cutSites$len_D <- len_D
+
+        message("Calculate GC content ...")
+        ## Upstream GC content
+        win <- start(cutSites)-wingc
+        win[win<0] <- 1
+        seq <- Biostrings::getSeq(genome, chr, start=win, end=start(cutSites)-1)
+        ##cutSites$seq_U <- seq
+        cutSites$GC_U<- round(Biostrings::letterFrequency(seq, as.prob=FALSE, letters="CG")/Biostrings::letterFrequency(seq, as.prob=FALSE, letters="ACGT"),3)
+        
+        ## Downstream GC content
+        win <- start(cutSites)+wingc-1
+        win[win>length(genome[[chr]])] <- length(genome[[chr]])
+        seq <- Biostrings::getSeq(genome, chr, start(cutSites), win)
+        cutSites$GC_D<- round(Biostrings::letterFrequency(seq, as.prob=FALSE, letters="CG")/Biostrings::letterFrequency(seq, as.prob=FALSE, letters="ACGT"),3)
+        ##cutSites$seq_D <- seq
+
+        if (!is.null(mappability)){
+            message("Calculate mappability ...")
+            stopifnot(inherits(mappability,"GRanges"))
+            
+            mappability <- mappability[seqnames(mappability)==chr]
+            win <- start(cutSites)-winmap+1
+            win[win<0] <- 1
+            gr <- GRanges(seqnames = chr, ranges = IRanges(start=win, end=start(cutSites)))
+            overl <- as.list(findOverlaps(gr, mappability))
+            mscore <- mappability$score
+            cutSites$map_U<- unlist(lapply(overl, function(idx){
+                round(mean(mscore[idx], na.rm=TRUE),3)
+            }))
+        
+            win <- start(cutSites)+winmap
+            win[win>length(genome[[chr]])] <- length(genome[[chr]])
+            gr <- GRanges(seqnames = chr, ranges = IRanges(start=start(cutSites)+1, end=win))
+            overl <- as.list(findOverlaps(gr, mappability))
+            mscore <- mappability$score
+            cutSites$map_D<- unlist(lapply(overl, function(idx){
+                round(mean(mscore[idx], na.rm=TRUE),3)
+            }))
+        }
+        cutSites
+    })
+    grl <- GRangesList(genomeCutSites)
+    names(grl) <- chromosomes
+    grl
 }
 
 

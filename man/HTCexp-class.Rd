@@ -82,7 +82,7 @@
     \item calls of the form
     \code{new("HTCexp", intdata, GRanges, GRanges)}.
     \item using the auxiliary function \code{HTCexp} and supplying
-    interaction Matrix with x and y intervals definition.
+    contact Matrix with x and y intervals definition.
   }
 }
 \section{Slots}{
@@ -103,7 +103,7 @@
     \item{detail(x)}{\code{signature("HTCexp")}: a more
       detailed output of the experiment than provided by \code{show}.}
     \item{divide(x)}{comparison of two \code{signature("HTCexp")}
-      objects. Perform the division of the two interaction matrices on the
+      objects. Perform the division of the two contact matrices on the
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
       to zero, the divided value will be NA}
@@ -113,18 +113,18 @@
       if the 'x' and 'y' genome intervals are the same, if 90\% of the bins have the
       same size and if the full genomic range is covered}
     \item{isIntraChrom(x)}{return TRUE if the current
-      \code{signature("HTCexp")} object contains intrachromosomal interaction data}
-    \item{isSymmetric(x)}{return TRUE if the interaction map is
+      \code{signature("HTCexp")} object contains intrachromosomal contact data}
+    \item{isSymmetric(x)}{return TRUE if the contact map is
       symmetrical, i.e inherits the \code{symmetricMatrix} class}
-    \item{normPerReads(x)}{normalize the interaction matrix by the total
+    \item{normPerReads(x)}{normalize the contact matrix by the total
       number of reads of the matrix.}
-    \item{normPerExpected(x, stdev=TRUE)}{normalize the interaction matrix by the expected
+    \item{normPerExpected(x, stdev=TRUE)}{normalize the contact matrix by the expected
       number of reads based on the distance between two loci. See details.}
     \item{normPerZscore(x)}{Defunct. See normPerExpected method}
-    \item{normPerTrans(x, xtrans, ytrans, method="sum")}{Normalize cis interaction map based on the trans
+    \item{normPerTrans(x, xtrans, ytrans, method="sum")}{Normalize cis contact map based on the trans
       interactions. See details}
     \item{plot(x)}{visualization method; Display an heatmap of the
-      interaction data. Refer to the documentation of
+      contact data. Refer to the documentation of
       \code{\link{mapC}} for more details of the plotting function}
     \item{range(x)}{return the genomic range of the
       \code{signature("HTCexp")} object} 
@@ -133,11 +133,11 @@
     \item{show(x)}{summarized output of the experiment, with informations
       about the data dimension and the genomic region studied}
     \item{substract(x)}{comparison of two \code{signature("HTCexp")}
-      objects. Perform the substraction of the two interaction matrices on the
+      objects. Perform the substraction of the two contact matrices on the
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
       to zero, the divided value will be NA}
-    \item{summary(x)}{return descriptive summary statistics about the interaction map}
+    \item{summary(x)}{return descriptive summary statistics about the contact map}
     \item{x_intervals(x)}{return the \code{xgi} GRanges object defining the
       x intervals}
     \item{y_intervals(x)}{return the \code{ygi} GRanges object defining the
@@ -153,7 +153,7 @@
   otherwise, the zscore ((observed-expected)/stdev) is returned
   Look at the   \code{\link{getExpectedCounts}} function for details.\cr
   
-  The \code{normPerTrans} method is based on the assumption that all trans interactions should be the same. Thus, the cis interactions can be normalized by the interaction level of trans data.
+  The \code{normPerTrans} method is based on the assumption that all trans contacts should be the same. Thus, the cis contacts can be normalized by the interaction level of trans data.
   The \code{xtrans} trans map has to share its 'xgi' ranges with the
   cis map, and the \code{ytrans} has to share its 'ygi' ranges with
   the cismap.
@@ -195,10 +195,10 @@ plot(E14$chrXchrX, tracks=list(RefSeqGene=gene))
 ## normPerTrans data normalization applied on \href{http://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeUmassDekker5C}{ENCODE data}.
 ENCODE=import.my5C("./ENM-GM12878-R1.matrix")
 
-## Look at raw interaction map
+## Look at raw contact map
 mapC(ENCODE$chr7chr7)
 
-## look at normalize by trans interaction map
+## look at normalize by trans contact map
 mapC(normPerTrans(ENCODE$chr7chr7, xtrans=ENCODE$chr7chr5, ytrans=ENCODE$chr5chr7))
 }
 

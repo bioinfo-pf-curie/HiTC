@@ -1,9 +1,9 @@
 \name{pca.hic}
 \Rdversion{1.1}
 \alias{pca.hic}
-\title{Perform Principle Component Analysis on Hi-C interaction map}
+\title{Perform Principle Component Analysis on Hi-C contact map}
 \description{
-  Perform Principle Component Analysis on Hi-C interaction map
+  Perform Principle Component Analysis on Hi-C contact map
 }
 \usage{pca.hic(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE)}
 \arguments{

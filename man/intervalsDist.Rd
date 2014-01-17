@@ -3,7 +3,7 @@
 \alias{intervalsDist}
 \title{intervalsDist}
 \description{
-   Compute the distance of intrachromosomal interactions of a 'C' experiment
+   Compute the distance of intrachromosomal contacts of a 'C' experiment
 }
 \usage{intervalsDist(x, use.zero=TRUE)}
 \arguments{
@@ -16,7 +16,7 @@
   If \eqn{A} and \eqn{B} are the two sets of intervals and
   \eqn{s} and \eqn{e}, the start and end of an interval, the distance is calculated as :\cr
   \deqn{\min(|A_e - B_s|, |A_s - B_e|)}
-    Only intrachromsomal interaction maps can be use for this operation.
+    Only intrachromsomal contact maps can be use for this operation.
 }
 
 \value{

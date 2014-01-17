@@ -11,10 +11,10 @@
 \arguments{
   \item{con}{input csv file. See details}
   \item{xgi.bed}{BED file describing the 'x' Intervals (i.e. column
-    names) of the interaction map. Required for the my5C list format}
+    names) of the contact map. Required for the my5C list format}
   \item{ygi.bed}{BED file describing the 'y' intervals (i.e. row names) of the
-    interaction map. Required for the my5C list format}
-  \item{all.pairwise}{logical; generate all pairwise chromosomal interaction maps, i.e chr1-chr2, chr2-chr1}
+    contact map. Required for the my5C list format}
+  \item{all.pairwise}{logical; generate all pairwise chromosomal contact maps, i.e chr1-chr2, chr2-chr1}
 }
 \details{
   This function import high-throughput data from a matrix file.

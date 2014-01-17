@@ -8,13 +8,15 @@
   (i.e. GC content, mappability, effective fragment length)
 }
 
-\usage{getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1, chromosome="chr1", genomePack="BSgenome.Mmusculus.UCSC.mm9", wingc=200, mappability=NULL, winmap=500)}
+\usage{getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1,
+chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9", mappability=NULL, wingc=200, winmap=500)}
 
 \arguments{
   \item{resSite}{the sequence of the restriction site to look
   for. Default is HindIII restriction site}
   \item{overhangs5}{5' overhangs on the DNA resulted from the cutting}
-  \item{chromosome}{chromosome number to focus on}
+  \item{chromosomes}{vector of chromosome number to focus on. Default
+  all the chromosomes for the specified genome.}
   \item{genomePack}{name of the genome package to access the DNA sequence}
   \item{wingc}{size of the window upstream and downstream the restriction site
   used to calculate the GC content}
@@ -44,7 +46,7 @@
 map_hg18<- import("wgEncodeCrgMapabilityAlign100mer.bw", format="BigWig", asRangedData=FALSE)
 
 ## 1- Example of restriction sites annnotation
-cutSites <- getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1, chromosome="chr1", genomePack="BSgenome.Hsapiens.UCSC.hg18", wingc=200, mappability=map_hg18, winmap=500)
+cutSites <- getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1, chromosomes="chr1", genomePack="BSgenome.Hsapiens.UCSC.hg18", wingc=200, mappability=map_hg18, winmap=500)
 }
 
 }
