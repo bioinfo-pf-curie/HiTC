@@ -265,7 +265,7 @@ normLGF <- function(x,  family=c("poisson", "nb")){
 setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
     stopifnot(inherits(x,"HTCexp"))
     if (inherits(cutSites, "GRangesList"))
-        cutSites <- cutSites[[seqlevels(xgi)]]
+        cutSites <- cutSites[[seqlevels(x)]]
     stopifnot(seqlevels(x)==seqlevels(cutSites))
     
     obj <- x
