@@ -267,12 +267,10 @@ setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
     if (inherits(cutSites, "GRangesList"))
         cutSites <- cutSites[[seqlevels(x)]]
     stopifnot(seqlevels(x)==seqlevels(cutSites))
-    
     obj <- x
     xgi <- x_intervals(x)
     xgi <- annotateIntervals(xgi, cutSites, minfragmap=minFragMap, efffraglen=effFragLen)
     x_intervals(obj) <- xgi
-    
     if (isIntraChrom(x) && isBinned(x)){
         y_intervals(obj) <- xgi
     }else{
@@ -309,21 +307,20 @@ annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
     annot_up <- annot
     end(annot_up)<-start(annot)
     elementMetadata(annot_up) <- NULL
-    annot_up$len=annot$len_U
-    annot_up$GC=annot$GC_U
-    annot_up$map=annot$map_U
+    annot_up$len=as.numeric(annot$len_U)
+    annot_up$GC=as.numeric(annot$GC_U)
+    annot_up$map=as.numeric(annot$map_U)
     annot_down <- annot
     start(annot_down) <- end(annot)
     elementMetadata(annot_down) <- NULL
-    annot_down$len=annot$len_D
-    annot_down$GC=annot$GC_D
-    annot_down$map=annot$map_D
+    annot_down$len=as.numeric(annot$len_D)
+    annot_down$GC=as.numeric(annot$GC_D)
+    annot_down$map=as.numeric(annot$map_D)
 
     outl_up<- as.list(findOverlaps(gi, annot_up))
     outl_dw<- as.list(findOverlaps(gi, annot_down))
     
     annotscores <- t(sapply(1:length(outl_up), function(i){
-
         id_up <- outl_up[[i]]
         id_dw <- outl_dw[[i]]
         temp <-  c(annot_up[id_up], annot_down[id_dw])
@@ -344,6 +341,7 @@ annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
 
         c(lenscore, gcscore, mapscore)
     }))
+    
     colnames(annotscores) <- c("len", "GC", "map")
     elementMetadata(gi)<-round(annotscores,3)
     gi
