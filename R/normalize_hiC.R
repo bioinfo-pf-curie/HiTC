@@ -176,8 +176,8 @@ tricube <- function(x) {
 ##**********************************************************************************************************##
 
 ###################################
-## setGenomicFeatures
-## Annotate a HTCexp object with the GC content and the mappability features
+## normLGF
+## Local Genomic Features normalization
 ## 
 ##
 ## x = HTCexp/HTClist object
@@ -264,8 +264,10 @@ normLGF <- function(x,  family=c("poisson", "nb")){
 
 setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
     stopifnot(inherits(x,"HTCexp"))
-    if (inherits(cutSites, "GRangesList"))
+    if (inherits(cutSites, "GRangesList")){
         cutSites <- cutSites[[seqlevels(x)]]
+        seqlevels(cutSites) <- seqlevels(x)
+    }
     stopifnot(seqlevels(x)==seqlevels(cutSites))
     obj <- x
     xgi <- x_intervals(x)
@@ -422,6 +424,9 @@ getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromos
             cutSites$map_D<- unlist(lapply(overl, function(idx){
                 round(mean(mscore[idx], na.rm=TRUE),3)
             }))
+        }else{
+            cutSites$map_U<-NA_real_
+            cutSites$map_D<-NA_real_
         }
         cutSites
     })
@@ -464,6 +469,16 @@ getRestrictionSitesPerChromosome <- function(resSite, overhangs5, genome, chromo
 ##
 ##**********************************************************************************************************##
 
+###################################
+## IterativeCorNormalization
+## INTERNAL FUNCTION
+## 
+##
+## x = HTCexp object
+## max_iter = maximum number of iteration to converge
+## eps = threshold to converge
+##
+##################################
 
 IterativeCorNormalization <- function(x, max_iter=200, eps=1e-4){
     m <- dim(x)[1]
@@ -474,36 +489,53 @@ IterativeCorNormalization <- function(x, max_iter=200, eps=1e-4){
     old_dbias <- NULL
     
     for (it in 1:max_iter){
-      message("it=",it)
-      sum_ds <- rowSums(x, na.rm=TRUE)
-      
-      ##sum_ds <- sqrt(rowSums(x^2))
-      
-      dbias <- as.matrix(sum_ds, ncol=1) + sum_ss
-      dbias <- dbias/mean(dbias[dbias!=0])
-      dbias[dbias==0] <- 1
-                                        #bias <- bias * dbias
-      
-      ## normalize by the dbias matrix product
-      x <- x/dbias %*% t(dbias)
-      
-      if (!is.null(old_dbias) && sum(abs(old_dbias - dbias))<eps){
-        message("break at iteration ", it)
-        break
-      }
-      
-      old_dbias <- dbias 
+        sum_ds <- rowSums(x, na.rm=TRUE)
+        ##sum_ds <- sqrt(rowSums(x^2))
+        dbias <- as.matrix(sum_ds, ncol=1) + sum_ss
+        dbias <- dbias/mean(dbias[dbias!=0])
+        dbias[dbias==0] <- 1
+        ##bias <- bias * dbias
+        
+        ## normalize by the dbias matrix product
+        x <- x/dbias %*% t(dbias)
+        
+        if (!is.null(old_dbias) && sum(abs(old_dbias - dbias))<eps){
+            message("Break at iteration ", it)
+            break
+        }
+        old_dbias <- dbias 
     }
     if (it == max_iter){
         warning("Did not converged. Stop at iteration ",max_iter)
     }
-
     return(x)
 }
 
-normICE <- function(x, max_iter=200, eps=1e-4){
+###################################
+## IterativeCorNormalization
+## ICE normlization
+## 
+##
+## x = HTCexp object
+## max_iter = maximum number of iteration to converge
+## eps = threshold to converge
+## spars.filter = filter out the (default 2%) bins the more sparse
+##
+##################################
+
+normICE <- function(x, max_iter=200, eps=1e-4, sparse.filter=0.02){
+
+    stopifnot(isSymmetric(x))
+    idata <- intdata(x)
+    srow <- rowSums(idata, na.rm=TRUE)
+
+    spars <- apply(idata, 1, function(x){length(which(x==0))})
+    f <- quantile(spars[spars!=dim(idata)[1]], probs=sparse.filter)
+    idx <- spars[which(spars<as.numeric(f))]
+    idata[idx,] <- 0
+    
     message("start ", seqlevels(x))
-    xmat <- IterativeCorNormalization(intdata(x), max_iter=max_iter, eps=eps)
+    xmat <- IterativeCorNormalization(idata, max_iter=max_iter, eps=eps)
     intdata(x) <- xmat
     message("end ", seqlevels(x))
     x

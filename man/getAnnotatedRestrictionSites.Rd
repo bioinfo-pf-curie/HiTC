@@ -43,7 +43,7 @@ chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9", mappability=NULL, wing
 
 \dontrun{
 ## Mappability data From http://hgdownload.cse.ucsc.edu/goldenPath/hg18/encodeDCC/wgEncodeMapability/
-map_hg18<- import("wgEncodeCrgMapabilityAlign100mer.bw", format="BigWig", asRangedData=FALSE)
+map_hg18<- import("wgEncodeCrgMapabilityAlign100mer.bw",format="BigWig", asRangedData=FALSE)
 
 ## 1- Example of restriction sites annnotation
 cutSites <- getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1, chromosomes="chr1", genomePack="BSgenome.Hsapiens.UCSC.hg18", wingc=200, mappability=map_hg18, winmap=500)

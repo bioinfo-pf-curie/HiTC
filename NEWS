@@ -4,8 +4,9 @@ CHANGES IN VERSION 1.7.4
 NEW FEATURES
 
 SIGNIFICANT USER-VISIBLE CHANGES
-
-   o Change the parameters of getAnnotatedRestrictionSites and setGenomicFeatures fucntions
+  
+  o New parameter for normICE - spars.filter, to filter out the more sparse bins before normlization
+  o Change the parameters of getAnnotatedRestrictionSites and setGenomicFeatures functions
   o Update of the setGenomicAnnotation function to fit with the original HiCNorm method
 
 BUG FIXES

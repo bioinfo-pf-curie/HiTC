@@ -7,12 +7,15 @@
  Iterative correction leverages the unique pairwise genome-wide structure of Hi-C data to decompose the data into a set of biases and a map of relative contact probabilities between any two genomic loci, achieving equal visibility across all genomic regions.
 }
 
-\usage{normICE(x,max_iter=200, eps=1e-4)}
+\usage{normICE(x,max_iter=200, eps=1e-4, sparse.filter=0.02)}
 
 \arguments{
     \item{x}{object that inherits from class \code{HTCexp}}
     \item{max_iter}{maximum number of iteration}
-    \item{eps}{the relative increment in the results before declaring convergence}
+    \item{eps}{the relative increment in the results before declaring
+      convergence}
+    \item{sparse.filter}{Define which pourcentage of bins with high
+    sparsity should be force to zero}
 }
 
 \details{

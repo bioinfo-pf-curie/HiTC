@@ -11,7 +11,7 @@
 
 \arguments{
   \item{x}{\code{HTCexp} object to annotate}
-  \item{cutSites}{\code{GRangesList} object with restriction sites
+  \item{cutSites}{\code{GRangesList} or \code{GRanges} object with restriction sites
     annotation obtained using the \code{getAnnotatedRestrictionSites}
     function}
   \item{minFragMap}{Minimum Fragment Mappbility. All fragments with a lower
