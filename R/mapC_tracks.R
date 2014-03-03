@@ -44,7 +44,7 @@ addImageTracks <- function(x, tracks, orientation=c("h","v"), names=TRUE){
   stopifnot(unlist(lapply(tracks, inherits,"GRanges")))
 
   ntrack <- length(tracks)
-  suppressWarnings(colblocs <- brewer.pal(ntrack*2,"Paired"))
+  suppressWarnings(colblocs <- RColorBrewer::brewer.pal(ntrack*2,"Paired"))
   colblocs.minus <- colblocs[seq(1, ntrack*2, by=2)]
   colblocs.plus <- colblocs[seq(2, ntrack*2, by=2)]
   blocnames <- names(tracks)

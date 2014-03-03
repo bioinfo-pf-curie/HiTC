@@ -1,4 +1,17 @@
 ***********************************
+CHANGES IN VERSION 1.7.5
+
+NEW FEATURES
+
+   o Update for BioC 2.14
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Add fit.out parameter in the plotIntraDist to remove the outliers during the regression
+
+BUG FIXES
+
+***********************************
 CHANGES IN VERSION 1.7.4
 
 NEW FEATURES

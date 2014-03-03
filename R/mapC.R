@@ -51,7 +51,7 @@ plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
     }else{
         z <- as.matrix(z)
     }
-    system.time(image(x, y, z, useRaster = TRUE, col=col, ...))
+    image(x, y, z, useRaster = TRUE, col=col, ...)
 }
 
 
@@ -88,7 +88,8 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
         xdata.neg <- xdata
         xdata.neg[xdata>=0] <- 0
     }
-   
+
+    ## k is the same for positive or negative values, to ensure that the same range of colors are used
     k <- length(unique(as.vector(abs(xdata))))
     
     if (!is.null(xdata.neg)){   
@@ -384,10 +385,14 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
             xminrange=minrange
     }
 
+    ## The minrange/maxrange are simetrical around zero. The same threshold are used for positive and negative values
     xdata@x[which(xdata@x<=xminrange & xdata@x>0)] <- xminrange
     xdata@x[which(xdata@x>=-xminrange & xdata@x<0)] <- -xminrange
     xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange
     xdata@x[which(xdata@x<=-xmaxrange & xdata@x<0)] <- -xmaxrange
+
+    print(paste("Minrange=",min(xdata, na.rm=TRUE)," - Maxrange=", max(xdata, na.rm=TRUE)))
+
     print(paste("minrange=",round(xminrange,6)," - maxrange=", round(xmaxrange,6)))
 
     xdata

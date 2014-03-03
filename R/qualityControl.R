@@ -82,7 +82,7 @@ slidingWindow <- function(mydata=consV, win=c(1, 100), start=1, end=length(consV
 }
 
 
-plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize=NA, add=FALSE, log=FALSE, fit=FALSE, fit.lim=NA, ...){
+plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize=NA, add=FALSE, log=FALSE, fit=FALSE, fit.lim=NA, fit.out=1, ...){
     stopifnot(length(xdata.intra)==length(xdata.intra.dist))
     r <- range(xdata.intra.dist)
 
@@ -92,6 +92,7 @@ plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize
     xdata.intra.dist <- xdata.intra.dist[idx]
     
     ## Windowing
+    ## To optimize - see tapply function
     if (!is.na(winsize)){
         win <- seq.int(from=r[1], to=r[2], by=winsize)
         xp <- yp <- rep(NA, length(win)-1)
@@ -113,8 +114,10 @@ plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize
         yp <- xdata.intra
         ptype <- "p"
     }
-
-    ## Trim on interaction counts
+    names(xp) <- paste("n",1:length(xp), sep="")
+    names(yp) <- paste("n",1:length(yp), sep="")
+    
+    ## Trim the interaction counts
     if (trim.range<1){
         qt <- quantile(yp, probs=c((1-trim.range),trim.range), na.rm=TRUE)
         idx <- which(yp>=qt[1] & yp<=qt[2])
@@ -124,31 +127,51 @@ plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize
     
     ## Log
     if (log){
-        xp <- log2(xp)
-        yp <- log2(yp)
+        xp <- log10(xp)
+        yp <- log10(yp)
     }
 
     if (fit){
         ## remove extreme distances
-        qt <- quantile(xp, probs=c(0.1,0.8), na.rm=TRUE)
-        idx <- which(xp>=qt[1] & xp<=qt[2])
-        xp <- xp[idx]
-        yp <- yp[idx]
+        #qt <- quantile(xp, probs=c(0.1,0.8), na.rm=TRUE)
+        #idx <- which(xp>=qt[1] & xp<=qt[2])
+        #xp <- xp[idx]
+        #yp <- yp[idx]
+
+        ## Define the scaling region
         if (length(fit.lim)==2){
-            res.fit <- lm(yp[which(xp>fit.lim[1] & xp<fit.lim[2])]~xp[which(xp>fit.lim[1] & xp<fit.lim[2])])
+            yp.fit <- yp[which(xp>fit.lim[1] & xp<fit.lim[2])]
+            xp.fit <- xp[which(xp>fit.lim[1] & xp<fit.lim[2])]
         }else{
-            res.fit <- lm(yp~xp)
+            xp.fit <- xp
+            yp.fit <- yp
+        }
+        res.fit <- lm(yp.fit~xp.fit)
+
+        ## remove outliers on the fitted region
+        ## outliers are defined as the points with the higher residual values (distance to the regression curve)
+        if (fit.out<1){
+            r <- residuals(res.fit)
+            th<-quantile(r, probs=fit.out)
+            out <- names(which(r>th))
+            
+            xp.fit <- xp.fit[setdiff(names(xp.fit), out)]
+            yp.fit <- yp.fit[setdiff(names(xp.fit), out)]
+            res.fit <- lm(yp.fit~xp.fit)
+
+            xp <- xp[setdiff(names(xp), out)]
+            yp <- yp[setdiff(names(xp), out)]
         }
     }
 
     ## Plotting function
     if (!add){
-        plot(x=c(min(xp), max(xp)), y=c(min(yp), max(yp)),  xlab="Genomic Distance (log2)", ylab="Interaction Counts (log2)",
+        plot(x=c(min(xp), max(xp)), y=c(min(yp), max(yp)),  xlab="Genomic Distance (log10)", ylab="Interaction Counts (log10)",
               frame=FALSE, type="n", ...)
     }
     
     if (fit){
-        pcol <- brewer.pal(8, "Pastel2")
+        pcol <- RColorBrewer::brewer.pal(8, "Pastel2")
         if (length(fit.lim)==2)
             rect(fit.lim[1], min(yp)-1, fit.lim[2], max(yp), col=pcol[5], border=pcol[5])
         abline(res.fit, ...)

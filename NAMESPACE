@@ -8,6 +8,7 @@
 import("methods")
 import("GenomicRanges")
 import("IRanges")
+import("Matrix")
 
 ##Package used in HiTC
 importFrom("graphics", "plot", "image", "abline", "axis", "text")
@@ -16,7 +17,8 @@ importFrom("stats", "prcomp")
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
-importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
+#importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
+importMethodsFrom("RColorBrewer", "brewer.pal")
 
 
 #############################
