@@ -6,19 +6,19 @@
 
 ##For S4 usage
 import("methods")
+import("Matrix")
 import("GenomicRanges")
 import("IRanges")
-import("Matrix")
 
 ##Package used in HiTC
 importFrom("graphics", "plot", "image", "abline", "axis", "text")
 importFrom("grDevices", "col2rgb")
 importFrom("stats", "prcomp")
+importFrom("RColorBrewer", "brewer.pal")
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
-#importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
-importMethodsFrom("RColorBrewer", "brewer.pal")
+##importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
 
 
 #############################
