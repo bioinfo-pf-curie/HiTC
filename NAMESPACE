@@ -6,7 +6,7 @@
 
 ##For S4 usage
 import("methods")
-import("Matrix")
+#import("Matrix")
 import("GenomicRanges")
 import("IRanges")
 
@@ -15,11 +15,11 @@ importFrom("graphics", "plot", "image", "abline", "axis", "text")
 importFrom("grDevices", "col2rgb")
 importFrom("stats", "prcomp")
 importFrom("RColorBrewer", "brewer.pal")
+importFrom("Matrix", "Matrix")
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
-##importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
-
+importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
 
 #############################
 ##

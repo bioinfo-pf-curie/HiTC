@@ -121,6 +121,7 @@ showClass("HTClist")
 \subsection{A simple example}
 
 <<importSimple>>=
+require(Matrix)
 ## Two genome intervals objects with primers informations
 reverse <- GRanges(seqnames=c("chr1","chr1"), 
                    ranges = IRanges(start=c(98831149, 98837507), 
