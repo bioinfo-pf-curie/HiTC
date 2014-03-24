@@ -44,7 +44,7 @@ colorC <- function (low="white", high=c("red"), mid=NA, k = 50){
 
 plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
     if (!show.zero){
-        zi <- which(Matrix:::is0(z))
+        zi <- which(!is.na(z) & z == 0) ##zi <- which(Matrix:::is0(z))
         z <- as.matrix(z)
         z[zi] <- NA
         col <- col[-1]

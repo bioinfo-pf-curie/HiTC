@@ -19,7 +19,7 @@ importFrom("Matrix", "Matrix")
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
-importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums")
+importMethodsFrom("Matrix", "colMeans", "crossprod", "rowSums", "nnzero")
 
 #############################
 ##
