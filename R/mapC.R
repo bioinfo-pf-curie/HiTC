@@ -391,10 +391,7 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
     xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange
     xdata@x[which(xdata@x<=-xmaxrange & xdata@x<0)] <- -xmaxrange
 
-    print(paste("Minrange=",min(xdata, na.rm=TRUE)," - Maxrange=", max(xdata, na.rm=TRUE)))
-
-    print(paste("minrange=",round(xminrange,6)," - maxrange=", round(xmaxrange,6)))
-
+    print(paste("minrange=",min(xdata[xdata>0], na.rm=TRUE)," - maxrange=", max(xdata[xdata>0], na.rm=TRUE)))
     xdata
 }
        
