@@ -1,4 +1,17 @@
 ***********************************
+CHANGES IN VERSION 1.7.11
+
+NEW FEATURES
+
+   o Update NAMESPACE for BioC 2.14
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+BUG FIXES
+
+   o Fix a bug in the getRestrictionSitesPerChromosome and matchPattern function (fixed=TRUE). If FALSE, all 'N' are reported.
+
+***********************************
 CHANGES IN VERSION 1.7.5
 
 NEW FEATURES

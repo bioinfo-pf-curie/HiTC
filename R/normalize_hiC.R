@@ -452,7 +452,7 @@ getRestrictionSitesPerChromosome <- function(resSite, overhangs5, genome, chromo
 
     stopifnot(inherits(genome,"BSgenome"))
 
-    restrictionSites<-Biostrings::matchPattern(resSite, genome[[chromosome]], fixed=FALSE)
+    restrictionSites<-Biostrings::matchPattern(resSite, genome[[chromosome]])
  
     ## Deal with restriction enzyme 5' overhangs
     s <- start(restrictionSites) + overhangs5
