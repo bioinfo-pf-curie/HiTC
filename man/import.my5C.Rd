@@ -16,7 +16,7 @@
   contact map. Required for the my5C list format}
   \item{all.pairwise}{logical; generate all pairwise chromosomal
     contact maps, i.e chr1-chr2, chr2-chr1}
-  \item{forceSymmetric}{Force the Matrix to be symmetrical}
+  \item{forceSymmetric}{force the intra-chromosomal contact maps to be symmetrical}
 }
 \details{
   This function allows data import from the \href{http://my5c.umassmed.edu}{the my5C webtool}.\cr
@@ -33,7 +33,8 @@
   
   The \code{all.pairwise} option is not necessary in case of symetric design. Otherwise, it will return all the pairwise contact maps.
 
-  The matrix will be stored as a matrix inheriting from \code{Matrix} class. If forcesymmetrical=TRUE, the matrix as forced to
+  The matrix will be stored as a matrix inheriting from \code{Matrix}
+  class. If forcesymmetrical=TRUE, the intrachromosomal matrix as coerced to
   \code{symmetricMatrix} class allowing a much more efficient memory usage.
 }
 

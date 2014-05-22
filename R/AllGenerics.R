@@ -1,4 +1,8 @@
 ##Generics
+
+setGeneric(name="getCombinedIntervals", def=function(x) standardGeneric("getCombinedIntervals"))
+setGeneric(name="getCombinedContacts", def=function(x) standardGeneric("getCombinedContacts"))
+
 setGeneric(name="intdata", def=function(x) standardGeneric("intdata"))
 setGeneric(name="intdata<-", def=function(x,value) standardGeneric("intdata<-"))
 

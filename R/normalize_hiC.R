@@ -67,7 +67,10 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
 
     if (plot){
         par(font.lab=2, mar=c(4,4,1,1))
-        plot(x=xdata.dist, y=ydata,  xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="5C counts", main="", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, col="gray", frame=FALSE)
+
+        ##plotIntraDist(ydata, xdata.dist, xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="Counts", main="", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, col="gray", frame=FALSE)
+        
+        plot(x=xdata.dist, y=ydata,  xlab="Genomic Distance (bp)",  ylim=c(0,y1), ylab="Counts", main="", cex=0.5, cex.lab=0.7, pch=20, cex.axis=0.7, col="gray", frame=FALSE)
         points(x=xdata.dist[order(lowess.fit)], y=sort(lowess.fit), type="l", col="red")
     }
     lowess.mat <- Matrix(lowess.fit[order(o)], nrow=length(y_intervals(x)), byrow=FALSE)
@@ -379,6 +382,7 @@ getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromos
     genomeCutSites <- mclapply(chromosomes, function(chr){
         message("Get restriction sites for ", chr, " ...")
         cutSites <- getRestrictionSitesPerChromosome(resSite, overhangs5, genome, chr)
+        message(length(cutSites), " sites")
         
         message("Calculate fragment length ...")
         ## Add chromosome start/end
@@ -437,7 +441,7 @@ getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromos
 
 
 ###################################
-## getRestrictionFragmentsPerChromosome
+## getRestrictionSitesPerChromosome
 ## INTERNAL FUNCTION
 ## 
 ##
@@ -451,7 +455,8 @@ getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromos
 getRestrictionSitesPerChromosome <- function(resSite, overhangs5, genome, chromosome){
 
     stopifnot(inherits(genome,"BSgenome"))
-
+    stopifnot(length(chromosome)==1)
+    
     restrictionSites<-Biostrings::matchPattern(resSite, genome[[chromosome]])
  
     ## Deal with restriction enzyme 5' overhangs
@@ -459,9 +464,33 @@ getRestrictionSitesPerChromosome <- function(resSite, overhangs5, genome, chromo
     e <- end(restrictionSites) - overhangs5
 
     ir <- IRanges(start=s, end=e)    
-    restrictionFrag <- GRanges(seqnames = chromosome, ranges = ir, strand = "*")
+    restrictionSites <- GRanges(seqnames = chromosome, ranges = ir, strand = "*")
+    return(restrictionSites)
+}
+
+###################################
+## getRestrictionFragmentsPerChromosome
+## 
+##
+## resSite = Cutting site of the restriction enzyme used
+## overhangs5 =  Cleavage 5 overhang
+## genome = BSgenome object of the reference genome
+## chromosome = chromosome to focus on
+##
+##################################
+
+getRestrictionFragmentsPerChromosome <- function(resSite="AAGCTT", overhangs5=1,
+chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
+
+    stopifnot(inherits(genome,"BSgenome"))
+     
+    restrictionSites<-getRestrictionSitesPerChromosome(resSite, overhangs5, genome, chromosome)        
+    restrictionFrag <- GRanges(seqnames=chromosome, ranges=IRanges(
+                                   start=c(1,start(restrictionSites)),
+                                   end=c(start(restrictionSites)-1, seqlengths(genome)[chromosome])), strand="+")
     return(restrictionFrag)
 }
+
 
 ##**********************************************************************************************************##
 ##

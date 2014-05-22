@@ -56,6 +56,23 @@ HTClist <- function(...)
 ##
 ################
 
+setMethod("[", "HTClist",
+    function(x, i, ...)
+    {
+        if (is.character(i)){
+            i <- match( i, names(x))
+          }        
+        HTClist(unlist(x)[i])
+    }
+)          
+
+setMethod("as.list", "HTClist",
+    function(x)
+    {
+        as.list(unlist(x))
+    }
+)          
+
 setMethod("c", "HTClist", function(x, ...){
     if (missing(x))
         args <- unname(list(...))
@@ -119,76 +136,10 @@ setMethod("show",signature="HTClist",
           }
 )
 
-## setMethod("summary", signature=c(object="HTClist"),
-##           function(object){
-              
-##               xdata.intra <- xdata.inter <- NULL
-##               nnzero.intra <- nnzero.inter <- NA_integer_
-##               l.intra <- l.inter <- NA_integer_
-              
-##               ## Connot apply of summary for HTCexp - averge of averages different from global average
-##               if (length(which(isIntraChrom(object)))>0){
-##                   x.intra <- object[isIntraChrom(object)]
-##                   xdata.intra <- unlist(lapply(x.intra, function(x) {
-##                       xdata <- as(as(intdata(x), "sparseMatrix"), "dgTMatrix")
-##                       return(xdata@x)
-##                   }))
-##                   nnzero.intra <- sapply(x.intra, function(x){nnzero(intdata(x), na.counted=TRUE)})
-##                   l.intra <- sapply(x.intra, function(x){length(intdata(x))})
-##               }
-              
-##               if (length(which(!isIntraChrom(object)))>0){
-##                   x.inter <- object[!isIntraChrom(object)]
-##                   xdata.inter <- unlist(lapply(x.inter, function(x) {
-##                       xdata <- as(as(intdata(x), "sparseMatrix"),"dgTMatrix")
-##                       return(xdata@x)
-##                   }))
-##                   nnzero.inter <- sapply(x.inter, function(x){nnzero(intdata(x), na.counted=TRUE)})
-##                   l.inter <- sapply(x.inter, function(x){length(intdata(x))})
-##               }
-              
-##               dstat <- matrix(0,ncol=5,nrow=3)
-##               rownames(dstat) <- c("all","intra","inter")
-##               colnames(dstat) <- c("nbreads","nbinteraction", "averagefreq","medfreq","meansparsity")
-              
-##               if (!is.null(xdata.intra)){
-##                   mx.intra <- round(mean(xdata.intra, na.rm=TRUE),3)
-##                   mdx.intra <- round(median(xdata.intra, na.rm=TRUE),3)
-##                   spars.intra <- round(mean(nnzero.intra/l.intra, na.rm=TRUE),3)
-##                   dstat[2,] <- c(sum(xdata.intra, na.rm=TRUE), length(xdata.intra), mx.intra, mdx.intra, spars.intra)
-##               }
-##               if (!is.null(xdata.inter)){
-##                   mx.inter <- round(mean(xdata.inter, na.rm=TRUE),3)
-##                   mdx.inter <- round(median(xdata.inter, na.rm=TRUE),3)
-##                   spars.inter <- round(mean(nnzero.inter/l.inter, na.rm=TRUE),3)
-##                   dstat[3,] <- c(sum(xdata.inter, na.rm=TRUE), length(xdata.inter), mx.inter, mdx.inter, spars.inter)
-##               }
-##               mx <- round(mean(c(xdata.intra, xdata.inter), na.rm=TRUE),3)
-##               mdx <- round(median(c(xdata.intra, xdata.inter), na.rm=TRUE),3)
-##               spars <- round(sum(c(nnzero.intra, nnzero.inter), na.rm=TRUE)/sum(c(l.intra, l.inter), na.rm=TRUE),3)
-##               dstat[1,] <- c(sum(c(xdata.intra, xdata.inter), na.rm=TRUE), length(c(xdata.intra, xdata.inter)), mx, mdx, spars)
-##               dstat
-##           })
-
 setMethod("summary", signature=c(object="HTClist"),
            function(object){
-               t(sapply(object, summary))
+               sy <- as.data.frame(t(as.data.frame(lapply(object, summary))))
+               rownames(sy) <- paste0(sy$seq1, sy$seq2)
+               sy
            })
 
-
-setMethod("[", "HTClist",
-    function(x, i, ...)
-    {
-        if (is.character(i)){
-            i <- match( i, names(x))
-          }        
-        HTClist(unlist(x)[i])
-    }
-)          
-
-setMethod("as.list", "HTClist",
-    function(x)
-    {
-        as.list(unlist(x))
-    }
-)          

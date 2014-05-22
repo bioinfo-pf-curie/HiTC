@@ -83,6 +83,8 @@
     \code{new("HTCexp", intdata, GRanges, GRanges)}.
     \item using the auxiliary function \code{HTCexp} and supplying
     contact Matrix with x and y intervals definition.
+    The frceSymmetric option can used to force intra-chromosomal
+    contact maps to be stored as symmetrical matrix.
   }
 }
 \section{Slots}{

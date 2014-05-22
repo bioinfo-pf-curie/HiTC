@@ -47,8 +47,9 @@ plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
         zi <- which(!is.na(z) & z == 0) ##zi <- which(Matrix:::is0(z))
         z <- as.matrix(z)
         z[zi] <- NA
-        col <- col[-1]
+        #col <- col[-1]
     }else{
+        col <- c("#FFFFFF", col)
         z <- as.matrix(z)
     }
     image(x, y, z, useRaster = TRUE, col=col, ...)
@@ -118,11 +119,16 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
     ## Heatmap options
     ## ###################
     if (show.na){
+        print("toto")
         if (length(which(is.na(xdata))>0)){
             par(new = TRUE)
             na.xdata <- matrix(NA, ncol=ncol(xdata), nrow=nrow(xdata))
             na.xdata[which(is.na(xdata))] <- 1
-            plottingfunc(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=col.na,add=TRUE)
+            if (!show.zero)
+                na.xdata[which(xdata==0)] <- 1
+
+            print(na.xdata)
+            plottingfunc(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,show.zero=FALSE,axes=FALSE,ylab="",xlab="",col=col.na,add=TRUE)
         }
     }
     
@@ -199,7 +205,9 @@ triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TR
             par(new = TRUE)
             na.trimat <- matrix(NA, ncol=ncol(trimat), nrow=nrow(trimat))
             na.trimat[which(is.na(trimat))] <- 1
-            plottingfunc(y=1:nrow(na.trimat),x=1:ncol(na.trimat),z=t(na.trimat),show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=col.na)
+            if (!show.zero)
+                na.trimat[which(trimat==0)] <- 1
+            plottingfunc(y=1:nrow(na.trimat),x=1:ncol(na.trimat),z=t(na.trimat),show.zero=FALSE,axes=FALSE,ylab="",xlab="",col=col.na)
         }
     }
 
@@ -391,7 +399,13 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
     xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange
     xdata@x[which(xdata@x<=-xmaxrange & xdata@x<0)] <- -xmaxrange
 
-    print(paste("minrange=",min(xdata[xdata@x>0], na.rm=TRUE)," - maxrange=", max(xdata[xdata@x>0], na.rm=TRUE)))
+    if (max(xdata@x, na.rm=TRUE)>0)
+        message(paste("minrange=",round(min(xdata@x[which(xdata@x>0)], na.rm=TRUE),3)," - maxrange=", round(max(xdata@x[which(xdata@x>0)], na.rm=TRUE),3)))
+    else{
+        ## Fix bug in case of empty matrix
+        message("Warning: no data to plot. Fixed to 1e-4.")
+        xdata[1,1] <- 1e-4
+    }
     xdata
 }
        
@@ -492,13 +506,12 @@ setMethod("mapC", signature=c("HTCexp","HTCexp"),
 
               if (!isBinned(x) || !isBinned(y))
                   stop("x and y have to be binned to plot them on the same scale")
-
               if (seqlevels(x) != seqlevels(y))
                   stop("x and y have to come from the same chromosome")
-              
+
               ## Set Graphical Environment
               setEnvDisplay(x, y, tracks=tracks, view=2)
-           
+
               ## Get data to map and plots
               xdata <- getData2Map(x, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
               ydata <- getData2Map(y, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)

@@ -1,3 +1,26 @@
+CHANGES IN VERSION 1.9.2
+
+NEW FEATURES
+
+   o getRestrictionFragmentsPerChromosome
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Update output of summary method to add the seqlevels of both interactors
+
+   o Speed improvement; seqlevels
+
+   o Update import.my5C function
+
+BUG FIXES
+
+   o Fix bug in HTCexp constructor. Only intrachromosomal data can be force to be symmetrical
+
+   o Fix bug in summary function for HTClist object
+
+   o Fix bug in mapC function, in case of empty matrices (only zero values)
+
+***********************************
 CHANGES IN VERSION 1.7.11
 -------------------------
 
@@ -26,12 +49,15 @@ CHANGES IN VERSION 1.7.4
 SIGNIFICANT USER-VISIBLE CHANGES
   
   o New parameter for normICE - spars.filter, to filter out the more sparse bins before normlization
+
   o Change the parameters of getAnnotatedRestrictionSites and setGenomicFeatures functions
+
   o Update of the setGenomicAnnotation function to fit with the original HiCNorm method
 
 BUG FIXES
 
   o isSymmetrix - NA values
+
   o Bug in definition of upstream and downstream flanking region for a restriction site in getAnnotatedRestrictionSites
 
 CHANGES IN VERSION 1.7.3

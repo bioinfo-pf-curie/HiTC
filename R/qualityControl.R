@@ -184,12 +184,12 @@ plotIntraDist <- function(xdata.intra, xdata.intra.dist, trim.range=.98, winsize
         invisible(NULL)
 }
 
-plotHistCounts <- function(x, trim.range=.98, ...){
+plotHistCounts <- function(x, trim.range=.98, title, ...){
     if (trim.range<1)
         x <- x[which(x<quantile(x, probs=trim.range, na.rm=TRUE))]
     histdens<-sort(hist(x,breaks=500, plot=FALSE)$density)
     ymax <- histdens[floor(length(histdens)*.995)]
-    hist(x,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main="Interaction Frequency Histogram\nInteraction Counts",ylab="Probability Density",xlab="Interaction Frequency")
+    hist(x,freq=FALSE,breaks=500,col="grey", ylim=c(0,ymax),main=paste("Interaction Frequency Histogram\n",title," Interaction Counts",sep=""),ylab="Probability Density",xlab="Interaction Frequency")
     lines(density(x), col="red")
 }
 
@@ -265,12 +265,14 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
     xdata <- c(xdata.inter, xdata.intra)
     xdata.intra.dist <- data$intra.dist
     
-  message("Generate quality control plots ...")
-  #nbplot <- length(which(c(cis.trans.ratio, scat.interac.dist, hist.dist, hist.interac)))
-  #if (!is.null(xdata.inter)){
-  #    nbplot <- nbplot+1
-  #}
-   
+    message("Generate quality control plots ...")
+    nbplot <- length(which(c(cis.trans.ratio, scat.interac.dist, hist.dist, hist.interac)))
+    if (!is.null(xdata.inter)){
+        nbplot <- nbplot+1
+    }
+    if (!dev.new)
+        par(mfrow=c(ceiling(nbplot/2),2), mar=c(4.1, 4.1, 2.5, 1.5), font.lab=2)
+
   ## Cis/Trans ratio
   if (cis.trans.ratio && length(xdata)>0){
       if (dev.new){
@@ -301,7 +303,7 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
       }
       plotHistCounts(xdata.intra, trim.range,
                      cex.lab=0.7, cex.axis=0.7,
-                     pch=20, cex.main=0.9)
+                     pch=20, cex.main=0.9, title="CIS")
       if (!is.null(xdata.inter)){
           if (dev.new){
               dev.new()
@@ -309,7 +311,7 @@ CQC<- function(x, cis.trans.ratio=TRUE, hist.interac=TRUE, scat.interac.dist=TRU
           }
           plotHistCounts(xdata.inter, trim.range,
                          ,cex.lab=0.7, cex.axis=0.7,
-                         pch=20, cex.main=0.9)
+                         pch=20, cex.main=0.9, title="TRANS")
       }
   }
  

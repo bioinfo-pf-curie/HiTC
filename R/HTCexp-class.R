@@ -76,7 +76,7 @@ HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
       intdata <- as(intdata, "Matrix")
     }
 
-    if (forceSymmetric){
+    if (forceSymmetric && seqlevels(xgi)==seqlevels(ygi)){
         intdata <- forceSymmetric(intdata)
     }
     
@@ -331,7 +331,10 @@ setReplaceMethod(f="intdata", signature(x="HTCexp",value="Matrix"),
 setMethod("isSymmetric", signature(object="HTCexp"),
 	  function(object){
               ##isSymmetric(intdata(x))
-              all(object@intdata-t(object@intdata)==0, na.rm=TRUE)
+              ret <- FALSE
+              if (seqlevels(object@xgi)==seqlevels(object@ygi))
+                  ret <- all(object@intdata-t(object@intdata)==0, na.rm=TRUE)
+              ret
           }
 )
 
@@ -354,9 +357,9 @@ setMethod("isBinned", signature(x="HTCexp"),
               ret <- TRUE
               
               ## Same bins for intra chromosomal
-              if(isIntraChrom(x)){
-                  if (length(setdiff(ranges(x@xgi),ranges(x@ygi))) != 0L)
-                      ret <- FALSE
+              ##if(isIntraChrom(x) && !all.equal(x@xgi, x@ygi)){
+              if (isIntraChrom(x) && sum(countMatches(x@xgi, x@ygi)) != length(x@xgi)){
+                  ret <- FALSE
               }
               ## Same width (exept for last bins - checked in 90% of bins)
               excl <- round(length(x@xgi)*.05)
@@ -405,7 +408,7 @@ setMethod(f="range", signature(x="HTCexp"),
 ## Seqlevels
 setMethod(f="seqlevels", signature(x="HTCexp"),
           function(x){
-              seqlevels(xy_intervals(x))
+              unique(c(seqlevels(x@xgi), seqlevels(x@ygi)))
           }
 )
 
@@ -456,10 +459,15 @@ setMethod("summary", signature=c(object="HTCexp"),
               xdata <- as(as(intdata(object), "sparseMatrix"),"dgTMatrix")
               mx <- mean(xdata@x, na.rm=TRUE)
               mdx <- median(xdata@x, na.rm=TRUE)
+              interactors <- seqlevels(object)
+              if (isIntraChrom(object))
+                  interactors <- rep(seqlevels(object),2)
+              else
+                  interactors <- seqlevels(object)
               
-              dstat <- c(sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round(length(xdata@x)/length(xdata),3))
-              names(dstat) <- c("nbreads","nbinteraction","averagefreq","medfreq","sparsity")
-              dstat
+              dstat <- c(interactors, sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round(length(xdata@x)/length(xdata),3))
+              names(dstat) <- c("seq1", "seq2", "nbreads","nbinteraction","averagefreq","medfreq","sparsity")
+              as.data.frame(dstat)
           })
 
 
