@@ -8,7 +8,7 @@
   convert this information as a list of restriction fragments.}
 
 \usage{getRestrictionFragmentsPerChromosome(resSite="AAGCTT", overhangs5=1,
-chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9")}
+chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9")}
 
 \arguments{
   \item{resSite}{the sequence of the restriction site to look

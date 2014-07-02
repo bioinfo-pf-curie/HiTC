@@ -3,7 +3,7 @@
 \alias{binningC}
 \title{Windowing of high-throughput 'C' contact matrix}
 \description{
-  Windowing of 'C' contact map
+  Binning of 'C' contact map
 }
 \usage{binningC(x, binsize=100000, bin.adjust=TRUE, upa=TRUE,
 method=c("median","mean","sum"), use.zero=TRUE, step=1, optimize.by = c("speed", "memory"))}
@@ -24,11 +24,16 @@ method=c("median","mean","sum"), use.zero=TRUE, step=1, optimize.by = c("speed",
 }
 
 \details{
- \code{bin.adjust} allows to work with bin of the same size. Otherwise,
- the last bin will has a size different from \code{binsize}.
- A primer is assigned to a bin, if there is at least one base overlap
- between the bin and the primer region.\cr
- The \code{method} is used to combine the counts in a bin, must be \sQuote{mea}, \sQuote{median} or \sQuote{sum}.
+ \code{bin.adjust} allows to work with bins of exactly the same size. Otherwise,
+ the last bin is usually smaller than the others.\cr
+ This function aims at changing the resolution of both 5C or Hi-C
+ data. In case of 5C data (i.e. raw, not binned data), the contacts between all
+ pairs of primers will be summarized per genomic bins (the median of all
+ pairwise primers is usually used). In case of binned data
+ (as Hi-C maps), the function can generate smaller resolution maps by
+ aggregating bins. For instance, going from a 40kb resolution to a 1Mb
+ resolution.\cr
+ The \code{method} is used to combine the counts in a bin, must be \sQuote{mean}, \sQuote{median} or \sQuote{sum}.
  The \code{step} parameter allows to choose the overlap between the
  bins. A \code{step} of 2 means a 50\% overlap between two bins, a step
  of 3 means a 60\% overlap between two bins, \emph{etc.}
@@ -47,5 +52,8 @@ data(Nora_5C)
 ## Data binning 100kb, with a 1/3 overlap
 E14.bin <- binningC(E14$chrXchrX, binsize=100000, step=3)
 show(E14.bin)
+## Move to a lower resolution map
+E14.bin2 <- binningC(E14.bin, binsize=500000, step=1)
+show(E14.bin2)
 }
 \keyword{manip}

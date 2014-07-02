@@ -10,8 +10,9 @@
 \alias{divide}
 \alias{divide-methods}
 \alias{divide,HTCexp,HTCexp-method}
+\alias{forceSymmetric,HTCexp,character-method}
 \alias{intdata}
-\alias{intdata-methods}
+\alias{intdata-method}
 \alias{intdata,HTCexp-method}
 \alias{intdata<--methods}
 \alias{intdata<-}
@@ -114,6 +115,8 @@
     \item{isBinned}{return TRUE if the data are binned. The method tests
       if the 'x' and 'y' genome intervals are the same, if 90\% of the bins have the
       same size and if the full genomic range is covered}
+    \item{forceSymmetric(x)}{force the interaction data to
+  'symmetricMatrix'}
     \item{isIntraChrom(x)}{return TRUE if the current
       \code{signature("HTCexp")} object contains intrachromosomal contact data}
     \item{isSymmetric(x)}{return TRUE if the contact map is

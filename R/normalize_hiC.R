@@ -276,7 +276,7 @@ setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
     xgi <- x_intervals(x)
     xgi <- annotateIntervals(xgi, cutSites, minfragmap=minFragMap, efffraglen=effFragLen)
     x_intervals(obj) <- xgi
-    if (isIntraChrom(x) && isBinned(x)){
+    if (isIntraChrom(x) & isBinned(x)){
         y_intervals(obj) <- xgi
     }else{
         ygi <- y_intervals(x)
@@ -308,7 +308,7 @@ annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
     }
 
     ## Get all restriction sites which overlap with the bins
-    ## Slip upstream and downstream bins to deal with restriction sites which overlap the start or end of a fragment
+    ## Split upstream and downstream bins to deal with restriction sites which overlap the start or end of a fragment
     annot_up <- annot
     end(annot_up)<-start(annot)
     elementMetadata(annot_up) <- NULL
@@ -368,14 +368,14 @@ annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
 ## D = downstream / U = upstream the restriction site
 ##################################
 
-getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9",  mappability=NULL, wingc=200, winmap=500){
+getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9",  mappability=NULL, wingc=200, winmap=500){
 
     if(genomePack %in% loadedNamespaces()==FALSE){
         stopifnot(require(genomePack, character.only=TRUE))
     }
     genome <- eval(as.name(genomePack))
 
-    if (length(chromosomes)==0){
+    if (is.null(chromosomes)){
         chromosomes <- seqlevels(genome)
     }
     
@@ -480,15 +480,26 @@ getRestrictionSitesPerChromosome <- function(resSite, overhangs5, genome, chromo
 ##################################
 
 getRestrictionFragmentsPerChromosome <- function(resSite="AAGCTT", overhangs5=1,
-chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
-
+chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
+    
+    if(genomePack %in% loadedNamespaces()==FALSE){
+        stopifnot(require(genomePack, character.only=TRUE))
+    }
+    genome <- eval(as.name(genomePack))
     stopifnot(inherits(genome,"BSgenome"))
-     
-    restrictionSites<-getRestrictionSitesPerChromosome(resSite, overhangs5, genome, chromosome)        
-    restrictionFrag <- GRanges(seqnames=chromosome, ranges=IRanges(
-                                   start=c(1,start(restrictionSites)),
-                                   end=c(start(restrictionSites)-1, seqlengths(genome)[chromosome])), strand="+")
-    return(restrictionFrag)
+
+    if (is.null(chromosomes)){
+        chromosomes <- seqlevels(genome)
+    }
+  
+    genomeResFrag <- mclapply(chromosomes, function(chromosome){
+        message("Get restriction fragments for ", chromosome, " ...")
+        restrictionSites<-getRestrictionSitesPerChromosome(resSite, overhangs5, genome, chromosome)        
+        restrictionFrag <- GRanges(seqnames=chromosome, ranges=IRanges(
+                                                         start=c(1,start(restrictionSites)),
+                                                         end=c(start(restrictionSites)-1, seqlengths(genome)[chromosome])), strand="+")
+    })
+    return(genomeResFrag)
 }
 
 
@@ -511,23 +522,38 @@ chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
 
 IterativeCorNormalization <- function(x, max_iter=200, eps=1e-4){
     m <- dim(x)[1]
-    ## for single end reads
-    sum_ss <- matrix(rep(0, m), ncol=1)
 
-    #bias <- matrix(rep(1, m), ncol=1)
+    ## Initialization    
+    sum_ss <- matrix(rep(0, m), ncol=1)
+    bias <- matrix(rep(1, m), ncol=1)
     old_dbias <- NULL
+    ## Remove Diagonal ?
     
     for (it in 1:max_iter){
+        message("it=",it," ", Sys.time())
+
+        ## 1- calculate sum of W over all rows ++
         sum_ds <- rowSums(x, na.rm=TRUE)
         ##sum_ds <- sqrt(rowSums(x^2))
+
+        ## 2- Calculate a vector of corrected ss reads
+        ## NOT DONE
+        
+        ## 3- Calculate vector of bias
         dbias <- as.matrix(sum_ds, ncol=1) + sum_ss
+
+        ## 4 - Renormalize bias by its mean valude over non-zero bins to avoid numerical instabilities
         dbias <- dbias/mean(dbias[dbias!=0])
+
+        ## 5- Set zero values of bias to 1 to avoir 0/0 error
         dbias[dbias==0] <- 1
+               
+        ## 6- Divide W by bias BiBj for all (i,j) ++++
+        x <- x/(dbias %*% t(dbias))
+
+        ## 7- Multiple total vector of bias by additional biases
         ##bias <- bias * dbias
-        
-        ## normalize by the dbias matrix product
-        x <- x/dbias %*% t(dbias)
-        
+
         if (!is.null(old_dbias) && sum(abs(old_dbias - dbias))<eps){
             message("Break at iteration ", it)
             break
@@ -535,37 +561,62 @@ IterativeCorNormalization <- function(x, max_iter=200, eps=1e-4){
         old_dbias <- dbias 
     }
     if (it == max_iter){
-        warning("Did not converged. Stop at iteration ",max_iter)
+        message("Did not converged. Stop at iteration ",max_iter)
+    }else{
+        message("Converge in ",it," iteration")
     }
     return(x)
 }
+
 
 ###################################
 ## IterativeCorNormalization
 ## ICE normlization
 ## 
 ##
-## x = HTCexp object
+## x = HTCexp object or HTClist object
 ## max_iter = maximum number of iteration to converge
 ## eps = threshold to converge
-## spars.filter = filter out the (default 2%) bins the more sparse
+## spars.filter = Percentage of row and column to discard based on sparsity (default=0.02)
 ##
 ##################################
 
 normICE <- function(x, max_iter=200, eps=1e-4, sparse.filter=0.02){
 
-    stopifnot(isSymmetric(x))
-    idata <- intdata(x)
-    srow <- rowSums(idata, na.rm=TRUE)
+    if (inherits(x, "HTCexp")){
+        stopifnot(isSymmetric(x))
+        idata <- intdata(x)
+        gr <- y_intervals(x)
+    }else if (inherits(x, "HTClist")){
+        idata <- HiTC:::getCombinedContacts(x)
+        gr <- HiTC:::getCombinedIntervals(x)
+    }
 
-    spars <- apply(idata, 1, function(x){length(which(x==0))})
-    f <- quantile(spars[spars!=dim(idata)[1]], probs=sparse.filter)
-    idx <- spars[which(spars<as.numeric(f))]
-    idata[idx,] <- 0
+    if (!is.na(sparse.filter)){
+        message("Start filtering  ...", Sys.time())
+        spars <- apply(idata, 1, function(x){length(which(x==0))}) 
+        spars.t <- quantile(spars[spars!=dim(idata)[1]], probs=(1-sparse.filter))
+        idx <- which(spars>as.numeric(spars.t))
+        idata[idx,] <- 0
+        idata[,idx] <- 0
+        message("Filter out ",length(idx)," rows and columns ...")
+    }
     
-    message("start ", seqlevels(x))
+    message("Start Iterative Correction ...")
     xmat <- IterativeCorNormalization(idata, max_iter=max_iter, eps=eps)
-    intdata(x) <- xmat
-    message("end ", seqlevels(x))
+    
+    if (inherits(x, "HTCexp")){
+        intdata(x) <- xmat
+    }else if (inherits(x, "HTClist")){
+        ##     gr <- HiTC:::dimnames2gr(xmat, pattern="\\||\\:|\\-", feat.names=c("name","chr","start", "end"))
+        ##     xgi <- gr[[1]]
+        ##     ygi <- gr[[2]]
+        ##     rownames(xmat) <- id(ygi)
+        ##     colnames(xmat) <- id(xgi)
+        if (is.null(gr$xgi))
+            x <- HiTC:::splitCombinedContacts(xmat, xgi=gr$ygi, ygi=gr$ygi)
+        else
+            x <- HiTC:::splitCombinedContacts(xmat, xgi=gr$xgi, ygi=gr$ygi)
+    }
     x
 }

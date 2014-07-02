@@ -9,7 +9,7 @@
 }
 
 \usage{getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1,
-chromosomes=NA, genomePack="BSgenome.Mmusculus.UCSC.mm9", mappability=NULL, wingc=200, winmap=500)}
+chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9", mappability=NULL, wingc=200, winmap=500)}
 
 \arguments{
   \item{resSite}{the sequence of the restriction site to look

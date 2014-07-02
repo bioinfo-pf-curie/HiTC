@@ -60,29 +60,35 @@ setValidity("HTCexp",
 HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
 {
     ## check xgi/ygi length
-    if (length(xgi)==0L || length(ygi)==0L){
+    stopifnot(inherits(ygi,"GRanges"))
+    stopifnot(inherits(xgi,"GRanges"))
+    
+    if (length(xgi)==0L || length(ygi)==0L)
         stop("Cannot create HTCexp object of size 0")
-    }
+    
+    if(length(ygi) != nrow(intdata))
+        stop("Length 'ygi' is not equal to number of rows in 'intdata'")
+    
+    if(length(xgi) != ncol(intdata))
+        stop("Length 'xgi' is not equal to number of columns in 'intdata'")
 
+    
     ## sort xgi and ygi data
     xgi <- sort(xgi)
     ygi <- sort(ygi)
-    indata <- intdata[id(ygi), id(xgi)]
+  
+    ## Check matrix format
+    if (!inherits(intdata, "Matrix")){
+        intdata <- Matrix(intdata, nrow=length(ygi), ncol=length(xgi))
+    }
+
+    ## Check matrix names
     colnames(intdata) <- id(xgi)
     rownames(intdata) <- id(ygi)
 
-    ## check format
-    if (!inherits(intdata, "Matrix")){
-      intdata <- as(intdata, "Matrix")
-    }
-
-    if (forceSymmetric && seqlevels(xgi)==seqlevels(ygi)){
+    if (forceSymmetric & seqlevels(xgi)==seqlevels(ygi)){
         intdata <- forceSymmetric(intdata)
     }
-    
-    stopifnot(inherits(ygi,"GRanges"))
-    stopifnot(inherits(xgi,"GRanges"))
-
     new("HTCexp", intdata, xgi, ygi)
 }
 
@@ -297,22 +303,53 @@ setMethod("detail",signature(x="HTCexp"),
 ## Divide method
 setMethod("divide", signature=c("HTCexp","HTCexp"),
           function(x,y){
-              xgi <- subsetByOverlaps(x@xgi, y@xgi, type="equal")
-              ygi <- subsetByOverlaps(x@ygi, y@ygi, type="equal")
+
+              xgi.ov <- findOverlaps(x@xgi, y@xgi, type="equal")
+              ygi.ov <- findOverlaps(x@ygi, y@ygi, type="equal")
+
+              ##xgi <- subsetByOverlaps(x@xgi, y@xgi, type="equal")
+              ##ygi <- subsetByOverlaps(x@ygi, y@ygi, type="equal")
               
-              if (length(xgi) == 0L || length(ygi) == 0L){
+              if (length(queryHits(xgi.ov)) == 0L || length(queryHits(ygi.ov)) == 0L){
                   stop("No equal intervals found in x and y objects")
               }
-              
-              a <- x@intdata[id(ygi),id(xgi)]
-              b <- y@intdata[id(ygi), id(xgi)]
+
+              x.xgi <- x@xgi[queryHits(xgi.ov)]
+              x.ygi <- x@ygi[queryHits(ygi.ov)]
+              y.xgi <- y@xgi[subjectHits(xgi.ov)]
+              y.ygi <- y@ygi[subjectHits(ygi.ov)]
+
+              a <- x@intdata[id(x.ygi), id(x.xgi)]
+              b <- y@intdata[id(y.ygi), id(y.xgi)]
+              ##a <- x@intdata[id(ygi), id(xgi)]
+              ##b <- y@intdata[id(ygi), id(xgi)]
               a[which(a==0L | b==0L)]<-NA
               b[which(a==0L | b==0L)]<-NA
+
+              ## Use x as reference for intervals description
+              colnames(b) <- colnames(a)
+              rownames(b) <- rownames(a)
               data <- a/b
-              HTCexp(data, xgi , ygi)
+              
+              HTCexp(data, x.xgi , x.ygi)
           }
 )
 
+## forceSymmetric
+setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="character"),
+          function(x, uplo="U"){
+              idata <- intdata(x)
+
+              #us <- sum(x[which(upper.tri(idata))])
+              #ls <- sum(x[which(lower.tri(idata))])
+
+              #if (us == 0 & ls>0)
+              #    idata <- forceSymmetric(idata, uplo="L")
+
+              idata <- forceSymmetric(idata, uplo)
+              intdata(x) <- idata
+              x
+          })
 
 ## Interaction Data
 setMethod(f="intdata", signature(x="HTCexp"),
@@ -332,8 +369,11 @@ setMethod("isSymmetric", signature(object="HTCexp"),
 	  function(object){
               ##isSymmetric(intdata(x))
               ret <- FALSE
-              if (seqlevels(object@xgi)==seqlevels(object@ygi))
-                  ret <- all(object@intdata-t(object@intdata)==0, na.rm=TRUE)
+              if (seqlevels(object@xgi)==seqlevels(object@ygi)){
+                  idata <- object@intdata
+                  if (ncol(idata)==nrow(idata))
+                      ret <- suppressWarnings(all(idata-t(idata)==0, na.rm=TRUE))
+              }
               ret
           }
 )
@@ -361,11 +401,12 @@ setMethod("isBinned", signature(x="HTCexp"),
               if (isIntraChrom(x) && sum(countMatches(x@xgi, x@ygi)) != length(x@xgi)){
                   ret <- FALSE
               }
-              ## Same width (exept for last bins - checked in 90% of bins)
-              excl <- round(length(x@xgi)*.05)
-              if (length(unique(width(x@xgi)[excl:(length(x@xgi)-excl)])) != 1 || length(unique(width(x@ygi)[excl:(length(x@xgi)-excl)])) != 1)
+              ## Same width (exept for last bins - checked in 95% of bins)
+              x.excl <- round(length(x@xgi)*.95)
+              y.excl <- round(length(x@ygi)*.95)
+              if (length(duplicated(width(x@xgi)))< x.excl || length(duplicated(width(x@ygi)))< y.excl)
                   ret <- FALSE
-
+              
               ## no gaps
               ##if (isDisjoint(x@xgi) || isDisjoint(x@ygi))
               if (length(reduce(x@xgi)) != 1 || length(reduce(x@ygi)) != 1)
@@ -394,7 +435,7 @@ setMethod(f="id", signature(x="GRanges"),
                   ret <- names(x)
               else if (!is.null(elementMetadata(x)$name))
                   ret <- elementMetadata(x)$name
-              ret
+              as.character(ret)
           }
 )
 
@@ -439,14 +480,21 @@ setMethod("show",signature="HTCexp",
 ## Substraction
 setMethod("substract", signature(x="HTCexp",y="HTCexp"),
           function(x,y){
-              xgi <- subsetByOverlaps(x@xgi, y@xgi, type="equal")
-              ygi <- subsetByOverlaps(x@ygi, y@ygi, type="equal")
+              xov <- findOverlaps(x@xgi, y@xgi, type="equal")
+              yov <- findOverlaps(x@ygi, y@ygi, type="equal")
+
+              a <- x@intdata[id(x@ygi)[queryHits(yov)],
+                        id(x@xgi)[queryHits(xov)]]
+              b <- y@intdata[id(y@ygi)[subjectHits(yov)],
+                        id(y@xgi)[subjectHits(xov)]]
               
-              a <- x@intdata[id(ygi),id(xgi)]
-              b <- y@intdata[id(ygi), id(xgi)]
-              a[which(a==0L | b==0L)]<-NA
-              b[which(a==0L | b==0L)]<-NA
+              #a <- x@intdata[id(x@ygi),id(x@xgi)]
+              #b <- y@intdata[id(y@ygi),id(y@xgi)]
+              #a[which(a==0L | b==0L)]<-NA
+              #b[which(a==0L | b==0L)]<-NA
               data <- a-b
+              xgi <- x@xgi[queryHits(xov)]
+              ygi <- x@ygi[queryHits(yov)]
               
               HTCexp(data, xgi , ygi)
           }
@@ -454,20 +502,24 @@ setMethod("substract", signature(x="HTCexp",y="HTCexp"),
 
 ## Summary
 setMethod("summary", signature=c(object="HTCexp"),
-          function(object){           
-              ## Force cohersion to dgTMatrix to have @x equal of non zero values
-              xdata <- as(as(intdata(object), "sparseMatrix"),"dgTMatrix")
-              mx <- mean(xdata@x, na.rm=TRUE)
-              mdx <- median(xdata@x, na.rm=TRUE)
+          function(object){
               interactors <- seqlevels(object)
               if (isIntraChrom(object))
                   interactors <- rep(seqlevels(object),2)
               else
                   interactors <- seqlevels(object)
-              
-              dstat <- c(interactors, sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round(length(xdata@x)/length(xdata),3))
-              names(dstat) <- c("seq1", "seq2", "nbreads","nbinteraction","averagefreq","medfreq","sparsity")
-              as.data.frame(dstat)
+
+              if(max(intdata(object), na.rm=TRUE)==0){
+                  dstat <- c(interactors, 0, 0, 0, 0, 1)                 
+              }else{
+                  ## Force cohersion to dgTMatrix to have @x equal of non zero values
+                  xdata <- as(as(intdata(object), "sparseMatrix"),"dgTMatrix")
+                  mx <- round(mean(xdata@x, na.rm=TRUE),4)
+                  mdx <- round(median(xdata@x, na.rm=TRUE),4)
+                  dstat <- c(interactors, sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round((length(xdata)-length(xdata@x))/length(xdata),4))
+              }
+              names(dstat) <- c("seq1", "seq2", "nbreads","nbinteraction","averagefreq","medfreq","sparsity")  
+              data.frame(summary=dstat)
           })
 
 

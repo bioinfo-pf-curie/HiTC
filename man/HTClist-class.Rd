@@ -6,6 +6,15 @@
 \alias{c,HTClist-method}
 \alias{detail,HTClist-method}
 \alias{as.list,HTClist-method}
+\alias{forcePairwise}
+\alias{forcePairwise,HTClist-method}
+\alias{forceSymmetric,HTClist,ANY-method}
+\alias{isComplete}
+\alias{isComplete-methods}
+\alias{isComplete,HTClist-method}
+\alias{isPairwise}
+\alias{isPairwise-method}
+\alias{isPairwise,HTClist-method}
 \alias{isBinned,HTClist-method}
 \alias{isIntraChrom,HTClist-method}
 \alias{plot,HTClist,ANY-method}
@@ -42,6 +51,14 @@
       objects in '...'. The results is an object of class \code{signature("HTCList")}}
     \item{detail(x)}{\code{signature("HTClist")}: a more
       detailed output of the experiment than provided by \code{show}.}
+    \item{forcePairwise(x)}{return a \code{signature("HTClist")} with
+      all the pairwise contact maps}
+    \item{forceSymmetric(x)}{return a \code{signature("HTClist")} with
+       half of the pairwise contact maps}
+     \item{isComplete(x)}{Logical; true if 'x' contains all intra and
+      interchromosomal maps}
+    \item{isPairwise(x)}{Logical; true if 'x' contains all chromosomes
+      pairs, i.e. chr1chr2 and chr2chr1}
     \item{isBinned(x)}{applies 'isBinned' to each element in 'x'}
     \item{isIntraChrom(x)}{applies 'isIntraChrom' to each element in 'x'}
     \item{ranges(x)}{applies 'range' to each element in 'x'}
@@ -58,6 +75,22 @@
 }
 \author{Nicolas Servant}
 
+\details{
+  A \code{signature("HTClist")} is composed of a list of contact maps,
+  representing the chromosomal interactions between a pair of
+  chromosome.\cr
+  The expected number of maps for a complete
+  \code{signature("HTClist")} object should be equal to
+  'lchrs+(lchrs*(lchrs-1)/2)'. In this case, the chr1-chr2 map is stored
+  once, but the dataset is complete.\cr
+  If a \code{signature("HTClist")} object is composed of all pairwise
+  interaction maps, it means that the chr1-chr2 AND the chr2-chr1 maps
+  will be stored. This way of storing the data is less memory efficient
+  but can ease the use of some genome-wide algorithm.\cr
+  
+  
+}
+
 \seealso{
   \code{\link[GenomicRanges]{GRangesList-class}}, \code{\link{HTCexp-class}}
 }
@@ -72,6 +105,8 @@ names(hiC)
 ## Methods
 ranges(hiC)
 range(hiC)
+isComplete(hiC)
+isPairwise(hiC)
 isBinned(hiC)
 isIntraChrom(hiC)
 seqlevels(hiC)

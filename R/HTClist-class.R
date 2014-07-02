@@ -27,8 +27,7 @@ setValidity("HTClist",
                 
                 if (length(fails) > 0) return(fails)
                 return(TRUE)
-            }
-)
+            })
 
 ## constructor
 HTClist <- function(...)
@@ -63,15 +62,15 @@ setMethod("[", "HTClist",
             i <- match( i, names(x))
           }        
         HTClist(unlist(x)[i])
-    }
-)          
+    })          
+
 
 setMethod("as.list", "HTClist",
     function(x)
     {
         as.list(unlist(x))
-    }
-)          
+    })          
+
 
 setMethod("c", "HTClist", function(x, ...){
     if (missing(x))
@@ -88,43 +87,154 @@ setMethod("c", "HTClist", function(x, ...){
     HTClist(args)
 })
 
+
 setMethod("detail",signature(x="HTClist"),
           function(x){
               stopifnot(validObject(x))
-              unlist(x)
-          }
-)
+              lapply(x, show)
+              invisible(NULL)
+          })
+
+
+setMethod(f="forcePairwise", signature(x="HTClist"),
+          function(x){
+              stopifnot(isComplete(x))
+              chrs <- seqlevels(x)
+              pchr <- pair.chrom(chrs)
+              isin <- rep(0, length(pchr))
+              names(isin) <- names(pchr)
+              isin[names(x)] <- 1
+              
+              ptoadd <- pchr[names(which(isin==0))]
+              
+              nmaps <- mclapply(ptoadd, function(obj){
+                  symobj <- x[[paste0(obj[2], obj[1])]]
+                  HTCexp(intdata=t(intdata(symobj)), xgi=y_intervals(symobj), ygi=x_intervals(symobj))
+              })
+              c(x, nmaps)
+          })
+
+
+setMethod(f="forceSymmetric", signature(x="HTClist"),
+          function(x, uplo="U"){
+              stopifnot(isComplete(x))
+              x <- sortSeqlevels(x)
+              chrs <- seqlevels(x)
+              pch <- pair.chrom(chrs, use.order=FALSE)
+              if (uplo=="L"){
+                  pch <- lapply(pch, "[", 2:1)
+                  names(pch) <- sapply(pch, paste0, collapse="")
+              }
+              x[names(pch)]
+          })
+
+
+setMethod(f="isPairwise", signature(x="HTClist"),
+          function(x){
+              chrs <- seqlevels(x)
+              all.pairs <- names(pair.chrom(chrs))
+              ret <- FALSE
+              if (length(setdiff(names(pair.chrom(chrs)), names(x)))==0)
+                  ret <- TRUE
+              ret
+          })
+
+
+setMethod(f="getCombinedIntervals", signature(x="HTClist"),
+          function(x){
+              x <- x[isIntraChrom(x)]
+              ygr <- lapply(x, y_intervals)
+              ygi <- suppressWarnings(do.call(c,unname(ygr)))
+              
+              if(length(which(!sapply(x, isSymmetric)))>0){
+                  xgr <- lapply(x, x_intervals)
+                  xgi <- suppressWarnings(do.call(c,unname(xgr)))
+              }else{
+                  xgi <- NULL
+              }
+              list(ygi=ygi, xgi=xgi)
+          })
+
+
+setMethod(f="getCombinedContacts", signature(x="HTClist"),
+          function(x){
+              stopifnot(isComplete(x))
+              if(!isPairwise(x))
+                  x <- forcePairwise(x)
+              
+              message("Start combining HTCexp objects ...")
+              pchr <- t(as.data.frame(pair.chrom(seqlevels(x))))
+              dimchr <- t(sapply(x[isIntraChrom(x)], function(xx){dim(intdata(xx))}))
+              rownames(dimchr) <- pchr[rownames(dimchr),1]
+              col.merged <- lapply(seqlevels(x), function(chr){
+                  allpairs <- rownames(pchr)[which(pchr[,2]==chr)]
+                  do.call(cBind,lapply(x[allpairs], intdata))
+              })
+              bigMat <- do.call(rBind, col.merged)
+              combint <- getCombinedIntervals(x)
+              ##ym <- paste0(paste0("bin",1:length(combint$ygi)),"|",seqnames(combint$ygi),":",start(combint$ygi),"-",end(combint$ygi))
+              ym <- id(combint$ygi)
+              if (!is.null(combint$xgi)){
+                  ##xm <- paste0(paste0("bin",1:length(combint$xgi)),"|",seqnames(combint$xgi),":",start(combint$xgi),"-",end(combint$xgi))
+                  xm <- id(combint$xgi)
+              }else{
+                  xm <- ym
+              }
+              colnames(bigMat) <- xm
+              rownames(bigMat) <- ym
+              message("Object size: ",object.size(bigMat))
+              bigMat
+          })
+
+
+setMethod(f="isComplete", signature(x="HTClist"),
+          function(x){
+              chrs <- seqlevels(x)
+              lchrs <- length(chrs)
+              mat.pairs <- matrix(0, ncol=lchrs, nrow=lchrs, dimnames=list(chrs, chrs))
+              for (m in x){
+                  mat.pairs[seqlevels(m@ygi), seqlevels(m@xgi)] <- 1
+              }
+              ## Minimum number of maps for unpairwise HiC data
+              min.exp.nb.maps <- lchrs+(lchrs*(lchrs-1)/2)
+              ups <- sum(mat.pairs[upper.tri(mat.pairs, diag=TRUE)])
+              los <- sum(mat.pairs[lower.tri(mat.pairs, diag=TRUE)])
+              ret <- FALSE
+              if (ups >= min.exp.nb.maps || los >= min.exp.nb.maps)
+                  ret <- TRUE
+              ret
+          })
+
 
 setMethod(f="isBinned", signature(x="HTClist"),
           function(x){
               sapply(x, isBinned)
-          }
-)
+          })
 
 
 setMethod(f="isIntraChrom", signature(x="HTClist"),
           function(x){
               sapply(x, isIntraChrom) 
-          }
-)
+          })
+
 
 setMethod(f="ranges", signature(x="HTClist"),
           function(x){
               GRangesList(sapply(x, range)) 
-          }
-)
+          })
+
 
 setMethod(f="range", signature(x="HTClist"),
           function(x){
-            reduce(unlist(ranges(x)))
-          }
-)
+              reduce(unlist(ranges(x)))
+        })
+
 
 setMethod(f="seqlevels", signature(x="HTClist"),
           function(x){
               unique(unlist(unname(sapply(x, seqlevels))))
-          }
-)
+          })
+
 
 setMethod("show",signature="HTClist",
           function(object){
@@ -133,8 +243,17 @@ setMethod("show",signature="HTClist",
               im <- isIntraChrom(object)
               cat(length(which(im)),"intra /", length(which(!im)), "inter-chromosomal maps\n")
               invisible(NULL)
-          }
-)
+          })
+
+
+setMethod("sortSeqlevels", signature="HTClist",
+          function(x){
+              stopifnot(validObject(x))
+              chrs <- seqlevels(x)
+              chrs.sort <- sortSeqlevels(chrs)
+              x[intersect(names(pair.chrom(chrs.sort)), names(x))]
+          })
+
 
 setMethod("summary", signature=c(object="HTClist"),
            function(object){

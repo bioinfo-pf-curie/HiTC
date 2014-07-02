@@ -6,28 +6,17 @@
   Import data from my5C webtool
 }
 
-\usage{import.my5C(my5C.datafile, xgi.bed=NULL, ygi.bed=NULL, all.pairwise=TRUE, forceSymmetric=FALSE)}
+\usage{import.my5C(file, all.pairwise=FALSE, forceSymmetric=FALSE)}
 
 \arguments{
-  \item{my5C.datafile}{input file from the my5C webtool}
-  \item{xgi.bed}{BED file describing the 'x' Intervals (i.e. column
-  names) of the contact map. Required for the my5C list format}
-  \item{ygi.bed}{BED file describing the 'y' intervals (i.e. row names) of the
-  contact map. Required for the my5C list format}
+  \item{file}{input file from the my5C webtool}
   \item{all.pairwise}{logical; generate all pairwise chromosomal
     contact maps, i.e chr1-chr2, chr2-chr1}
-  \item{forceSymmetric}{force the intra-chromosomal contact maps to be symmetrical}
+  \item{forceSymmetric}{logical; force the intra-chromosomal contact maps to be symmetrical}
 }
 \details{
   This function allows data import from the \href{http://my5c.umassmed.edu}{the my5C webtool}.\cr
-  Two input formats can be used :\cr
-  -  The list format is composed of three files; two BED files describing the genomic intervals (i.e. primers); and a tabbed
-  delimited format to specify the interaction between each genomic regions, with :\cr
-  FORWARD_PRIMER_NAME/REVERSE_PRIMER_NAME/INTERACTION_COUNT.
-  In this case, \href{http://genome.ucsc.edu/goldenPath/help/customTrack.html}{BED
-  files} describing the genomic coordinates are required.
-  
-  - The matrix format is a tab-delimited format, corresponding to the
+  The matrix format is a tab-delimited format, corresponding to the
   contact map. The rownames and columnames are splitted to created
   the genome intervals (example : REV_2|mm9|chrX:98831149-98834145). 
   
@@ -39,7 +28,7 @@
 }
 
 \value{
-  A \code{HTClist} object(s)
+  A \code{HTClist} object
 }
 \author{N. Servant}
 \seealso{\code{\link[rtracklayer]{import}}, code{\link{HTClist-class}},

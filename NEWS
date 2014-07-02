@@ -1,4 +1,30 @@
-CHANGES IN VERSION 1.9.2
+***********************************
+CHANGES IN VERSION 1.9.4
+
+NEW FEATURES
+
+   o ICE normalization can now be applied on both HTCexp and HTClist objects
+
+   o New methods for HTClist-class : isComplete, isPairwise, forcePairwise, forceSymmetric
+
+   o New methods for HTCexp-class : forceSymmetric
+
+   o New methods (not exported) for HTClist-class : getCombinedIntervals, getCombinedContacts
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Update of the binningC method. Improvement of speed and memory usage. The binningC function can now be applied on Hi-C data (or any already binned data). The goal is to move from a very high resolution map (for instance 40kb) to a lower resolution ( for instance 1Mb) by aggregationg and summing the bins.
+
+   o Update of the importC/exportC functions which are now based on a new format (list with interactor1/interactor2/count + BED files). This format is recommanded to store sparse data because only the non null values are exported/imported.
+
+   o Update of the import.my5C/export.m5C functions. Only the matrix format is now supported. For the list format, see the importC/exportC functions.
+
+BUG FIXES
+
+   o Bug fixed in divide method
+
+***********************************
+CHANGES IN VERSION 1.9.3
 
 NEW FEATURES
 
@@ -22,18 +48,19 @@ BUG FIXES
 
 ***********************************
 CHANGES IN VERSION 1.7.11
--------------------------
 
 NEW FEATURES
 
    o Update NAMESPACE for BioC 2.14
 
+SIGNIFICANT USER-VISIBLE CHANGES
+
 BUG FIXES
 
    o Fix a bug in the getRestrictionSitesPerChromosome and matchPattern function (fixed=TRUE). If FALSE, all 'N' are reported.
 
+***********************************
 CHANGES IN VERSION 1.7.5
-------------------------
 
 NEW FEATURES
 
@@ -43,8 +70,12 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
    o Add fit.out parameter in the plotIntraDist to remove the outliers during the regression
 
+BUG FIXES
+
+***********************************
 CHANGES IN VERSION 1.7.4
-------------------------
+
+NEW FEATURES
 
 SIGNIFICANT USER-VISIBLE CHANGES
   
@@ -60,8 +91,8 @@ BUG FIXES
 
   o Bug in definition of upstream and downstream flanking region for a restriction site in getAnnotatedRestrictionSites
 
+***********************************
 CHANGES IN VERSION 1.7.3
-------------------------
 
 NEW FEATURES
    
@@ -83,8 +114,8 @@ BUG FIXES
 
    o max (na.rm=TRUE) in mapC function
 
+***********************************
 CHANGES IN VERSION 1.5.2
-------------------------
 
 NEW FEATURES
 
@@ -105,8 +136,8 @@ BUG FIXES
     o Bug Fixe in import.my5C for ChrM
     
 
+***********************************
 CHANGES IN VERSION 1.5.1
-------------------------
 
 BUG FIXES
 
@@ -120,8 +151,8 @@ BUG FIXES
 
    o Correct errors in the man pages
 
+***********************************
 CHANGES IN VERSION 1.3.3
-------------------------
 
 NEW FEATURES
 
@@ -132,8 +163,8 @@ BUG FIXES
    o Error in constructor when the interaction map has a dim = 1
 
 
+***********************************
 CHANGES IN VERSION 1.3.2
-------------------------
 
 NEW FEATURES
 
@@ -155,8 +186,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
    o Update of all mapC methods. The view parameter is removed. The HTCexp object are now displayed in the triangle view, whereas the HTClist are displayed in the heatmap view
 
 
+***********************************
 CHANGES IN VERSION 1.3.1
-------------------------
 
 NEW FEATURES
 
@@ -190,8 +221,8 @@ BUG FIXES
 
    o mapC. Bug fixed in the visualization of count values for interchromosomal data 
 
+***********************************
 CHANGES IN VERSION 1.1.3
-------------------------
 
 NEW FEATURES
 
@@ -202,8 +233,8 @@ DEPRECATED AND DEFUNCT
    o Update of getExpectedCount function to use the lowess() function (stats). The 'C' call in stats is now deprecated
 
 
+***********************************
 CHANGES IN VERSION 1.1.2
-------------------------
 
 NEW FEATURES
 
@@ -245,8 +276,8 @@ BUG FIXES
   o Force the xgi and ygi objects to have some ids
 
   
+***********************************
 CHANGES IN VERSION 1.1.1
-------------------------
 
 NEW FEATURES
 

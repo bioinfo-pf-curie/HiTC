@@ -10,21 +10,13 @@
 ## method = the method used to summarize the window information (mean, median, sum)
 ## use.zero = use zero value for the summarization
 ## step = overlap of window. step = 1 for no overlap window, step = 2 50% overlap, etc
-## bnorm = normalize by the log2 of number of primers in the window
 ###################################
-
 
 binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("median", "mean", "sum"), use.zero=TRUE, step=1, optimize.by=c("speed","memory")){
 
     stopifnot(inherits(x,"HTCexp"))
-
-    #met.agglo <- c("mean", "median", "sum")
-    #method <- met.agglo[pmatch(method, met.agglo)]
     met <- match.arg(method)
-    optim <- match.arg(optimize.by)
-        
-    #if (is.na(method)) 
-    #    stop("Error :Unknown method.")
+    optim <- match.arg(optimize.by)        
   
     ygi <- y_intervals(x)
     xgi <- x_intervals(x)
@@ -34,21 +26,28 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("med
     if (optim=="speed")
         mat.data <- as.matrix(mat.data)
 
-    xmin <- start(range(xgi))
-    xmax <- end(range(xgi))
-    ymin <- start(range(ygi))
-    ymax <- end(range(ygi))
+    rxi <- range(xgi, ignore.strand=TRUE)
+    ryi <- range(ygi, ignore.strand=TRUE)
 
     ## For cis data - set the same ranges
     if (isIntraChrom(x)){
         xmin <- ymin <- start(range(c(xgi,ygi), ignore.strand=TRUE))
         xmax <- ymax <- end(range(c(xgi,ygi), ignore.strand=TRUE))
+    }else{
+        xmin <- start(rxi)
+        xmax <- end(rxi)
+        ymin <- start(ryi)
+        ymax <- end(ryi)
     }
-       
-    x.nb.bin <- floor((xmax - xmin)/binsize)
-    y.nb.bin <- floor((ymax - ymin)/binsize)
-     
+
+    if (max(xmax, ymax)<binsize){
+        binsize=xmax
+        warning("Data smaller than binsize. Cannot be binned at such resolution.")
+    }
+           
     if (bin.adjust){
+        x.nb.bin <- floor((xmax - xmin)/binsize)
+        y.nb.bin <- floor((ymax - ymin)/binsize)
         x.size.bin <- ceiling(binsize+((xmax-xmin+1)-(x.nb.bin*binsize))/x.nb.bin)
         y.size.bin <- ceiling(binsize+((ymax-ymin+1)-(y.nb.bin*binsize))/y.nb.bin)
     } else{ 
@@ -69,76 +68,131 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("med
     
     ## Unique Primer Assignment
     if (upa){
-        start(ranges(xgi)) <- end(ranges(xgi)) <- mean(ranges(xgi))
-        start(ranges(ygi)) <- end(ranges(ygi)) <- mean(ranges(ygi))
+        start(xgi) <- end(xgi) <- start(xgi)+(width(xgi)/2)
+        start(ygi) <- end(ygi) <- start(ygi)+(width(ygi)/2)
     }
 
-    x.se.bin <- matrix(NA, ncol=2, nrow=x.nb.bin, byrow=TRUE)
+    x.se.bin <- matrix(NA_integer_, ncol=2, nrow=x.nb.bin, byrow=TRUE)
     x.se.bin[,1] <- x.pas
     x.se.bin[,2] <- ifelse(x.pas+x.size.bin>xmax,xmax,x.pas+x.size.bin)
-        
-    y.se.bin <- matrix(NA, ncol=2, nrow=y.nb.bin, byrow=TRUE)
+    x.se.bin[,2] <- x.se.bin[,2] - 1
+    
+    y.se.bin <- matrix(NA_integer_, ncol=2, nrow=y.nb.bin, byrow=TRUE)
     y.se.bin[,1] <- y.pas
     y.se.bin[,2] <- ifelse(y.pas+y.size.bin>ymax,ymax,y.pas+y.size.bin)
- 
+    y.se.bin[,2] <- y.se.bin[,2] - 1
+
     x.bin.set <- GRanges(seqnames=seqlevels(xgi), ranges = IRanges(start=x.se.bin[,1], end=x.se.bin[,2], names=paste(seqlevels(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")))
     y.bin.set <- GRanges(seqnames=seqlevels(ygi), ranges = IRanges(start=y.se.bin[,1], end=y.se.bin[,2], names=paste(seqlevels(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")))
 
-    ## Overlap with both xgi and ygi (for 5C)
-    xx.bin.over <- as.list(findOverlaps(x.bin.set, xgi))
-    xy.bin.over <- as.list(findOverlaps(x.bin.set, ygi))
-    yy.bin.over <- as.list(findOverlaps(y.bin.set, ygi))
-    yx.bin.over <- as.list(findOverlaps(y.bin.set, xgi))
-
-    if (optim=="speed")
-        mat.bin <- matrix(0, ncol=x.nb.bin, nrow=y.nb.bin)
-    else
-        mat.bin <- Matrix(0, ncol=x.nb.bin, nrow=y.nb.bin)
-
-    colnames(mat.bin) <- paste(seqlevels(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
-    rownames(mat.bin) <- paste(seqlevels(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
-
-    for (i in 1:(y.nb.bin)){
-        fA <-yy.bin.over[[i]]
-        rA <-yx.bin.over[[i]]
+    ## Binning for 5C data - Overlap with both xgi and ygi
+    if (!isBinned(x)){
+        xx.bin.over <- as.list(findOverlaps(x.bin.set, xgi))
+        xy.bin.over <- as.list(findOverlaps(x.bin.set, ygi))
+        yy.bin.over <- as.list(findOverlaps(y.bin.set, ygi))
+        yx.bin.over <- as.list(findOverlaps(y.bin.set, xgi))
         
-        for (j in 1:(x.nb.bin)){
-            fB <-xy.bin.over[[j]]
-            rB <-xx.bin.over[[j]]
-
-            if ((length(fA>0) || length(rA)>0) && (length(fB>0) || length(rB)>0)){
-                if (met=="sum"){
-                    mat.bin[i,j] <- sum(mat.data[fA,rB], na.rm=TRUE)+sum(mat.data[fB,rA], na.rm=TRUE)
-                    if (rownames(mat.bin)[i]==colnames(mat.bin)[j]){
-                        mat.bin[i,j] <- mat.bin[i,j]/2
-                    }
-                }
+        ## vector of pairs to combine
+        if (isIntraChrom(x)){
+            p <- matrix(rep(1:y.nb.bin,2), ncol=2)
+            p <- rbind(p, t(combn(1:y.nb.bin, 2)))
+        }else{
+            p <- matrix(c(rep(1:y.nb.bin,x.nb.bin), rep(1:x.nb.bin, each=y.nb.bin)), ncol=2)
+        }
+                
+        out<- apply(p, 1, function(idx){
+            fA <-yy.bin.over[[idx[1]]]
+            rA <-yx.bin.over[[idx[1]]]
+            fB <-xy.bin.over[[idx[2]]]
+            rB <-xx.bin.over[[idx[2]]]
+               
+             if ((length(fA>0) || length(rA)>0) && (length(fB>0) || length(rB)>0)){
+                 if (met=="sum"){
+                     if (idx[1]==idx[2])
+                         (sum(mat.data[fA,rB], na.rm=TRUE)+sum(mat.data[fB,rA], na.rm=TRUE))/2
+                     else
+                        sum(mat.data[fA,rB], na.rm=TRUE)+sum(mat.data[fB,rA], na.rm=TRUE)
+                 }
                 else if(met=="mean"){
                     sdata <- c(as.vector(mat.data[fA,rB]), as.vector(mat.data[fB,rA]))
-                    if (!use.zero && length(sdata[sdata!=0]>0)){
-                        mat.bin[i,j] <- mean(sdata[sdata!=0], na.rm=TRUE)
-                    }
-                    else {
-                        mat.bin[i,j] <- mean(sdata, na.rm=TRUE)
-                    }
+                    if (!use.zero && length(sdata[sdata!=0]>0))
+                        mean(sdata[sdata!=0], na.rm=TRUE)
+                    else
+                        mean(sdata, na.rm=TRUE)
                 }
                 else if (met=="median"){
                     sdata <- c(as.vector(mat.data[fA,rB]), as.vector(mat.data[fB,rA]))
-                    if (!use.zero && length(sdata[sdata!=0]>0)){
-                        mat.bin[i,j] <-  median(sdata[sdata!=0], na.rm=TRUE)
-                    }
-                    else{
-                        mat.bin[i,j] <-  median(sdata, na.rm=TRUE)
-                    }
-                    a <- median(sdata, na.rm=TRUE)
+                    if (!use.zero && length(sdata[sdata!=0]>0))
+                        median(sdata[sdata!=0], na.rm=TRUE)
+                    else
+                        median(sdata, na.rm=TRUE)
                 }
+            }else{
+                return(0)
             }
+        })
+        out <- unlist(out)
+        ## Create new HTCexp object
+        mat.bin <- Matrix::sparseMatrix(i=p[which(out!=0),1], j=p[which(out!=0),2], x=out[which(out!=0)], dims=c(y.nb.bin, x.nb.bin))
+        
+        if (isIntraChrom(x))
+            mat.bin <- forceSymmetric(mat.bin)
+        
+    }else{
+        ## Binning for Hi-C data
+        if (isSymmetric(x)){
+            xx.bin.over <- as.list(findOverlaps(x.bin.set, xgi))
+            xy.bin.over <- xx.bin.over
+            
+            ## vector of pairs to combine
+            if (y.nb.bin>1){
+                p <- matrix(rep(1:y.nb.bin,2), ncol=2)
+                p <- rbind(p, t(combn(1:y.nb.bin, 2)))
+            }else{
+                p <- matrix(c(1,1), ncol=2, byrow=2)
+            }
+        }else{
+            xx.bin.over <- as.list(findOverlaps(x.bin.set, xgi))
+            xy.bin.over <- as.list(findOverlaps(y.bin.set, ygi))
+            
+            ## vector of pairs to combine
+            p <- matrix(c(rep(1:y.nb.bin,x.nb.bin), rep(1:x.nb.bin, each=y.nb.bin)), ncol=2)
         }
-    }
+        ## sum of pairs of overlap
+        out<- apply(p, 1, function(idx){
+            i <-xy.bin.over[[idx[1]]]
+            j <-xx.bin.over[[idx[2]]]
 
-    if (optim=="speed")
-        mat.bin <- as(mat.bin, "Matrix")
- 
+            if (met=="sum"){
+                if (idx[1]==idx[2])
+                    sum(mat.data[i,j], na.rm=TRUE) ##/2
+                else
+                    sum(mat.data[i,j], na.rm=TRUE)
+            }
+            else if(met=="mean"){
+                sdata <- as.vector(mat.data[i,j])
+                if (!use.zero && length(sdata[sdata!=0]>0))
+                    mean(sdata[sdata!=0], na.rm=TRUE)
+                else
+                    mean(sdata, na.rm=TRUE)
+            }
+            else if (met=="median"){
+                sdata <- as.vector(mat.data[i,j])
+                if (!use.zero && length(sdata[sdata!=0]>0))
+                    median(sdata[sdata!=0], na.rm=TRUE)
+                else
+                    median(sdata, na.rm=TRUE)
+            }
+        })
+        ## Create new HTCexp object
+        mat.bin <- Matrix::sparseMatrix(i=p[which(out!=0),1], j=p[which(out!=0),2], x=out[which(out!=0)], dims=c(y.nb.bin, x.nb.bin))
+
+        if (isSymmetric(x))
+            mat.bin <- forceSymmetric(mat.bin)
+    }
+    colnames(mat.bin) <- paste(seqlevels(xgi),":",x.se.bin[,1],"-",x.se.bin[,2], sep="")
+    rownames(mat.bin) <- paste(seqlevels(ygi),":",y.se.bin[,1],"-",y.se.bin[,2], sep="")
+  
     return(HTCexp(mat.bin, x.bin.set, y.bin.set))  
 }
 
@@ -159,11 +213,6 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("med
 setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method=c("median","mean","sum"), use.zero=TRUE, optimize.by=c("speed","memory")){
     
     stopifnot(inherits(x,"HTCexp"))
-
-    #met.agglo <- c("mean", "median", "sum")
-    #method <- met.agglo[pmatch(method, met.agglo)]
-    #if (is.na(method)) 
-    #    stop("Error :Unknown method.")
     met <- match.arg(method)
     optim <- match.arg(optimize.by)
 

@@ -1,12 +1,9 @@
 ##Generics
 
-setGeneric(name="getCombinedIntervals", def=function(x) standardGeneric("getCombinedIntervals"))
-setGeneric(name="getCombinedContacts", def=function(x) standardGeneric("getCombinedContacts"))
+## Data access
 
 setGeneric(name="intdata", def=function(x) standardGeneric("intdata"))
 setGeneric(name="intdata<-", def=function(x,value) standardGeneric("intdata<-"))
-
-#setGeneric(name="isSymmetric", def=function(x) standardGeneric("isSymmetric"))
 
 setGeneric(name="id", def=function(x) standardGeneric("id"))
 setGeneric(name="id<-", def=function(x,value) standardGeneric("id<-"))
@@ -17,8 +14,23 @@ setGeneric(name="x_intervals", def=function(x) standardGeneric("x_intervals"))
 setGeneric(name="x_intervals<-", def=function(x, value) standardGeneric("x_intervals<-"))
 setGeneric(name="xy_intervals", def=function(x) standardGeneric("xy_intervals"))
 
+## Update objects
+
+setGeneric(name="getCombinedIntervals", def=function(x) standardGeneric("getCombinedIntervals"))
+setGeneric(name="getCombinedContacts", def=function(x) standardGeneric("getCombinedContacts"))
+
+setGeneric(name="forcePairwise", def=function(x) standardGeneric("forcePairwise"))
+##setGeneric(name="forceSymmetric", def=function(x) standardGeneric("forceSymmetric"))
+
+## is ?
+
+setGeneric(name="isComplete", def=function(x) standardGeneric("isComplete"))
+setGeneric(name="isPairwise", def=function(x) standardGeneric("isPairwise"))
+
 setGeneric(name="isBinned", def=function(x) standardGeneric("isBinned"))
 setGeneric(name="isIntraChrom", def=function(x) standardGeneric("isIntraChrom"))
+
+## Operation
 
 setGeneric(name="divide", def=function(x,y) standardGeneric("divide"))
 setGeneric(name="substract", def=function(x,y) standardGeneric("substract"))

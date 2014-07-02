@@ -155,15 +155,14 @@ seqlevels(z)
 
 \subsection{Import/Export Data}
 
-The HiTC package provides the \Rfunction{importC} and \Rfunction{exportC} functions to import/export data from a simple matrix file.
+The HiTC package provides the \Rfunction{importC} and \Rfunction{exportC} functions to import/export data from a list file. Only non null values have the written in this file allowing a efficient storage of Hi-C (sparse) data.
 The format is defined as follow :
 \begin{itemize}
-\item A matrix file with rows and columns names. The name of the intervals (primers or bins) are required to link the count data with the ranges description.\
-\item The associated \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files describing the x and y intervals of the HTCexp object. For 5C experiment, it can be the forward and reverse primers location, whereas for Hi-C experiment, it can be a description of the genomic bins.
+\item A list file (tab-separated) with per line, the name of both interactors and the number of associated sequencing reads (i.e. \verb?I1 I2 Count1-2?).
+\item The associated \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files describing the x and y intervals of the HTCexp object. For 5C experiment, it can be the forward and reverse primers location, whereas for Hi-C experiment, it can be a description of the genomic bins. The name of these intervals must match with the name of the interactors in the list file.
  \end{itemize}
 
-In addition, the package is fully compatible with the \href{http://my5c.umassmed.edu/welcome/welcome.php}{my5C web browser}. The interaction counts matrices can be imported/exported from a matrix or a list file format. The list file with the count of each pair of genomic loci is defined as : \verb?nameA nameB countAB?\\
-The matrix format summarizes all the informations with genomic coordinates as row and column names (ex: \verb?HIC_bin1|hg18|chr14:1-999999?). The row and column names are splitted to create the HTCexp object.
+In addition, the package is fully compatible with the \href{http://my5c.umassmed.edu/welcome/welcome.php}{my5C web browser}. The interaction counts matrices can be imported/exported from a matrix file format. The matrix format summarizes all the informations with genomic coordinates as row and column names (ex: \verb?HIC_bin1|hg18|chr14:1-999999?). The row and column names are splitted to create the HTCexp object.
 
 The \Biocpkg{HiTC} package includes a sample of the Human Hi-C dataset (\href{http://0-www.ncbi.nlm.nih.gov.elis.tmu.edu.tw/geo/query/acc.cgi?acc=GSE18199}{GSE18199}) published by \cite{Lieberman-Aiden2009}. The interaction map of chromosome 12 to 14 is used to illustrate the capabilities of the \Biocpkg{HiTC} package to explore Hi-C data.
 
@@ -181,6 +180,7 @@ ranges(hiC)
 range(hiC)
 isBinned(hiC)
 isIntraChrom(hiC)
+isComplete(hiC)
 seqlevels(hiC)
 summary(hiC)
 @

@@ -15,7 +15,7 @@ importFrom("graphics", "plot", "image", "abline", "axis", "text")
 importFrom("grDevices", "col2rgb")
 importFrom("stats", "prcomp")
 importFrom("RColorBrewer", "brewer.pal")
-importFrom("Matrix", "cBind", "Matrix")
+importFrom("Matrix", "cBind", "rBind", "Matrix", "sparseMatrix")
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
@@ -55,6 +55,7 @@ exportMethods(
               "isBinned", "isIntraChrom", "isSymmetric",
               "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
               "id",
+              "forcePairwise","forceSymmetric","isPairwise", "isComplete", 
               "mapC","plot",
               "normPerReads", "normPerExpected", "normPerTrans",
               "range", "ranges",
