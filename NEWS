@@ -1,4 +1,23 @@
 ***********************************
+CHANGES IN VERSION 1.9.5
+
+NEW FEATURES
+
+   o The normLGF function can now be applied both on intra and inter-chromosomal maps
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Access the contact map is now ALWAYS performed using chromosomes' name such as ygi/xgi, i.e. rownames/colnames of contact maps
+
+   o Update of the setGenomicFeatures method and speed improvment
+
+BUG FIXES
+
+   o Update of isComplete method
+
+   o Update of import functions
+
+***********************************
 CHANGES IN VERSION 1.9.4
 
 NEW FEATURES

@@ -19,7 +19,7 @@ importFrom("Matrix", "cBind", "rBind", "Matrix", "sparseMatrix")
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")
 importMethodsFrom("rtracklayer", "import", "export")
-importMethodsFrom("Matrix", "colMeans", "crossprod", "forceSymmetric", "rowSums", "nnzero")
+importMethodsFrom("Matrix", "colMeans", "colSums", "crossprod", "forceSymmetric", "rowSums", "nnzero")
 
 #############################
 ##

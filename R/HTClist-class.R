@@ -42,7 +42,7 @@ HTClist <- function(...)
   listData <- unname(listData)
 
   names(listData) <- sapply(listData, function(x){
-    paste(seqlevels(x_intervals(x)), seqlevels(y_intervals(x)), sep="")
+    paste(seqlevels(y_intervals(x)), seqlevels(x_intervals(x)), sep="")
   })
   
   new("HTClist", listData)
@@ -114,9 +114,12 @@ setMethod(f="forcePairwise", signature(x="HTClist"),
               c(x, nmaps)
           })
 
+setMethod(f="forceSymmetric", signature(x="HTClist", uplo="missing"),
+          function(x, uplo){forceSymmetric(x, uplo="U")})
 
-setMethod(f="forceSymmetric", signature(x="HTClist"),
-          function(x, uplo="U"){
+setMethod(f="forceSymmetric", signature(x="HTClist", uplo="character"),
+          function(x, uplo){
+              stopifnot(uplo=="U" || uplo=="L")
               stopifnot(isComplete(x))
               x <- sortSeqlevels(x)
               chrs <- seqlevels(x)
@@ -167,8 +170,8 @@ setMethod(f="getCombinedContacts", signature(x="HTClist"),
               dimchr <- t(sapply(x[isIntraChrom(x)], function(xx){dim(intdata(xx))}))
               rownames(dimchr) <- pchr[rownames(dimchr),1]
               col.merged <- lapply(seqlevels(x), function(chr){
-                  allpairs <- rownames(pchr)[which(pchr[,2]==chr)]
-                  do.call(cBind,lapply(x[allpairs], intdata))
+                  allpairs <- rownames(pchr)[which(pchr[,1]==chr)]
+                  do.call(cBind,lapply(x[allpairs], function(xx){as(intdata(xx), "sparseMatrix")}))
               })
               bigMat <- do.call(rBind, col.merged)
               combint <- getCombinedIntervals(x)
@@ -194,14 +197,11 @@ setMethod(f="isComplete", signature(x="HTClist"),
               mat.pairs <- matrix(0, ncol=lchrs, nrow=lchrs, dimnames=list(chrs, chrs))
               for (m in x){
                   mat.pairs[seqlevels(m@ygi), seqlevels(m@xgi)] <- 1
-              }
-              ## Minimum number of maps for unpairwise HiC data
-              min.exp.nb.maps <- lchrs+(lchrs*(lchrs-1)/2)
-              ups <- sum(mat.pairs[upper.tri(mat.pairs, diag=TRUE)])
-              los <- sum(mat.pairs[lower.tri(mat.pairs, diag=TRUE)])
-              ret <- FALSE
-              if (ups >= min.exp.nb.maps || los >= min.exp.nb.maps)
-                  ret <- TRUE
+              }         
+              ret <- TRUE
+              maps_per_chr <- apply(mat.pairs, 1, sum) + apply(mat.pairs, 2, sum)
+              if (any(maps_per_chr<(length(seqlevels(x))+1)))
+                  ret <- FALSE
               ret
           })
 
@@ -251,7 +251,8 @@ setMethod("sortSeqlevels", signature="HTClist",
               stopifnot(validObject(x))
               chrs <- seqlevels(x)
               chrs.sort <- sortSeqlevels(chrs)
-              x[intersect(names(pair.chrom(chrs.sort)), names(x))]
+              out <- x[intersect(names(pair.chrom(chrs.sort)), names(x))]
+              out
           })
 
 

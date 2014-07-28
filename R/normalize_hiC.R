@@ -186,36 +186,29 @@ tricube <- function(x) {
 ## x = HTCexp/HTClist object
 ## family = regression model Poisson or Neg Binon
 ##
-## TODO
-## - trans data
 ##
 ##################################
 
 normLGF <- function(x,  family=c("poisson", "nb")){
     family <- match.arg(family)
-    message("start ", seqlevels(x))
+    message("Starting LGF normalization on ", seqlevels(x), " ...")
     counts <- intdata(x)
     
-    ##remove rowCounts=0
-    rc <- which(rowSums(counts)==0)
-    if (length(rc)>0){
-        counts.rc <- counts[-rc,-rc]
-        elt <- elementMetadata(x_intervals(x)[-rc])
-    }
-    else{
-        counts.rc <- counts
-        elt <- elementMetadata(x_intervals(x))
-    }
+    ## Remove rowCounts=0 & colCounts=0
+    rc <- which(rowSums(counts)>0)
 
-    if(dim(counts.rc)[1]==0){
-        warning("Unable to normalize ",seqlevels(x_intervals(x))," interaction map")
-        invisible(NULL)
-    }else{
+    ## Intrachromosomal maps
+    if (isIntraChrom(x)){
+        cc <- rc
+        stopifnot(length(rc)>0)
+        counts.rc <- counts[rc,rc]
+
+        elt <- elementMetadata(y_intervals(x)[rc])
         len <- elt$len
         gcc <- elt$GC
         map <- elt$map
-
-        if(is.null(len) || is.null(gcc) || is.null(map))
+        
+        if(all(is.na(len)) || all(is.na(gcc)) || all(is.na(map)))
             stop("Genomic features are missing. Effective fragments length, GC content and mappability are required.")
         
         ##get cov matrix
@@ -226,33 +219,72 @@ normLGF <- function(x,  family=c("poisson", "nb")){
         map[which(map==0)] <- 10e-4
         map_m<-as.matrix(log(map%o%map))      
 
-        ##centralize cov matrix of enz, gcc
-        len_m<-(len_m-mean(len_m, na.rm=TRUE))/apply(len_m, 2, sd, na.rm=TRUE)
-        gcc_m<-(gcc_m-mean(gcc_m, na.rm=TRUE))/apply(gcc_m, 2, sd, na.rm=TRUE)
+    }else{
+
+    ## Interchromosomal maps
+        cc <- which(colSums(counts)>0)
+        stopifnot(length(rc)>0 & length(cc)>0)
         
-        ##change matrix into vector
+        counts.rc <- counts[rc,cc]
+        yelt <- elementMetadata(y_intervals(x)[rc])
+        xelt <- elementMetadata(x_intervals(x)[cc])
+        
+        ylen <- yelt$len
+        xlen <- xelt$len
+        ygcc <- yelt$GC
+        xgcc <- xelt$GC
+        ymap <- yelt$map
+        xmap <- xelt$map
+
+        if(all(is.na(ylen)) || all(is.na(ygcc)) || all(is.na(ymap)) || all(is.na(xlen)) || all(is.na(xgcc)) || all(is.na(xmap)))
+            stop("Genomic features are missing. Effective fragments length, GC content and mappability are required.")
+      
+        ##get cov matrix
+        len_m<-as.matrix(log(1+ylen%o%xlen))
+        gcc_m<-as.matrix(log(1+ygcc%o%xgcc))
+        
+        ##error for regions with 0 mappability
+        ymap[which(ymap==0)] <- 10e-4
+        xmap[which(xmap==0)] <- 10e-4
+        map_m<-as.matrix(log(ymap%o%xmap))      
+    }
+    
+    ##centralize cov matrix of enz, gcc
+    len_m<-(len_m-mean(len_m, na.rm=TRUE))/apply(len_m, 2, sd, na.rm=TRUE)
+    gcc_m<-(gcc_m-mean(gcc_m, na.rm=TRUE))/apply(gcc_m, 2, sd, na.rm=TRUE)
+    
+    ##change matrix into vector
+    if (isIntraChrom(x)){
         counts_vec<-counts.rc[which(upper.tri(counts.rc,diag=FALSE))]
         len_vec<-len_m[upper.tri(len_m,diag=FALSE)]
         gcc_vec<-gcc_m[upper.tri(gcc_m,diag=FALSE)]
         map_vec<-map_m[upper.tri(map_m,diag=FALSE)]
-        
-        print("fit ...")
-        if (family=="poisson"){
-            ##fit Poisson regression: u~len+gcc+offset(map)
-            fit<-glm(counts_vec~len_vec+gcc_vec+offset(map_vec),family="poisson")
-            ##fit<-bigglm(counts_vec~len_vec+gcc_vec+offset(map_vec),family="poisson", data=cbind(counts_vec, len_vec, gcc_vec, map_vec))
-        }else{
-            fit<-glm.nb(counts_vec~len_vec+gcc_vec+offset(map_vec))
-        }
-        
-        coeff<-round(fit$coeff,4)
-        counts.cor<-round(counts.rc/exp(coeff[1]+coeff[2]*len_m+coeff[3]*gcc_m+map_m), 4)
-        counts[rownames(counts.rc), colnames(counts.rc)]<-counts.cor
-        
-        intdata(x) <- counts
-        return(x)
+    }else{
+        counts_vec<-as.vector(counts.rc)
+        len_vec<-as.vector(len_m)
+        gcc_vec<-as.vector(gcc_m)
+        map_vec<-as.vector(map_m)
     }
-}
+    
+    print("fit ...")
+    if (family=="poisson"){
+        ##fit Poisson regression: u~len+gcc+offset(map)
+        fit<-glm(counts_vec~ len_vec+gcc_vec+offset(map_vec),family="poisson")
+        ##fit<-bigglm(counts_vec~len_vec+gcc_vec+offset(map_vec),family="poisson", data=cbind(counts_vec, len_vec, gcc_vec, map_vec))
+    }else{
+        fit<-glm.nb(counts_vec~len_vec+gcc_vec+offset(map_vec))
+    }
+
+    coeff<-fit$coeff
+
+    ## The corrected values (residuals) can be seen as a observed/expected correction.
+    ## So I will compare the normalized counts with one: the observed count is higher or lower than the expected count. We may not want to compare the range of the normalized count with the range of the raw count. They have different interpretations.
+    counts.cor<-round(counts.rc/exp(coeff[1]+coeff[2]*len_m+coeff[3]*gcc_m+map_m), 4)
+    counts[rownames(counts.rc), colnames(counts.rc)]<-counts.cor
+  
+    intdata(x) <- counts
+    return(x)
+}##normLGF
 
 ###################################
 ## setGenomicFeatures
@@ -267,20 +299,17 @@ normLGF <- function(x,  family=c("poisson", "nb")){
 
 setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
     stopifnot(inherits(x,"HTCexp"))
-    if (inherits(cutSites, "GRangesList")){
-        cutSites <- cutSites[[seqlevels(x)]]
-        seqlevels(cutSites) <- seqlevels(x)
-    }
-    stopifnot(seqlevels(x)==seqlevels(cutSites))
+    stopifnot(seqlevels(x) %in% seqlevels(cutSites))
     obj <- x
     xgi <- x_intervals(x)
-    xgi <- annotateIntervals(xgi, cutSites, minfragmap=minFragMap, efffraglen=effFragLen)
+    message("Annotation of ", seqlevels(x), " ...")
+    xgi <- annotateIntervals(xgi, cutSites[[seqlevels(xgi)]], minfragmap=minFragMap, efffraglen=effFragLen)
     x_intervals(obj) <- xgi
     if (isIntraChrom(x) & isBinned(x)){
         y_intervals(obj) <- xgi
     }else{
         ygi <- y_intervals(x)
-        ygi <- annotateIntervals(ygi, cutSites, minfragmap=minFragMap, efffraglen=effFragLen)
+        ygi <- annotateIntervals(ygi, cutSites[[seqlevels(ygi)]], minfragmap=minFragMap, efffraglen=effFragLen)
         y_intervals(obj) <- ygi
     }
    obj
@@ -297,10 +326,9 @@ setGenomicFeatures <- function(x, cutSites, minFragMap=.5, effFragLen=1000){
 ##################################
 
 annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
-
     ## Preprocess, keep fragments ends with mappability score larger than .5.
     ## Depends on the data processing (see Yaffe and Tanay, 2011). These fragments will be exclude from the analysis.
-    if (!is.na(minfragmap)){
+    if (!is.na(minfragmap) & !all(is.na(annot$map_U)) & !all(is.na(annot$map_D))){
         idxmap <- which(annot$map_U<minfragmap | is.na(annot$map_U))
         elementMetadata(annot)[idxmap,c("len_U", "GC_U", "map_U")]<-NA_real_
         idxmap <- which(annot$map_D<minfragmap | is.na(annot$map_D))
@@ -324,31 +352,36 @@ annotateIntervals <- function(gi, annot, minfragmap=.5, efffraglen=1000){
 
     outl_up<- as.list(findOverlaps(gi, annot_up))
     outl_dw<- as.list(findOverlaps(gi, annot_down))
-    
-    annotscores <- t(sapply(1:length(outl_up), function(i){
+  
+    annotscores <- lapply(1:length(outl_up), function(i){
         id_up <- outl_up[[i]]
         id_dw <- outl_dw[[i]]
-        temp <-  c(annot_up[id_up], annot_down[id_dw])
+        ##temp <-  c(annot_up[id_up], annot_down[id_dw])
+        temp_up <- annot_up[id_up]
+        temp_dw <- annot_down[id_dw]
 
         ## len - effective length" is the fragment length truncated by 1000 bp, which is the number of bases with specific ligation.
         ## In Yaffe & Tanay's paper Figure 1b, they define specific ligation as sum of distance to cutter sites (d1+d2) <= 500 bp. Such criterion implies that d1<=500 bp and d2 <= 500 bp. So for each fragment end, only reads mapped within 500 bp to cutter sites are used for downstream analysis. 
-        lenv <- unique(temp$len)
+        lenv <- unique(c(temp_up$len, temp_dw$len))
         if (!is.na(efffraglen))
             lenscore <- sum(lenv>efffraglen, na.rm=TRUE)*efffraglen + sum(lenv[lenv<efffraglen], na.rm=TRUE)
         else
             lenscore <- sum(lenv, na.rm=TRUE)
         
         ##GC
-        gcscore <- mean(temp$GC, na.rm=TRUE)
+        gcscore <- mean(c(temp_up$GC, temp_dw$GC), na.rm=TRUE)
 
         ##map
-        mapscore <- mean(temp$map, na.rm=TRUE)
+        mapscore <- mean(c(temp_up$map, temp_dw$map), na.rm=TRUE)
 
         c(lenscore, gcscore, mapscore)
-    }))
-    
+    })
+    annotscores <- matrix(unlist(annotscores), ncol=3, byrow=TRUE)
     colnames(annotscores) <- c("len", "GC", "map")
-    elementMetadata(gi)<-round(annotscores,3)
+    elementMetadata(gi)$len <- round(annotscores[,"len"],3)
+    elementMetadata(gi)$GC <- round(annotscores[,"GC"],3)
+    elementMetadata(gi)$map <- round(annotscores[,"map"],3)
+
     gi
 }
 
@@ -432,6 +465,7 @@ getAnnotatedRestrictionSites <- function(resSite="AAGCTT", overhangs5=1, chromos
             cutSites$map_U<-NA_real_
             cutSites$map_D<-NA_real_
         }
+        message("done ...")
         cutSites
     })
     grl <- GRangesList(genomeCutSites)
@@ -520,7 +554,7 @@ chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
 ##
 ##################################
 
-IterativeCorNormalization <- function(x, max_iter=200, eps=1e-4){
+IterativeCorNormalization <- function(x, max_iter=50, eps=1e-4){
     m <- dim(x)[1]
 
     ## Initialization    
@@ -581,15 +615,15 @@ IterativeCorNormalization <- function(x, max_iter=200, eps=1e-4){
 ##
 ##################################
 
-normICE <- function(x, max_iter=200, eps=1e-4, sparse.filter=0.02){
+normICE <- function(x, max_iter=50, eps=1e-4, sparse.filter=0.02){
 
     if (inherits(x, "HTCexp")){
         stopifnot(isSymmetric(x))
         idata <- intdata(x)
         gr <- y_intervals(x)
     }else if (inherits(x, "HTClist")){
-        idata <- HiTC:::getCombinedContacts(x)
-        gr <- HiTC:::getCombinedIntervals(x)
+        idata <- getCombinedContacts(x)
+        gr <- getCombinedIntervals(x)
     }
 
     if (!is.na(sparse.filter)){
@@ -608,15 +642,15 @@ normICE <- function(x, max_iter=200, eps=1e-4, sparse.filter=0.02){
     if (inherits(x, "HTCexp")){
         intdata(x) <- xmat
     }else if (inherits(x, "HTClist")){
-        ##     gr <- HiTC:::dimnames2gr(xmat, pattern="\\||\\:|\\-", feat.names=c("name","chr","start", "end"))
+        ##     gr <- dimnames2gr(xmat, pattern="\\||\\:|\\-", feat.names=c("name","chr","start", "end"))
         ##     xgi <- gr[[1]]
         ##     ygi <- gr[[2]]
         ##     rownames(xmat) <- id(ygi)
         ##     colnames(xmat) <- id(xgi)
         if (is.null(gr$xgi))
-            x <- HiTC:::splitCombinedContacts(xmat, xgi=gr$ygi, ygi=gr$ygi)
+            x <- splitCombinedContacts(xmat, xgi=gr$ygi, ygi=gr$ygi)
         else
-            x <- HiTC:::splitCombinedContacts(xmat, xgi=gr$xgi, ygi=gr$ygi)
+            x <- splitCombinedContacts(xmat, xgi=gr$xgi, ygi=gr$ygi)
     }
     x
 }

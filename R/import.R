@@ -7,7 +7,7 @@
 ## file = name of intput file to read
 ###################################
 
-importC <- function(con, xgi.bed, ygi.bed=NULL, all.pairwise=FALSE, forceSymmetric=FALSE){
+importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetric=FALSE){
     
     stopifnot(!missing(con))
 
@@ -16,8 +16,10 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, all.pairwise=FALSE, forceSymmetr
     
     message("Loading Genomic intervals ...")
     xgi <- rtracklayer::import(xgi.bed, format="bed", asRangedData=FALSE)
+    names(xgi) <- id(xgi)
     if (!is.null(ygi.bed)){
         ygi <- rtracklayer::import(ygi.bed, format="bed", asRangedData=FALSE)
+        names(ygi) <- id(ygi)
     }else{
         ygi <- xgi
     }
@@ -29,14 +31,16 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, all.pairwise=FALSE, forceSymmetr
     id1 <- cdata[,1]
     id2 <- cdata[,2]
     pos1 <- match(id1, id(ygi))
-    pos2 <- match(id2, id(xgi))
-
+    pos2 <- match(id2, id(xgi))  
+    ipos1 <- which(!is.na(pos1))
+    
+    
     ## -1 is performed in the sparseMatrix function
     bigMat <- Matrix::sparseMatrix(i=pos1, j=pos2, x=cdata[,3], dims=c(length(ygi), length(xgi)), dimnames=list(id(ygi), id(xgi)))
     rm(cdata)
     
     message("Convert 'C' file in HTCexp object(s)")
-    x <- splitCombinedContacts(bigMat, xgi, ygi, all.pairwise, forceSymmetric)
+    x <- splitCombinedContacts(bigMat, xgi, ygi, allPairwise, forceSymmetric)
 }##importC
 
 
@@ -51,7 +55,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, all.pairwise=FALSE, forceSymmetr
 ##
 ##################################
 
-import.my5C <- function(file, all.pairwise=FALSE, forceSymmetric=FALSE){
+import.my5C <- function(file, allPairwise=FALSE, forceSymmetric=FALSE){
     
     ## Read data
     stopifnot(!missing(file))
@@ -60,7 +64,7 @@ import.my5C <- function(file, all.pairwise=FALSE, forceSymmetric=FALSE){
 
     message("Convert my5C matrix file in HTCexp object(s)")
     my5Cdata <- as(as.matrix(my5Cdata),"Matrix")
-    
+
     ## Create xgi and ygi object
     gr <- dimnames2gr(my5Cdata, pattern="\\||\\:|\\-", feat.names=c("name","org","chr","start", "end"))
     ygi <- gr[[1]]
@@ -69,7 +73,7 @@ import.my5C <- function(file, all.pairwise=FALSE, forceSymmetric=FALSE){
     ## Create HTClist object from my5Cdata
     rownames(my5Cdata) <- id(ygi)
     colnames(my5Cdata) <- id(xgi)
-    obj <- splitCombinedContacts(my5Cdata, xgi, ygi, all.pairwise, forceSymmetric)
+    obj <- splitCombinedContacts(my5Cdata, xgi, ygi, allPairwise, forceSymmetric)
     
     return(HTClist(unlist(obj[which(!unlist(lapply(obj, is.null)))])))
 }##import.my5C
@@ -116,22 +120,22 @@ dimnames2gr <- function(x, pattern="\\||\\:|\\-", feat.names=c("name","chr","sta
 ## x: Matrix data
 ## xgi: GenomicRanges of x_intervals
 ## ygi: GenomicRanges of y_intervals
-## all.pairwise: see pair.chrom
+## allPairwise: see pair.chrom
 ## forceSymmetric: see HTCexp
 ##
 ##################################
 
-splitCombinedContacts <- function(x, xgi, ygi, all.pairwise=TRUE, forceSymmetric=FALSE){
+splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, forceSymmetric=FALSE){
     
-    chromPair <- pair.chrom(c(seqlevels(xgi), seqlevels(ygi)), use.order = all.pairwise)
+    chromPair <- pair.chrom(sortSeqlevels(c(seqlevels(xgi), seqlevels(ygi))), use.order = allPairwise)
     obj <- mclapply(chromPair, function(chr) {
-        xgi.subset <- xgi[which(seqnames(xgi) == chr[1]),]
-        seqlevels(xgi.subset) <- as.character(unique(seqnames(xgi.subset)))
-        ygi.subset <- ygi[which(seqnames(ygi) == chr[2]),] 
+        ygi.subset <- ygi[which(seqnames(ygi) == chr[1]),] 
         seqlevels(ygi.subset) <- as.character(unique(seqnames(ygi.subset)))
-
+        xgi.subset <- xgi[which(seqnames(xgi) == chr[2]),]
+        seqlevels(xgi.subset) <- as.character(unique(seqnames(xgi.subset)))
+     
         if (length(xgi.subset) > 0 && length(ygi.subset) > 0) {
-            message("Creating ", chr[1], "-", chr[2], " Contact Map ...")
+            message("Creating ", chr[2], "-", chr[1], " Contact Map ...")
             if (length(ygi.subset)==1 || length(xgi.subset)==1){
                 intdata <- Matrix(x[id(ygi.subset), id(xgi.subset)], nrow=length(ygi.subset), ncol=length(xgi.subset))
             }else{
@@ -142,6 +146,7 @@ splitCombinedContacts <- function(x, xgi, ygi, all.pairwise=TRUE, forceSymmetric
             HTCexp(intdata, xgi.subset, ygi.subset, forceSymmetric = forceSymmetric)
         }
     })
+    ##obj
     HTClist(unlist(obj))
 }##splitCombinedContacts
     

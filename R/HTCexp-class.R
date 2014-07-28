@@ -79,7 +79,7 @@ HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
   
     ## Check matrix format
     if (!inherits(intdata, "Matrix")){
-        intdata <- Matrix(intdata, nrow=length(ygi), ncol=length(xgi))
+        intdata <- as(as.matrix(intdata), "Matrix")
     }
 
     ## Check matrix names
@@ -336,16 +336,18 @@ setMethod("divide", signature=c("HTCexp","HTCexp"),
 )
 
 ## forceSymmetric
+setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="missing"),
+          function(x, uplo){forceSymmetric(x, uplo="U")})
+
 setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="character"),
-          function(x, uplo="U"){
+          function(x, uplo){
+              stopifnot(uplo=="U" || uplo=="L")
               idata <- intdata(x)
-
-              #us <- sum(x[which(upper.tri(idata))])
-              #ls <- sum(x[which(lower.tri(idata))])
-
-              #if (us == 0 & ls>0)
-              #    idata <- forceSymmetric(idata, uplo="L")
-
+              ##us <- sum(x[which(upper.tri(idata))])
+              ##ls <- sum(x[which(lower.tri(idata))])
+              
+              ##if (us == 0 & ls>0)
+              ##    idata <- forceSymmetric(idata, uplo="L")
               idata <- forceSymmetric(idata, uplo)
               intdata(x) <- idata
               x
@@ -470,7 +472,7 @@ setMethod("show",signature="HTCexp",
               }
               cat("Matrix of Interaction data: [", dim(intdata(object))[1],"-",dim(intdata(object))[2], "]\n", sep="")
               gf <- union(names(elementMetadata(x_intervals(object))), names(elementMetadata(y_intervals(object))))
-              if (length(gf)>1)
+              if (length(gf)>0)
                   cat("Genomic Features : ", paste(gf, collapse="-"),"\n")
               invisible(NULL)
           }

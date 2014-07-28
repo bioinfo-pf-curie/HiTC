@@ -20,8 +20,6 @@
   Briefly, the method uses a generalized linear model to correct the
   systematic biases (effective fragment length, GC content, mappability)
   in a Hi-C contact map.
-
-  Note : v1.7.3. works only for intrachromosome data
 }
 \value{
   Returns a \code{HTCexp} object with a normalized contact map.

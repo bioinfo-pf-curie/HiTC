@@ -8,7 +8,8 @@
 \alias{as.list,HTClist-method}
 \alias{forcePairwise}
 \alias{forcePairwise,HTClist-method}
-\alias{forceSymmetric,HTClist,ANY-method}
+\alias{forceSymmetric,HTClist,character-method}
+\alias{forceSymmetric,HTClist,missing-method}
 \alias{isComplete}
 \alias{isComplete-methods}
 \alias{isComplete,HTClist-method}

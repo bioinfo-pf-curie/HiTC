@@ -7,7 +7,7 @@
  Iterative correction leverages the unique pairwise genome-wide structure of Hi-C data to decompose the data into a set of biases and a map of relative contact probabilities between any two genomic loci, achieving equal visibility across all genomic regions.
 }
 
-\usage{normICE(x,max_iter=200, eps=1e-4, sparse.filter=0.02)}
+\usage{normICE(x, max_iter=50, eps=1e-4, sparse.filter=0.02)}
 
 \arguments{
     \item{x}{object that inherits from class \code{HTCexp}}

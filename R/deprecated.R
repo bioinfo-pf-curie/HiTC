@@ -19,3 +19,5 @@ setMethod("normPerZscore", signature=c("HTCexp"), definition=function(x, ...){
 setMethod("export", signature("HTCexp", "character"), function(object, con){
     .Defunct("exportC")
 })
+
+

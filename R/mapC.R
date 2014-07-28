@@ -119,7 +119,6 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
     ## Heatmap options
     ## ###################
     if (show.na){
-        print("toto")
         if (length(which(is.na(xdata))>0)){
             par(new = TRUE)
             na.xdata <- matrix(NA, ncol=ncol(xdata), nrow=nrow(xdata))
@@ -284,7 +283,7 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
       design <- matrix(NA, lc+1, lc+1)
       design[1,] <- c(1,seq(lc^2+2,(lc+1)^2-1,2))
       design[,1] <- c(1,seq(lc^2+3,(lc+1)^2,2))
-      design[2:(lc+1), 2:(lc+1)] <- matrix(2:(lc^2+1), lc, lc, byrow=FALSE)
+      design[2:(lc+1), 2:(lc+1)] <- matrix(2:(lc^2+1), lc, lc, byrow=TRUE)
 
       heatspace <- 1-sizeblocs*ntrack
       layout(design, widths=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)), heights=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)))
@@ -293,7 +292,7 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
       par(mar=c(0,0,0,0))
       plot(1, type="n", axes=FALSE, xlab="", ylab="")     
     }else{
-      design <- matrix(1:lc^2, lc, lc, byrow=FALSE)
+      design <- matrix(1:lc^2, lc, lc, byrow=TRUE)
       layout(design, widths=round(w/sum(w),3), heights=round(w/sum(w),3))
     }
     ## HTCexp object
@@ -454,7 +453,7 @@ setMethod("mapC", signature="HTClist",
                       heatmapC(xdata, names=names, value=value, show.zero=show.zero,show.na=show.na, col.pos=col.pos,
                                col.neg=col.neg, col.na=col.na, grid=grid)
                   }else{
-                      plot(1, type="n", axes=FALSE, xlab="", ylab="")
+                     plot(1, type="n", axes=FALSE, xlab="", ylab="")
                   }
               })
               

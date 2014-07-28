@@ -11,6 +11,7 @@
 \alias{divide-methods}
 \alias{divide,HTCexp,HTCexp-method}
 \alias{forceSymmetric,HTCexp,character-method}
+\alias{forceSymmetric,HTCexp,missing-method}
 \alias{intdata}
 \alias{intdata-method}
 \alias{intdata,HTCexp-method}

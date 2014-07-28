@@ -6,11 +6,11 @@
   Import data from my5C webtool
 }
 
-\usage{import.my5C(file, all.pairwise=FALSE, forceSymmetric=FALSE)}
+\usage{import.my5C(file, allPairwise=FALSE, forceSymmetric=FALSE)}
 
 \arguments{
   \item{file}{input file from the my5C webtool}
-  \item{all.pairwise}{logical; generate all pairwise chromosomal
+  \item{allPairwise}{logical; generate all pairwise chromosomal
     contact maps, i.e chr1-chr2, chr2-chr1}
   \item{forceSymmetric}{logical; force the intra-chromosomal contact maps to be symmetrical}
 }
@@ -20,7 +20,7 @@
   contact map. The rownames and columnames are splitted to created
   the genome intervals (example : REV_2|mm9|chrX:98831149-98834145). 
   
-  The \code{all.pairwise} option is not necessary in case of symetric design. Otherwise, it will return all the pairwise contact maps.
+  The \code{allPairwise} option is not necessary in case of symetric design. Otherwise, it will return all the pairwise contact maps.
 
   The matrix will be stored as a matrix inheriting from \code{Matrix}
   class. If forcesymmetrical=TRUE, the intrachromosomal matrix as coerced to

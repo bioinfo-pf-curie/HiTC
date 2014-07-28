@@ -6,14 +6,14 @@
   Import 5C or Hi-C data from list file
 }
 
-\usage{importC(con, xgi.bed, ygi.bed=NULL, all.pairwise=FALSE, forceSymmetric=FALSE)}
+\usage{importC(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetric=FALSE)}
 \arguments{
   \item{con}{input csv file. See details}
   \item{xgi.bed}{BED file describing the 'x' Intervals (i.e. column
     names) of the contact map}
   \item{ygi.bed}{BED file describing the 'y' intervals (i.e. row names) of the
     contact map}
-  \item{all.pairwise}{logical; generate all pairwise chromosomal contact
+  \item{allPairwise}{logical; generate all pairwise chromosomal contact
     maps, i.e chr1-chr2, chr2-chr1}
   \item{forceSymmetric}{logical; force the intra-chromosomal contact maps to be symmetrical}
 }
