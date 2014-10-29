@@ -63,17 +63,26 @@ import.my5C <- function(file, allPairwise=FALSE, forceSymmetric=FALSE){
     my5Cdata <- read.table(file,comment.char = "#", check.names=FALSE)
 
     message("Convert my5C matrix file in HTCexp object(s)")
-    my5Cdata <- as(as.matrix(my5Cdata),"Matrix")
+    my5CdataM <- as(as.matrix(my5Cdata),"Matrix")
+    rownames(my5CdataM) <- rownames(my5Cdata)
+    colnames(my5CdataM) <- colnames(my5Cdata)
 
+    
     ## Create xgi and ygi object
     gr <- dimnames2gr(my5Cdata, pattern="\\||\\:|\\-", feat.names=c("name","org","chr","start", "end"))
     ygi <- gr[[1]]
     xgi <- gr[[2]]
     
     ## Create HTClist object from my5Cdata
-    rownames(my5Cdata) <- id(ygi)
-    colnames(my5Cdata) <- id(xgi)
-    obj <- splitCombinedContacts(my5Cdata, xgi, ygi, allPairwise, forceSymmetric)
+    rownames(my5CdataM) <- id(ygi)
+    colnames(my5CdataM) <- id(xgi)
+    
+    ## For multiple maps in one file
+    if (length(seqlevels(xgi)) > 1 || length(seqlevels(ygi)) > 1){
+      obj <- splitCombinedContacts(my5CdataM, xgi, ygi, allPairwise, forceSymmetric)
+    }else{
+      obj <- HTClist(HTCexp(my5CdataM, xgi, ygi, forceSymmetric = forceSymmetric))
+    }
     
     return(HTClist(unlist(obj[which(!unlist(lapply(obj, is.null)))])))
 }##import.my5C
@@ -100,7 +109,7 @@ dimnames2gr <- function(x, pattern="\\||\\:|\\-", feat.names=c("name","chr","sta
     colnames(dr)<-feat.names
     rgr <- GRanges(seqnames=dr$chr, ranges = IRanges(start=as.numeric(as.character(dr$start)), end=as.numeric(as.character(dr$end)), names=as.character(dr$name)))
 
-    if (length(setdiff(colnames(x), rownames(x))) > 0){
+    if (any(colnames(x)!=rownames(x))){
         cdata <- strsplit(colnames(x), pattern)
         cr <- do.call(rbind.data.frame, cdata)
         colnames(cr)<-feat.names
