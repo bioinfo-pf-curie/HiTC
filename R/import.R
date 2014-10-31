@@ -31,9 +31,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetri
     id1 <- cdata[,1]
     id2 <- cdata[,2]
     pos1 <- match(id1, id(ygi))
-    pos2 <- match(id2, id(xgi))  
-    ipos1 <- which(!is.na(pos1))
-    
+    pos2 <- match(id2, id(xgi))      
     
     ## -1 is performed in the sparseMatrix function
     bigMat <- Matrix::sparseMatrix(i=pos1, j=pos2, x=cdata[,3], dims=c(length(ygi), length(xgi)), dimnames=list(id(ygi), id(xgi)))

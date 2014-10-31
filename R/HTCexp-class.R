@@ -337,18 +337,20 @@ setMethod("divide", signature=c("HTCexp","HTCexp"),
 
 ## forceSymmetric
 setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="missing"),
-          function(x, uplo){forceSymmetric(x, uplo="U")})
+          function(x, uplo){forceSymmetric(x, uplo="S")})
 
 setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="character"),
           function(x, uplo){
-              stopifnot(uplo=="U" || uplo=="L")
+              stopifnot(uplo=="U" || uplo=="L" || uplo=="S")
               idata <- intdata(x)
-              ##us <- sum(x[which(upper.tri(idata))])
-              ##ls <- sum(x[which(lower.tri(idata))])
-              
-              ##if (us == 0 & ls>0)
-              ##    idata <- forceSymmetric(idata, uplo="L")
-              idata <- forceSymmetric(idata, uplo)
+
+              if (uplo == "U" || uplo == "L"){
+                idata <- forceSymmetric(idata, uplo)
+              }else if (uplo== "S"){
+                 idata <- idata + t(idata)
+                 diag(idata) <- diag(idata)/2
+                 idata <- as(idata, "symmetricMatrix")
+              }
               intdata(x) <- idata
               x
           })
@@ -451,7 +453,7 @@ setMethod(f="range", signature(x="HTCexp"),
 ## Seqlevels
 setMethod(f="seqlevels", signature(x="HTCexp"),
           function(x){
-              unique(c(seqlevels(x@xgi), seqlevels(x@ygi)))
+              unique(c(seqlevels(x@ygi), seqlevels(x@xgi)))
           }
 )
 
@@ -521,7 +523,7 @@ setMethod("summary", signature=c(object="HTCexp"),
                   dstat <- c(interactors, sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round((length(xdata)-length(xdata@x))/length(xdata),4))
               }
               names(dstat) <- c("seq1", "seq2", "nbreads","nbinteraction","averagefreq","medfreq","sparsity")  
-              data.frame(summary=dstat)
+              data.frame(summary=dstat, stringsAsFactors=FALSE)
           })
 
 

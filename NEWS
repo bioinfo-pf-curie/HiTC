@@ -1,10 +1,13 @@
 ***********************************
 CHANGES IN VERSION 1.11.1
 
+NEW FEATURES
+
+   o Changes in forceSymmetric method on HTCexp object. The default is now to sum up both upper and lower maps.
+
 BUG FIXES
 
    o Bug in import.my5C function
-
 
 ***********************************
 CHANGES IN VERSION 1.9.6
