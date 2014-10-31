@@ -86,10 +86,14 @@ HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
     colnames(intdata) <- id(xgi)
     rownames(intdata) <- id(ygi)
 
+    ## Create HTCexp
+    obj <- new("HTCexp", intdata, xgi, ygi)
+
+    
     if (forceSymmetric & seqlevels(xgi)==seqlevels(ygi)){
-        intdata <- forceSymmetric(intdata)
+        obj <- forceSymmetric(obj)
     }
-    new("HTCexp", intdata, xgi, ygi)
+    obj
 }
 
 
