@@ -273,7 +273,7 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
   }
 
   ## HTClist object
-  if (view==1){
+  if (view==1L){
       rx <- range(x)
       w <- as.numeric(width(rx))
       names(w) <- seqlevels(rx)
@@ -286,14 +286,14 @@ setEnvDisplay <- function(x, y=NULL, view, tracks=NULL){
       design[2:(lc+1), 2:(lc+1)] <- matrix(2:(lc^2+1), lc, lc, byrow=TRUE)
 
       heatspace <- 1-sizeblocs*ntrack
-      layout(design, widths=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)), heights=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,3)))
+      layout(design, widths=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,5)), heights=c(sizeblocs*ntrack,round(w/sum(w)*heatspace,5)))
       
       ##blank plot at position 1
       par(mar=c(0,0,0,0))
       plot(1, type="n", axes=FALSE, xlab="", ylab="")     
     }else{
       design <- matrix(1:lc^2, lc, lc, byrow=TRUE)
-      layout(design, widths=round(w/sum(w),3), heights=round(w/sum(w),3))
+      layout(design, widths=round(w/sum(w),5), heights=round(w/sum(w),5))
     }
     ## HTCexp object
   }else if (view==2L){
