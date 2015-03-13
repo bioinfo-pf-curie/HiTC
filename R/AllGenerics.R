@@ -15,15 +15,11 @@ setGeneric(name="x_intervals<-", def=function(x, value) standardGeneric("x_inter
 setGeneric(name="xy_intervals", def=function(x) standardGeneric("xy_intervals"))
 
 ## Update objects
-
 setGeneric(name="getCombinedIntervals", def=function(x) standardGeneric("getCombinedIntervals"))
 setGeneric(name="getCombinedContacts", def=function(x) standardGeneric("getCombinedContacts"))
-
 setGeneric(name="forcePairwise", def=function(x) standardGeneric("forcePairwise"))
-##setGeneric(name="forceSymmetric", def=function(x) standardGeneric("forceSymmetric"))
 
-## is ?
-
+## is 
 setGeneric(name="isComplete", def=function(x) standardGeneric("isComplete"))
 setGeneric(name="isPairwise", def=function(x) standardGeneric("isPairwise"))
 
@@ -31,6 +27,7 @@ setGeneric(name="isBinned", def=function(x) standardGeneric("isBinned"))
 setGeneric(name="isIntraChrom", def=function(x) standardGeneric("isIntraChrom"))
 
 ## Operation
+setGeneric(name="directionalityIndex", def=function(x) standardGeneric("directionalityIndex"))
 
 setGeneric(name="divide", def=function(x,y) standardGeneric("divide"))
 setGeneric(name="substract", def=function(x,y) standardGeneric("substract"))

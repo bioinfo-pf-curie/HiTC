@@ -72,14 +72,14 @@ BiocStyle::latex(use.unsrturl=FALSE)
 %\tableofcontents
 %\newpage
 
-\begin{center}
-    \fcolorbox{black}{mygray}{
-     \begin{minipage}[c]{1\textwidth}
-      \textbf{HiTC - Major Release}\\\\ Since version 1.5.2 the HiTC package now depends on the \Rpackage{Matrix} package. The main reason of this change is an improvment of the memory usage of the package in order to deal with recent high resolution Hi-C data. See section~\ref{sec:speedandmem} for details.
+% \begin{center}
+%     \fcolorbox{black}{mygray}{
+%      \begin{minipage}[c]{1\textwidth}
+%       \textbf{HiTC - Major Release}\\\\ Since version 1.5.2 the HiTC package now depends on the \Rpackage{Matrix} package. The main reason of this change is an improvment of the memory usage of the package in order to deal with recent high resolution Hi-C data. See section~\ref{sec:speedandmem} for details.
     
-     \end{minipage}}
-\end{center}
-
+%      \end{minipage}}
+% \end{center}
+\vspace{2cm}
 
 \section{Introduction}
 Chromosome Capture Conformation (3C) was first introduced by \cite{Dekker2002a} ten years ago. The 3C technique aims in detecting physical contact between pairs of genomic loci and is now widely used to detect intrachromosomal (cis) and interchromosomal (trans) interactions between genes and regulatory elements. The development of the 3C-based techniques has changed our vision of the nulcear oragnization  (see \cite{Wit2012} for a review).\\

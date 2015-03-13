@@ -12,6 +12,7 @@
 \alias{divide,HTCexp,HTCexp-method}
 \alias{forceSymmetric,HTCexp,character-method}
 \alias{forceSymmetric,HTCexp,missing-method}
+\alias{forcePairwise,HTCexp-method}
 \alias{intdata}
 \alias{intdata-method}
 \alias{intdata,HTCexp-method}
@@ -85,7 +86,7 @@
     \code{new("HTCexp", intdata, GRanges, GRanges)}.
     \item using the auxiliary function \code{HTCexp} and supplying
     contact Matrix with x and y intervals definition.
-    The frceSymmetric option can used to force intra-chromosomal
+    The forceSymmetric option can used to force intra-chromosomal
     contact maps to be stored as symmetrical matrix.
   }
 }
@@ -117,7 +118,9 @@
       if the 'x' and 'y' genome intervals are the same, if 90\% of the bins have the
       same size and if the full genomic range is covered}
     \item{forceSymmetric(x)}{force the interaction data to
-  'symmetricMatrix'}
+      'symmetricMatrix'}
+    \item{forcePairwise(x)}{reverse of forceSymmetric function. Force
+  the contact map to be dense. Useful for plotting function.}
     \item{isIntraChrom(x)}{return TRUE if the current
       \code{signature("HTCexp")} object contains intrachromosomal contact data}
     \item{isSymmetric(x)}{return TRUE if the contact map is

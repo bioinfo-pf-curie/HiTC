@@ -359,6 +359,16 @@ setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="character"),
               x
           })
 
+setMethod(f="forcePairwise", signature(x="HTCexp"),
+          function(x){
+            idata <- intdata(x)
+            idata <- idata + t(idata)
+            diag(idata) <- diag(idata)/2
+            idata <- as(idata, "sparseMatrix")
+            intdata(x) <- idata
+            x
+          })
+
 ## Interaction Data
 setMethod(f="intdata", signature(x="HTCexp"),
           function(x){x@intdata}

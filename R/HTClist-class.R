@@ -99,19 +99,26 @@ setMethod("detail",signature(x="HTClist"),
 setMethod(f="forcePairwise", signature(x="HTClist"),
           function(x){
               stopifnot(isComplete(x))
-              chrs <- seqlevels(x)
-              pchr <- pair.chrom(chrs)
-              isin <- rep(0, length(pchr))
-              names(isin) <- names(pchr)
-              isin[names(x)] <- 1
+              ## intra sym
+              x[isIntraChrom(x)] <- HTClist(lapply(x[isIntraChrom(x)], forcePairwise))
               
-              ptoadd <- pchr[names(which(isin==0))]
-              
-              nmaps <- mclapply(ptoadd, function(obj){
+              ## inter maps
+              if (!isPairwise(x)){
+                chrs <- seqlevels(x)
+                pchr <- pair.chrom(chrs)
+                isin <- rep(0, length(pchr))
+                names(isin) <- names(pchr)
+                isin[names(x)] <- 1
+                
+                ptoadd <- pchr[names(which(isin==0))]
+                nmaps <- mclapply(ptoadd, function(obj){
                   symobj <- x[[paste0(obj[2], obj[1])]]
                   HTCexp(intdata=t(intdata(symobj)), xgi=y_intervals(symobj), ygi=x_intervals(symobj))
-              })
-              c(x, nmaps)
+                })
+                c(x, nmaps)
+              }else{
+                x
+              }
           })
 
 setMethod(f="forceSymmetric", signature(x="HTClist", uplo="missing"),
@@ -258,7 +265,7 @@ setMethod("sortSeqlevels", signature="HTClist",
 
 setMethod("summary", signature=c(object="HTClist"),
            function(object){
-               sy <- as.data.frame(t(as.data.frame(lapply(object, summary))))
+               sy <- as.data.frame(t(data.frame(lapply(object, summary),stringsAsFactors=FALSE)), stringsAsFactors=FALSE)
                rownames(sy) <- paste0(sy$seq1, sy$seq2)
                sy
            })

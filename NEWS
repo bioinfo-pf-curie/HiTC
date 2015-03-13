@@ -1,4 +1,19 @@
 ***********************************
+CHANGES IN VERSION 1.11.4
+
+NEW FEATURES
+
+   o New directionalyIndex function as a first step of TADs detection
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o new forcePairwise method for HTClist or HTCexp objects. The methods reverse the forceSymmetrical method. Useful for plotting function.
+
+BUG FIXES
+
+   o Bug in mapC for Pairwise Hi-C map
+
+***********************************
 CHANGES IN VERSION 1.11.3
 
 BUG FIXES

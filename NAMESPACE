@@ -31,6 +31,7 @@ importMethodsFrom("Matrix", "colMeans", "colSums", "crossprod", "diag", "forceSy
 export(
        "binningC",
        "CQC", "intervalsDist",
+       "directionalityIndex",
        "discretize",
        "exportC", "export.my5C", "importC", "import.my5C",
        "extractRegion",

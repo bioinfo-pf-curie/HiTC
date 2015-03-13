@@ -439,6 +439,10 @@ setMethod("mapC", signature="HTClist",
               setEnvDisplay(x, tracks=tracks, view=1)
               
               ## Get data to map and plots
+              #isPairwise <- FALSE
+              #if (isPairwise(x)){
+              #  isPairwise <- TRUE
+              #}             
               tmp <- sapply(names(pair.chrom(seqlevels(x))), function(i){
                   if (is.element(i,names(x))){
                       obj <- x[[i]]
