@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Hight-Throughput Chromosome Conformation Capture analysis}
+%\VignetteIndexEntry{Hi-C data analysis using HiTC}
 %\VignetteDepends{}
 %\VignetteKeywords{next-generation sequencing}
 %\VignettePackage{HiTC} % name of package
@@ -17,7 +17,7 @@ BiocStyle::latex(use.unsrturl=FALSE)
 \definecolor{mygray}{gray}{0.90}
 %\usepackage[%
 %baseurl={http://www.bioconductor.org},%
-%pdftitle={HiTC - High Throughput analysis of 'C' experiments},%
+%pdftitle={HiTC - Hi-C data analysis},%
 %pdfauthor={Nicolas Servant},%
 %pdfsubject={HiTC Vignette},%
 %pdfkeywords={Bioconductor},%

@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Hight-Throughput Chromosome Conformation Capture analysis}
+%\VignetteIndexEntry{Introduction to HiTC package}
 %\VignetteDepends{}
 %\VignetteKeywords{next-generation sequencing}
 %\VignettePackage{HiTC} % name of package
