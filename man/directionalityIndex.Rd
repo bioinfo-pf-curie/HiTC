@@ -22,5 +22,10 @@
 }
 \author{N. Servant}
 \seealso{\code{\link{HTClist-class}}}
-\examples{}
+\examples{
+require(HiCDataHumanIMR90)
+data(Dixon2012_IMR90)
+hox <- extractRegion(hic_imr90_40$chr6chr6, chr="chr6", from=50e6, to=58e6)
+di<-directionalityIndex(hox)
+}
 \keyword{IO}

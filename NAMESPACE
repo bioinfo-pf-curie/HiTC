@@ -37,6 +37,7 @@ export(
        "extractRegion",
        "getExpectedCounts",
        "getAnnotatedRestrictionSites", "getRestrictionFragmentsPerChromosome",
+       "getCombinedIntervals", "getCombinedContacts",
        "HTCexp","HTClist",
        "normLGF","normICE",
        "pca.hic",

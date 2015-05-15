@@ -15,7 +15,7 @@ setGeneric(name="x_intervals<-", def=function(x, value) standardGeneric("x_inter
 setGeneric(name="xy_intervals", def=function(x) standardGeneric("xy_intervals"))
 
 ## Update objects
-setGeneric(name="getCombinedIntervals", def=function(x) standardGeneric("getCombinedIntervals"))
+setGeneric(name="getCombinedIntervals", def=function(x, ...) standardGeneric("getCombinedIntervals"))
 setGeneric(name="getCombinedContacts", def=function(x) standardGeneric("getCombinedContacts"))
 setGeneric(name="forcePairwise", def=function(x) standardGeneric("forcePairwise"))
 

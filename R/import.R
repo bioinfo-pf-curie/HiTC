@@ -167,7 +167,7 @@ splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, forceSymmetric=
 ##
 ##################################
 
-pair.chrom <- function(chrom, use.order=TRUE){
+pair.chrom <- function(chrom, use.order=TRUE, rm.cis=FALSE){
     v <- unique(chrom)
     if (use.order)
       z <- unlist(sapply(1:length(v),function(i){paste(v[i], v)}))
@@ -175,5 +175,9 @@ pair.chrom <- function(chrom, use.order=TRUE){
       z <- unlist(sapply(1:length(v),function(i){paste(v[i], v[i:length(v)])}))
     lz <- strsplit(z," ")
     names(lz) <- gsub(" ","",z)
+
+    if (rm.cis){
+      lz <- lz[which(sapply(lapply(lz, duplicated), sum)==0)]
+    }
     lz
 }##pair.chrom

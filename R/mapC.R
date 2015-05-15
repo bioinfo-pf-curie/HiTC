@@ -43,14 +43,15 @@ colorC <- function (low="white", high=c("red"), mid=NA, k = 50){
 ##################################
 
 plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
-    if (!show.zero){
+    if (!show.zero && length(col)>1){
         zi <- which(!is.na(z) & z == 0) ##zi <- which(Matrix:::is0(z))
         z <- as.matrix(z)
-        z[zi] <- NA
-        #col <- col[-1]
+        z[zi] <- NA_integer_
+        ## remove col.zero
+        col <- col[-1]
     }else{
-        col <- c("#FFFFFF", col)
-        z <- as.matrix(z)
+      #col <- c(col.zero, col)
+      z <- as.matrix(z)
     }
     image(x, y, z, useRaster = TRUE, col=col, ...)
 }
@@ -74,71 +75,75 @@ plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
 ##
 ##################################
 
-heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", grid=FALSE, title=NULL){
+heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="#CCCCCC", col.zero="#FFFFFF", grid=FALSE, maxrange=NA, title=NULL, k=500){
 
-    xdata <- t(xdata)
-    xdata <- xdata[,ncol(xdata):1]
-
-    xdata.pos <- xdata.neg <- NULL
-   
-    if (max(xdata, na.rm=TRUE)>0){
-        xdata.pos <- xdata
-        xdata.pos[xdata<0] <- 0
-    }
-    if (min(xdata, na.rm=TRUE)<0){
-        xdata.neg <- xdata
-        xdata.neg[xdata>=0] <- 0
-    }
-
-    ## k is the same for positive or negative values, to ensure that the same range of colors are used
-    k <- length(unique(as.vector(abs(xdata))))
+  xdata <- t(xdata)
+  xdata <- xdata[,ncol(xdata):1]
+  
+  xdata.pos <- xdata.neg <- NULL 
+  if (max(xdata, na.rm=TRUE)>0){
+    xdata.pos <- xdata
+    xdata.pos[xdata<0] <- 0
+    xdata.pos <- as(xdata.pos,"sparseMatrix")
+  }
+  if (min(xdata, na.rm=TRUE)<0){
+    xdata.neg <- xdata
+    xdata.neg[xdata>=0] <- 0
+    xdata.neg <- as(xdata.neg,"sparseMatrix")
+  }
+  
+  ## k is the same for positive or negative values, to ensure that the same range of colors are used
+  #k <- length(unique(as.vector(abs(xdata))))
     
-    if (!is.null(xdata.neg)){   
-        col.neg <- colorC(col.neg[3],col.neg[1],mid=col.neg[2], k=k)
-        plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.neg, show.zero=show.zero, axes=FALSE,ylab="",xlab="",col=col.neg)
-        par(new = TRUE)
+  if (!is.null(xdata.neg)){   
+    col.neg <- colorC(col.neg[3],col.neg[1],mid=col.neg[2], k=k)
+    if (!is.na(maxrange) && max(abs(xdata.neg), na.rm=TRUE) < maxrange){
+      col.neg <- col.neg[length(col.neg)-round(length(col.neg)*(max(abs(xdata.neg), na.rm=TRUE)/maxrange)):length(col.neg)]
     }
-    
-    if (!is.null(xdata.pos)){   
-        col.pos <- colorC(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
-        xdata <- as(xdata,"sparseMatrix")
-        plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.pos,show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=col.pos)
+    plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.neg, show.zero=show.zero, axes=FALSE,ylab="",xlab="",col=c(col.zero,col.neg))
+    par(new = TRUE)
+  }
+  
+  if (!is.null(xdata.pos)){   
+    col.pos <- colorC(col.pos[1],col.pos[3],mid=col.pos[2],k=k)   
+    if (!is.na(maxrange) && max(xdata, na.rm=TRUE) < maxrange){
+      col.pos <- col.pos[1:round(length(col.pos)*(max(xdata, na.rm=TRUE)/maxrange))]
     }
-
-    if (names){
-        axis(side=2, at=1:ncol(xdata), labels=colnames(xdata), lwd=0.5, las=1, cex.axis=0.7)  
-        axis(side=1, at=1:nrow(xdata), labels=rownames(xdata), lwd=0.5, las=2, cex.axis=0.7)
+    plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.pos,show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=c(col.zero,col.pos))
+  }
+  
+  if (names){
+    axis(side=2, at=1:ncol(xdata), labels=colnames(xdata), lwd=0.5, las=1, cex.axis=0.7)  
+    axis(side=1, at=1:nrow(xdata), labels=rownames(xdata), lwd=0.5, las=2, cex.axis=0.7)
+  }
+  if (value){
+    for (i in nrow(xdata):1){
+      text(x=i,y=1:ncol(xdata),labels=round(xdata[i,],2), cex=0.7)
     }
-    if (value){
-        for (i in nrow(xdata):1){
-            text(x=i,y=1:ncol(xdata),labels=round(xdata[i,],2), cex=0.7)
-        }
+  }
+  
+  ## ###################
+  ## Heatmap options
+  ## ###################
+  if (show.na){
+    if (length(which(is.na(xdata))>0)){
+      par(new = TRUE)
+      na.xdata <- matrix(NA_integer_, ncol=ncol(xdata), nrow=nrow(xdata))
+      na.xdata[which(is.na(xdata))] <- 1
+      if (!show.zero)
+        na.xdata[which(xdata==0)] <- 1
+      plottingfunc(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,show.zero=FALSE,axes=FALSE,ylab="",xlab="",col=col.na, add=TRUE)
     }
-    
-    ## ###################
-    ## Heatmap options
-    ## ###################
-    if (show.na){
-        if (length(which(is.na(xdata))>0)){
-            par(new = TRUE)
-            na.xdata <- matrix(NA, ncol=ncol(xdata), nrow=nrow(xdata))
-            na.xdata[which(is.na(xdata))] <- 1
-            if (!show.zero)
-                na.xdata[which(xdata==0)] <- 1
-
-            print(na.xdata)
-            plottingfunc(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,show.zero=FALSE,axes=FALSE,ylab="",xlab="",col=col.na,add=TRUE)
-        }
-    }
-    
-    if (grid){
-        abline(h=seq(0.5,ncol(xdata)+0.5, by=1), mar=c(0,0))
-        abline(v=seq(0.5,nrow(xdata)+0.5, by=1), mar=c(0,0))
-    }
-    
-    if (!is.null(title)){
-        text(x=ncol(xdata)-nchar(title), y=nrow(xdata)-5, title, col="darkgray", font=2)
-    }
+  }
+  
+  if (grid){
+    abline(h=seq(0.5,ncol(xdata)+0.5, by=1), mar=c(0,0))
+    abline(v=seq(0.5,nrow(xdata)+0.5, by=1), mar=c(0,0))
+  }
+  
+  if (!is.null(title)){
+    text(x=ncol(xdata)-nchar(title), y=nrow(xdata)-5, title, col="darkgray", font=2)
+  }
 }
 
 ###################################
@@ -158,12 +163,12 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
 ##
 ##################################
 
-triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", title=NULL){
+triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80",  col.zero="#FFFFFF", title=NULL, k=500){
 
     d <- min(dim(xdata))
 
     ## Start with a matrix for speed implementation - optimize.by option ???
-    trimat <- matrix(NA, ncol=d*2, nrow=d)
+    trimat <- matrix(0, ncol=d*2, nrow=d)
     xdata <- as.matrix(xdata)
     for (w in 0:(d-1)){
         s <- gdiag(xdata, w=w)
@@ -187,22 +192,22 @@ triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TR
         trimat.neg[trimat>0] <- 0
     }
     
-    k <- length(unique(as.vector(abs(trimat))))
+    #k <- length(unique(as.vector(abs(trimat))))
     
     if (!is.null(trimat.neg)){     
         col.neg <- colorC(col.neg[3],col.neg[1],mid=col.neg[2],k=k)
-        plottingfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.neg),show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=col.neg)
+        plottingfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.neg),show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=c(col.zero, col.neg))
         par(new = TRUE)
     }
 
     if (!is.null(trimat.pos)){     
         col.pos <- colorC(col.pos[1],col.pos[3],mid=col.pos[2],k=k)
-        plottingfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.pos),show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=col.pos)
+        plottingfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.pos),show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=c(col.zero, col.pos))
     }
     if (show.na){
         if (length(which(is.na(trimat))>0)){
             par(new = TRUE)
-            na.trimat <- matrix(NA, ncol=ncol(trimat), nrow=nrow(trimat))
+            na.trimat <- matrix(NA_integer_, ncol=ncol(trimat), nrow=nrow(trimat))
             na.trimat[which(is.na(trimat))] <- 1
             if (!show.zero)
                 na.trimat[which(trimat==0)] <- 1
@@ -372,38 +377,40 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
     ## #################
     ## Play with contrast
     ## #################
-    if (trim.range <1 && is.na(maxrange) && is.na(minrange)){
+    if (max(xdata, na.rm=TRUE)>0){
+      if (trim.range <1 && is.na(maxrange) && is.na(minrange)){
         if (inherits(xdata, "sparseMatrix")){
-            xmaxrange <- quantile(abs(xdata@x), probs=trim.range, na.rm=TRUE)
-            xminrange <- quantile(abs(xdata@x), probs=1-trim.range, na.rm=TRUE)
+          xmaxrange <- quantile(abs(xdata@x), probs=trim.range, na.rm=TRUE)
+          xminrange <- quantile(abs(xdata@x), probs=1-trim.range, na.rm=TRUE)
         }else{
-            xmaxrange <- quantile(abs(xdata@x[which(xdata@x!=0)]), probs=trim.range, na.rm=TRUE)
-            xminrange <- quantile(abs(xdata@x[which(xdata@x!=0)]), probs=1-trim.range, na.rm=TRUE)
+          xmaxrange <- quantile(abs(xdata@x[which(xdata@x!=0)]), probs=trim.range, na.rm=TRUE)
+          xminrange <- quantile(abs(xdata@x[which(xdata@x!=0)]), probs=1-trim.range, na.rm=TRUE)
         }
-    }
-    else{
+      }
+      else{
         if (is.na(maxrange))
-            xmaxrange <- max(abs(xdata@x), na.rm=TRUE)
+          xmaxrange <- max(abs(xdata@x), na.rm=TRUE)
         else
-            xmaxrange=maxrange
+          xmaxrange=maxrange
         if (is.na(minrange))
-            xminrange <- min(abs(xdata@x), na.rm=TRUE)         
+          xminrange <- min(abs(xdata@x), na.rm=TRUE)         
         else
-            xminrange=minrange
-    }
+          xminrange=minrange
+      }
+      
+      ## The minrange/maxrange are simetrical around zero. The same threshold are used for positive and negative values
+      xdata@x[which(xdata@x<=xminrange & xdata@x>0)] <- xminrange
+      xdata@x[which(xdata@x>=-xminrange & xdata@x<0)] <- -xminrange
+      xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange
+      xdata@x[which(xdata@x<=-xmaxrange & xdata@x<0)] <- -xmaxrange
 
-    ## The minrange/maxrange are simetrical around zero. The same threshold are used for positive and negative values
-    xdata@x[which(xdata@x<=xminrange & xdata@x>0)] <- xminrange
-    xdata@x[which(xdata@x>=-xminrange & xdata@x<0)] <- -xminrange
-    xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange
-    xdata@x[which(xdata@x<=-xmaxrange & xdata@x<0)] <- -xmaxrange
-
-    if (max(xdata@x, na.rm=TRUE)>0)
+      if (max(xdata@x, na.rm=TRUE)>0)
         message(paste("minrange=",round(min(xdata@x[which(xdata@x>0)], na.rm=TRUE),3)," - maxrange=", round(max(xdata@x[which(xdata@x>0)], na.rm=TRUE),3)))
-    else{
+      else{
         ## Fix bug in case of empty matrix
         message("Warning: no data to plot. Fixed to 1e-4.")
         xdata[1,1] <- 1e-4
+      }
     }
     xdata
 }
@@ -432,8 +439,8 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
 
 setMethod("mapC", signature="HTClist",
           function(x, tracks=NULL,
-                   minrange=NA, maxrange=NA, trim.range=0.98, show.zero=FALSE, show.na=FALSE, log.data=FALSE, names=FALSE, value=FALSE,
-                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", grid=FALSE){
+                   minrange=NA, maxrange=NA, trim.range=0.98, show.zero=FALSE, show.na=FALSE, log.data=FALSE, names=FALSE, value=FALSE, k=500,
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="#CCCCCC",  col.zero="#FFFFFF", grid=FALSE){
               
               ## Set Graphical Environment
               setEnvDisplay(x, tracks=tracks, view=1)
@@ -446,16 +453,17 @@ setMethod("mapC", signature="HTClist",
               tmp <- sapply(names(pair.chrom(seqlevels(x))), function(i){
                   if (is.element(i,names(x))){
                       obj <- x[[i]]
-                      xdata <- getData2Map(obj, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
                       message("Plotting ",i,"...")
+
+                      xdata <- getData2Map(obj, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
 
                       if (!names)
                           par(mar=c(0,0,0,0))
                       else
                           par(mar=c(mean(sapply(rownames(xdata),nchar))/2,mean(sapply(colnames(xdata),nchar))/2,0,0))
 
-                      heatmapC(xdata, names=names, value=value, show.zero=show.zero,show.na=show.na, col.pos=col.pos,
-                               col.neg=col.neg, col.na=col.na, grid=grid)
+                      heatmapC(xdata, names=names, value=value, show.zero=show.zero ,show.na=show.na, col.pos=col.pos,
+                               col.neg=col.neg, col.na=col.na, col.zero=col.zero, maxrange=maxrange, grid=grid, k=k)
                   }else{
                      plot(1, type="n", axes=FALSE, xlab="", ylab="")
                   }
@@ -481,8 +489,8 @@ setMethod("mapC", signature="HTClist",
 
 setMethod("mapC", signature="HTCexp",
           function(x, tracks=NULL,
-                   minrange=NA, maxrange=NA, trim.range=0.98, value=FALSE, show.zero=FALSE, show.na=FALSE, log.data=FALSE,
-                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", grid=FALSE, title=NULL){
+                   minrange=NA, maxrange=NA, trim.range=0.98, show.zero=FALSE, show.na=FALSE, log.data=FALSE, value=FALSE, k=500, 
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="#CCCCCC",  col.zero="#FFFFFF", grid=FALSE, title=NULL){
 
               if (!isIntraChrom(x))
                   stop("The triangle view is available for intrachromosomal data only")
@@ -495,7 +503,7 @@ setMethod("mapC", signature="HTCexp",
 
               ## Plots tracks and C map
               par(mar=c(0,0,0,0))
-              triViewC(xdata, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, value=value, title=title)
+              triViewC(xdata, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, value=value, col.zero=col.zero, title=title, k=k)
               if (!is.null(tracks))
                 addImageTracks(x, tracks, orientation="h")
           }
@@ -504,8 +512,8 @@ setMethod("mapC", signature="HTCexp",
 
 setMethod("mapC", signature=c("HTCexp","HTCexp"),
           function(x, y, tracks=NULL,
-                   minrange=NA, maxrange=NA, trim.range=0.98, value=FALSE, show.zero=FALSE, show.na=FALSE, log.data=FALSE,
-                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="gray80", grid=FALSE, title=NULL){
+                   minrange=NA, maxrange=NA, trim.range=0.98,  show.zero=FALSE, show.na=FALSE, log.data=FALSE, value=FALSE, k=500,
+                   col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="#CCCCCC",  col.zero="#FFFFFF", grid=FALSE, title=NULL){
 
               if (!isBinned(x) || !isBinned(y))
                   stop("x and y have to be binned to plot them on the same scale")
@@ -528,9 +536,9 @@ setMethod("mapC", signature=c("HTCexp","HTCexp"),
                 }
               }
               par(mar=c(.5,0,0,0))
-              triViewC(xdata, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, title=title[1])
+              triViewC(xdata, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, col.zero=col.zero, title=title[1], k=k)
               par(mar=c(0,0,.5,0))
-              triViewC(ydata, flip=TRUE, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, title=title[2])
+              triViewC(ydata, flip=TRUE, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, col.zero=col.zero, title=title[2], k=k)
             }
 )
 

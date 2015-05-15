@@ -133,9 +133,8 @@ By default, objects from the \Rclass{HTClist} class will be represented as an he
 
 <<plot1, fig=TRUE, width=3, height=3>>=
 ## Go back to a smaller dataset (chr21, 22, X) at lower resolution
-chrs.subset<-c("chr5chr5", "chr6chr6", "chr7chr7", 
-               "chr5chr6", "chr6chr7", "chr5chr7")
-imr90_500 <- HTClist(mclapply(hic_imr90_40[chrs.subset], binningC, 
+sset <- reduce(hic_imr90_40, chr=c("chr5","chr6","chr7"))
+imr90_500 <- HTClist(mclapply(sset, binningC, 
                           binsize=500000, bin.adjust=FALSE, method="sum", step=1))
 mapC(imr90_500)
 @ 

@@ -51,10 +51,15 @@
   This function implements the \code{plot} method for objects
   of class \code{HTCexp} and \code{HTClist}.
   
-  By default, the maxrange and minrange values are fixed as the 98th
-  percentile (resp. 2th percentile) of the interaction matrix. These
-  values are useful to play with the contrast and remove the extreme
-  values from the matrix.
+  By default, the trim.range value is fixed so that the 98th
+  percentile (resp. 2th percentile) of each interaction matrix is discarded. 
+  It therefore allow to remove the extreme values from the matrix, but
+  each map is plotted independently.
+  If the maxrange argument is set, data higher that this threshold will
+  be fixed to the maxrange value for all maps. In addition, color ranges
+  are ajusted in a way that all maps are plotted within the same color
+  range allowing visual maps comparison.
+  
 
   The \code{HTCexp} and \code{HTClist} are not represented in the same
   way. The heatmap view is used to display the \code{HTClist} objects in

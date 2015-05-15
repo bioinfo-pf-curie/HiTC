@@ -1,4 +1,25 @@
 ***********************************
+CHANGES IN VERSION 1.13.1
+
+NEW FEATURES
+
+   o Export methods getCombinedContacts, getCombinedIntervals for HTClist objects
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o getCombinedContact is now able to merge HTCexp objects for non complete HiTClist objects. Missing maps are replaced by NA matrices
+
+   o Update of isComplete, isPairwise, getCombinedIntervals methods for Hi-C data with no intrachromosomal maps
+
+   o When the maxrange argument is set in the mapC function, all maps are displayed on the same scale so that they can be compared to each other
+
+BUG FIXES
+
+   o Bug fixed in mapC with the contact map is empty
+
+   o Bug fixed in seqlevels(HTClist) method
+
+***********************************
 CHANGES IN VERSION 1.11.4
 
 NEW FEATURES
