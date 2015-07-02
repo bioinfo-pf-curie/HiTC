@@ -100,9 +100,9 @@ setMethod(f="forcePairwise", signature(x="HTClist"),
           function(x){
             ##stopifnot(isComplete(x))
             ## intra sym
-            if (length(x[isIntraChrom(x)])>0){
-              x[isIntraChrom(x)] <- HTClist(lapply(x[isIntraChrom(x)], forcePairwise))
-            }
+            #if (length(x[isIntraChrom(x)])>0){
+            #  x[isIntraChrom(x)] <- HTClist(lapply(x[isIntraChrom(x)], forcePairwise))
+            #}
             ## inter maps
             if (!isPairwise(x)){
               chrs <- seqlevels(x)

@@ -6,13 +6,14 @@
   Import data from my5C webtool
 }
 
-\usage{import.my5C(file, allPairwise=FALSE, forceSymmetric=FALSE)}
+\usage{import.my5C(file, allPairwise=FALSE, lazyload=FALSE)}
 
 \arguments{
   \item{file}{input file from the my5C webtool}
   \item{allPairwise}{logical; generate all pairwise chromosomal
     contact maps, i.e chr1-chr2, chr2-chr1}
-  \item{forceSymmetric}{logical; force the intra-chromosomal contact maps to be symmetrical}
+  \item{lazyload}{logical; force the intra-chromosomal contact maps to
+  be stored as triangular matrix}
 }
 \details{
   This function allows data import from the \href{http://my5c.umassmed.edu}{the my5C webtool}.\cr

@@ -19,11 +19,13 @@
 }
 
 \details{
-  The imakaev normalization of Hi-C data consists of iteratively
-  estimating the bias using the l1 norm.
-  Note that the original method is applied on the genome-wide Hi-C
-  map. For computation reason, we will applied the normalization to
-  each chromosome separatly.
+  The normalization of Hi-C data is based on matrix balancing algorithm which consists of iteratively
+  estimating the matrix bias using the l1 norm. The method
+  implemented here is the Sinkhorn-Knopp algorithm as used in the
+  Imakaev et al. paper.
+  Note that the original method is applied on the genome-wide Hi-C map,
+  but that the method could be applied on intra-chromosomal maps at high
+  resolution. 
 }
 \value{
   Returns a \code{HTCexp} object with a corrected contact map.

@@ -7,7 +7,7 @@
 ## file = name of intput file to read
 ###################################
 
-importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetric=FALSE){
+importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALSE){
     
     stopifnot(!missing(con))
 
@@ -38,7 +38,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetri
     rm(cdata)
     
     message("Convert 'C' file in HTCexp object(s)")
-    x <- splitCombinedContacts(bigMat, xgi, ygi, allPairwise, forceSymmetric)
+    x <- splitCombinedContacts(bigMat, xgi, ygi, allPairwise, lazyload)
 }##importC
 
 
@@ -53,7 +53,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetri
 ##
 ##################################
 
-import.my5C <- function(file, allPairwise=FALSE, forceSymmetric=FALSE){
+import.my5C <- function(file, allPairwise=FALSE, lazyload=FALSE){
     
     ## Read data
     stopifnot(!missing(file))
@@ -77,9 +77,9 @@ import.my5C <- function(file, allPairwise=FALSE, forceSymmetric=FALSE){
     
     ## For multiple maps in one file
     if (length(seqlevels(xgi)) > 1 || length(seqlevels(ygi)) > 1){
-      obj <- splitCombinedContacts(my5CdataM, xgi, ygi, allPairwise, forceSymmetric)
+      obj <- splitCombinedContacts(my5CdataM, xgi, ygi, allPairwise, lazyload)
     }else{
-      obj <- HTClist(HTCexp(my5CdataM, xgi, ygi, forceSymmetric = forceSymmetric))
+      obj <- HTClist(HTCexp(my5CdataM, xgi, ygi, lazyload = lazyload))
     }
     
     return(HTClist(unlist(obj[which(!unlist(lapply(obj, is.null)))])))
@@ -128,11 +128,11 @@ dimnames2gr <- function(x, pattern="\\||\\:|\\-", feat.names=c("name","chr","sta
 ## xgi: GenomicRanges of x_intervals
 ## ygi: GenomicRanges of y_intervals
 ## allPairwise: see pair.chrom
-## forceSymmetric: see HTCexp
+## lazyload: see HTCexp
 ##
 ##################################
 
-splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, forceSymmetric=FALSE){
+splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, lazyload=FALSE){
     
     chromPair <- pair.chrom(sortSeqlevels(c(seqlevels(xgi), seqlevels(ygi))), use.order = allPairwise)
     obj <- mclapply(chromPair, function(chr) {
@@ -150,7 +150,7 @@ splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, forceSymmetric=
             }
             colnames(intdata) <- id(xgi.subset)
             rownames(intdata) <- id(ygi.subset)
-            HTCexp(intdata, xgi.subset, ygi.subset, forceSymmetric = forceSymmetric)
+            HTCexp(intdata, xgi.subset, ygi.subset, lazyload = lazyload)
         }
     })
     ##obj

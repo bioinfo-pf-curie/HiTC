@@ -43,12 +43,16 @@ addImageTracks <- function(x, tracks, orientation=c("h","v"), names=TRUE){
   }
   stopifnot(unlist(lapply(tracks, inherits,"GRanges")))
 
+  ## Invert tracks order
+  tracks<-rev(tracks)
+ 
   ntrack <- length(tracks)
   suppressWarnings(colblocs <- RColorBrewer::brewer.pal(ntrack*2,"Paired"))
   colblocs.minus <- colblocs[seq(1, ntrack*2, by=2)]
   colblocs.plus <- colblocs[seq(2, ntrack*2, by=2)]
   blocnames <- names(tracks)
-  
+
+
   if (orientation=="h"){
     ypos <- 1
     if (isBinned(x)){
@@ -60,14 +64,22 @@ addImageTracks <- function(x, tracks, orientation=c("h","v"), names=TRUE){
         blocs <- subsetByOverlaps(blocs,range(x_intervals(x)), ignore.strand=TRUE)
         ## get strand information
         blocs.plus <- blocs[which(strand(blocs)=="+" | strand(blocs)=="*")]
-        blocs.minus <- blocs[which(strand(blocs)=="-")]
+        blocs.minus <- blocs[which(strand(blocs)=="-")]        
+        ## set up y axis
+      
         ## draw features
-        if (length(blocs.plus)>0)
-          rect(start(blocs.plus), ypos+.1, end(blocs.plus), ypos+.6, col=colblocs.plus[t], border=colblocs.plus[t])
-        if (length(blocs.minus)>0)
-          rect(start(blocs.minus), ypos-.1, end(blocs.minus), ypos-0.6, col=colblocs.minus[t], border=colblocs.minus[t])
+        if (length(blocs.plus)>0){
+          yp <- rep(ypos, length(blocs.plus))
+          yp[seq.int(from=1, to=length(yp), by=2)]<-ypos+.5
+          rect(start(blocs.plus), yp, end(blocs.plus), yp+.3, col=colblocs.plus[t], border=colblocs.plus[t])
+        }
+        if (length(blocs.minus)>0){
+          yp <- rep(ypos, length(blocs.minus))
+          yp[seq.int(from=1, to=length(yp), by=2)]<-ypos+.5
+          rect(start(blocs.minus), yp-.5, end(blocs.minus), yp-.8, col=colblocs.minus[t], border=colblocs.minus[t])
+        }
         if (names)
-          text(x=start(range(x_intervals(x)))+width(range(x_intervals(x)))/2, y=ypos+1, labels=blocnames[t], cex=.7, font=2, col=colblocs.plus[t])
+          text(x=start(range(x_intervals(x)))+width(range(x_intervals(x)))/2, y=ypos+1.5, labels=blocnames[t], cex=.5, font=2, col=colblocs.plus[t])
         ypos <- ypos+3
       }
     }else{

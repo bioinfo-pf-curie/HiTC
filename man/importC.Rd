@@ -6,7 +6,7 @@
   Import 5C or Hi-C data from list file
 }
 
-\usage{importC(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, forceSymmetric=FALSE)}
+\usage{importC(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALSE)}
 \arguments{
   \item{con}{input csv file. See details}
   \item{xgi.bed}{BED file describing the 'x' Intervals (i.e. column
@@ -15,7 +15,7 @@
     contact map}
   \item{allPairwise}{logical; generate all pairwise chromosomal contact
     maps, i.e chr1-chr2, chr2-chr1}
-  \item{forceSymmetric}{logical; force the intra-chromosomal contact maps to be symmetrical}
+  \item{lazyload}{logical; see details}
 }
 \details{
   This function import high-throughput data from a tab list file.\cr
@@ -32,6 +32,12 @@
 
   Note that this format is particularly interesting for sparse
   data as only non null values are stored.
+
+  The lazyload option allow to reduce the memory size of imported
+  object. Therefore, only half of inter-chromosomal maps are stored. And
+  intra-chromosomal maps are stored as sparse triangular matrix.
+  Note that even if the contact maps are stored as triangular matrix,
+  the indata method always returns a symmetrical map.
 }
 
 \value{

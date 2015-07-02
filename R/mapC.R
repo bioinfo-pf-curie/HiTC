@@ -78,8 +78,8 @@ plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
 heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na=TRUE, col.pos=c("white",NA,"red"), col.neg=c("white",NA,"blue"), col.na="#CCCCCC", col.zero="#FFFFFF", grid=FALSE, maxrange=NA, title=NULL, k=500){
 
   xdata <- t(xdata)
-  xdata <- xdata[,ncol(xdata):1]
-  
+  xdata <- as(xdata[,ncol(xdata):1], "sparseMatrix")
+
   xdata.pos <- xdata.neg <- NULL 
   if (max(xdata, na.rm=TRUE)>0){
     xdata.pos <- xdata
@@ -94,7 +94,7 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
   
   ## k is the same for positive or negative values, to ensure that the same range of colors are used
   #k <- length(unique(as.vector(abs(xdata))))
-    
+  
   if (!is.null(xdata.neg)){   
     col.neg <- colorC(col.neg[3],col.neg[1],mid=col.neg[2], k=k)
     if (!is.na(maxrange) && max(abs(xdata.neg), na.rm=TRUE) < maxrange){
@@ -109,7 +109,7 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
     if (!is.na(maxrange) && max(xdata, na.rm=TRUE) < maxrange){
       col.pos <- col.pos[1:round(length(col.pos)*(max(xdata, na.rm=TRUE)/maxrange))]
     }
-    plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.pos,show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=c(col.zero,col.pos))
+    plottingfunc(x=1:dim(xdata)[1],y=1:dim(xdata)[2],z=xdata.pos,show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=c(col.zero,col.pos))
   }
   
   if (names){
@@ -242,7 +242,7 @@ triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TR
 
 gdiag <- function(x, w=0){
     if ((m <- min(dim(x))) == 0L) 
-        return(vector(typeof(x), 0L))
+        return(vector("numeric", 0L))
     if (w<m){
         if (w>0)
             y <- x[1L + (0L+w):(m - 1L)* (dim(x)[1L] + 1L) - w]
@@ -250,7 +250,7 @@ gdiag <- function(x, w=0){
             y <- x[1L + 0L:(m - 1L - abs(w))* (dim(x)[1L] + 1L) + abs(w)]
         return(y)
     }else{
-        return(vector(typeof(x), 0L)) 
+        return(vector("numeric", 0L)) 
     }
 }
 
@@ -406,11 +406,11 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
 
       if (max(xdata@x, na.rm=TRUE)>0)
         message(paste("minrange=",round(min(xdata@x[which(xdata@x>0)], na.rm=TRUE),3)," - maxrange=", round(max(xdata@x[which(xdata@x>0)], na.rm=TRUE),3)))
-      else{
-        ## Fix bug in case of empty matrix
-        message("Warning: no data to plot. Fixed to 1e-4.")
-        xdata[1,1] <- 1e-4
-      }
+    }
+    if (max(xdata, na.rm=TRUE)==0){
+      ## Fix bug in case of empty matrix
+      message("Warning: no data to plot. Fixed to 1e-4.")
+      xdata[1,1] <- 1e-4
     }
     xdata
 }
@@ -461,11 +461,10 @@ setMethod("mapC", signature="HTClist",
                           par(mar=c(0,0,0,0))
                       else
                           par(mar=c(mean(sapply(rownames(xdata),nchar))/2,mean(sapply(colnames(xdata),nchar))/2,0,0))
-
                       heatmapC(xdata, names=names, value=value, show.zero=show.zero ,show.na=show.na, col.pos=col.pos,
                                col.neg=col.neg, col.na=col.na, col.zero=col.zero, maxrange=maxrange, grid=grid, k=k)
                   }else{
-                     plot(1, type="n", axes=FALSE, xlab="", ylab="")
+                    plot(1, type="n", axes=FALSE, xlab="", ylab="")
                   }
               })
               

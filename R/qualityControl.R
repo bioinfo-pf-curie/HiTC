@@ -49,6 +49,7 @@ intervalsDist<-function(x, use.zero=TRUE){
         d
     }, yi=ranges(ygi))
 
+    dist.mat <- as(as.matrix(dist.mat), "Matrix")
     rownames(dist.mat) <- id(ygi)
     colnames(dist.mat) <- id(xgi)
 

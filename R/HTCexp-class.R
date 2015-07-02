@@ -57,7 +57,7 @@ setValidity("HTCexp",
 )
 
 ## constructor
-HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
+HTCexp <- function(intdata, xgi, ygi, lazyload=FALSE)
 {
     ## check xgi/ygi length
     stopifnot(inherits(ygi,"GRanges"))
@@ -90,8 +90,9 @@ HTCexp <- function(intdata, xgi, ygi, forceSymmetric=FALSE)
     obj <- new("HTCexp", intdata, xgi, ygi)
 
     
-    if (forceSymmetric & seqlevels(xgi)==seqlevels(ygi)){
+    if (lazyload & seqlevels(xgi)==seqlevels(ygi)){
         obj <- forceSymmetric(obj)
+        obj <- forceTriangular(obj)
     }
     obj
 }
@@ -341,37 +342,53 @@ setMethod("divide", signature=c("HTCexp","HTCexp"),
 
 ## forceSymmetric
 setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="missing"),
-          function(x, uplo){forceSymmetric(x, uplo="S")})
+          function(x, uplo){forceSymmetric(x, uplo="U")})
 
 setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="character"),
           function(x, uplo){
-              stopifnot(uplo=="U" || uplo=="L" || uplo=="S")
-              idata <- intdata(x)
+              stopifnot(uplo=="U" || uplo=="L")# || uplo=="S")
+              idata <- x@intdata
 
-              if (uplo == "U" || uplo == "L"){
-                idata <- forceSymmetric(idata, uplo)
-              }else if (uplo== "S"){
-                 idata <- idata + t(idata)
-                 diag(idata) <- diag(idata)/2
-                 idata <- as(idata, "symmetricMatrix")
-              }
-              intdata(x) <- idata
+              #if (uplo == "U" || uplo == "L"){
+              #  idata <- forceSymmetric(idata, uplo)
+              #}else if (uplo== "S"){
+              #   idata <- idata + t(idata)
+              #   diag(idata) <- diag(idata)/2
+              #   idata <- as(idata, "symmetricMatrix")
+              #}
+              #intdata(x) <- idata
+              intdata(x) <- forceSymmetric(idata, uplo)
               x
-          })
+          }
+)
 
-setMethod(f="forcePairwise", signature(x="HTCexp"),
+setMethod(f="forceTriangular", signature(x="HTCexp"),
           function(x){
+            stopifnot(isSymmetric(x))
             idata <- intdata(x)
-            idata <- idata + t(idata)
-            diag(idata) <- diag(idata)/2
-            idata <- as(idata, "sparseMatrix")
-            intdata(x) <- idata
+            idata[lower.tri(idata)] <- 0
+            intdata(x)<-as(idata, "sparseMatrix")
             x
-          })
+})
+
+#setMethod(f="forcePairwise", signature(x="HTCexp"),
+#          function(x){
+#            idata <- intdata(x)
+#            idata <- idata + t(idata)
+#            diag(idata) <- diag(idata)/2
+#            idata <- as(idata, "sparseMatrix")
+#            intdata(x) <- idata
+#            x
+#          })
 
 ## Interaction Data
 setMethod(f="intdata", signature(x="HTCexp"),
-          function(x){x@intdata}
+          function(x){
+            if (isTriangular(x)){
+              x <- forceSymmetric(x)
+            }
+             x@intdata
+          }
 )
 
 setReplaceMethod(f="intdata", signature(x="HTCexp",value="Matrix"),
@@ -385,16 +402,28 @@ setReplaceMethod(f="intdata", signature(x="HTCexp",value="Matrix"),
 ## Symetric interaction maps
 setMethod("isSymmetric", signature(object="HTCexp"),
 	  function(object){
-              ##isSymmetric(intdata(x))
               ret <- FALSE
-              if (seqlevels(object@xgi)==seqlevels(object@ygi)){
-                  idata <- object@intdata
-                  if (ncol(idata)==nrow(idata))
-                      ret <- suppressWarnings(all(idata-t(idata)==0, na.rm=TRUE))
+              idata <- object@intdata
+              if (Matrix::isSymmetric(idata))
+                ret <- TRUE
+              else if (isTriangular(idata))
+                ret <- TRUE
+              else if (seqlevels(object@xgi)==seqlevels(object@ygi)){
+                if (ncol(idata)==nrow(idata))
+                  ret <- suppressWarnings(all(idata-t(idata)==0, na.rm=TRUE))
               }
               ret
           }
 )
+
+## is Triangular Matrix
+setMethod("isTriangular", signature(object="HTCexp"),
+	  function(object){
+            ret <- Matrix::isTriangular(object@intdata)
+          }
+)
+
+
 
 ## Initialize method
 setMethod("initialize",signature=c("HTCexp"),
@@ -486,8 +515,8 @@ setMethod("show",signature="HTCexp",
                       seqlevels(r)[1], ":", start(r)[1], "-", end(r)[1],"] vs [",
                       seqlevels(r)[2], ":", start(r)[2], "-", end(r)[2],"]\n", sep="")
               }
-              cat("Matrix of Interaction data: [", dim(intdata(object))[1],"-",dim(intdata(object))[2], "]\n", sep="")
-              gf <- union(names(elementMetadata(x_intervals(object))), names(elementMetadata(y_intervals(object))))
+              cat("Matrix of Interaction data: [", dim(object@intdata)[1],"-",dim(object@intdata)[2], "]\n", sep="")
+              gf <- union(names(elementMetadata(object@xgi)), names(elementMetadata(object@ygi)))
               if (length(gf)>0)
                   cat("Genomic Features : ", paste(gf, collapse="-"),"\n")
               invisible(NULL)
@@ -527,11 +556,11 @@ setMethod("summary", signature=c(object="HTCexp"),
               else
                   interactors <- seqlevels(object)
 
-              if(max(intdata(object), na.rm=TRUE)==0){
+              if(max(object@intdata, na.rm=TRUE)==0){
                   dstat <- c(interactors, 0, 0, 0, 0, 1)                 
               }else{
                   ## Force cohersion to dgTMatrix to have @x equal of non zero values
-                  xdata <- as(as(intdata(object), "sparseMatrix"),"dgTMatrix")
+                  xdata <- as(as(object@intdata, "sparseMatrix"),"dgTMatrix")
                   mx <- round(mean(xdata@x, na.rm=TRUE),4)
                   mdx <- round(median(xdata@x, na.rm=TRUE),4)
                   dstat <- c(interactors, sum(xdata@x, na.rm=TRUE), nnzero(xdata, na.counted=TRUE), mx, mdx, round((length(xdata)-length(xdata@x))/length(xdata),4))

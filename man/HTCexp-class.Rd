@@ -12,7 +12,6 @@
 \alias{divide,HTCexp,HTCexp-method}
 \alias{forceSymmetric,HTCexp,character-method}
 \alias{forceSymmetric,HTCexp,missing-method}
-\alias{forcePairwise,HTCexp-method}
 \alias{intdata}
 \alias{intdata-method}
 \alias{intdata,HTCexp-method}
@@ -112,15 +111,14 @@
       common 'x' and 'y' intervals. The operation is done only on the
       common intervals of both objects. If one of the two objects has a count
       to zero, the divided value will be NA}
-    \item{intdata(x)}{return the \code{intdata} Matrix counts}
+    \item{intdata(x)}{return the \code{intdata} Matrix counts. Note that
+  triangular matrices are always returned as symmetric matrices.}
     \item{export(x)}{Defunct. See exportC method}
     \item{isBinned}{return TRUE if the data are binned. The method tests
       if the 'x' and 'y' genome intervals are the same, if 90\% of the bins have the
       same size and if the full genomic range is covered}
     \item{forceSymmetric(x)}{force the interaction data to
       'symmetricMatrix'}
-    \item{forcePairwise(x)}{reverse of forceSymmetric function. Force
-  the contact map to be dense. Useful for plotting function.}
     \item{isIntraChrom(x)}{return TRUE if the current
       \code{signature("HTCexp")} object contains intrachromosomal contact data}
     \item{isSymmetric(x)}{return TRUE if the contact map is

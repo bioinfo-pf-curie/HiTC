@@ -41,6 +41,39 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, stdev
 ## Easy to do with a 'for' loop but the parallel advantages are much bigger
 ###################################
 
+
+
+## x= HiTClist object
+## getExpectedCounts2 <- function(x){
+
+##   x.intra <- x[isIntraChrom(x)]
+  
+##   n <- max(sapply(x.intra, function(x){
+##     stopifnot(isSymmetric(x))
+##     dim(intdata(x))[1]}))
+
+##   expcounts <- rep(0, n)
+##   expn <- rep(0, n)
+  
+##   for (d in 1:n){
+##     dc <- sapply(x.intra, function(xx){gdiag(as.matrix(intdata(xx)), w=d)})
+##     expcounts[d] <- expcounts[d]+sum(unlist(dc))
+##     expn[d] <- expn[d]+sum(sapply(dc, length))
+##   }
+
+##   ret <- expcounts/expn
+##   ret[which(is.na(ret))]<-0
+
+##   mat <- matrix(0, ncol=n, nrow=n)
+##   for (i in 1:n){
+##     mat[(0L+i):n , i] <- ret[1:(n-i+1)]
+##   }
+
+##   mat
+## }
+
+
+
 getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     stopifnot(inherits(x,"HTCexp"))
         
@@ -544,9 +577,11 @@ chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
 ##**********************************************************************************************************##
 
 ###################################
-## IterativeCorNormalization
+## balancingSK
 ## INTERNAL FUNCTION
-## 
+##
+## Matrix balancing used in ICE normalization
+## Based on the Sinkhorn-Knopp algorithm
 ##
 ## x = HTCexp object
 ## max_iter = maximum number of iteration to converge
@@ -554,7 +589,7 @@ chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9"){
 ##
 ##################################
 
-IterativeCorNormalization <- function(x, max_iter=50, eps=1e-4){
+balancingSK<- function(x, max_iter=50, eps=1e-4){
     m <- dim(x)[1]
 
     ## Initialization    
@@ -637,7 +672,7 @@ normICE <- function(x, max_iter=50, eps=1e-4, sparse.filter=0.02){
     }
     
     message("Start Iterative Correction ...")
-    xmat <- IterativeCorNormalization(idata, max_iter=max_iter, eps=eps)
+    xmat <- balancingSK(idata, max_iter=max_iter, eps=eps)
     
     if (inherits(x, "HTCexp")){
         intdata(x) <- xmat

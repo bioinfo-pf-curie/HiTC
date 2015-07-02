@@ -18,6 +18,7 @@ setGeneric(name="xy_intervals", def=function(x) standardGeneric("xy_intervals"))
 setGeneric(name="getCombinedIntervals", def=function(x, ...) standardGeneric("getCombinedIntervals"))
 setGeneric(name="getCombinedContacts", def=function(x) standardGeneric("getCombinedContacts"))
 setGeneric(name="forcePairwise", def=function(x) standardGeneric("forcePairwise"))
+setGeneric(name="forceTriangular", def=function(x) standardGeneric("forceTriangular"))
 
 ## is 
 setGeneric(name="isComplete", def=function(x) standardGeneric("isComplete"))

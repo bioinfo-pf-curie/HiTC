@@ -66,7 +66,7 @@ pca.hic <- function(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE){
 
 sparseCor <- function(x){
     n <- nrow(x)
-    cMeans <- colMeans(x)
+    cMeans <- colMeans(x, na.rm=TRUE)
     covmat <- (as.matrix(crossprod(x)) - n*tcrossprod(cMeans))/(n-1)
     sdvec <- sqrt(diag(covmat)) 
     cormat <- covmat/tcrossprod(sdvec)
