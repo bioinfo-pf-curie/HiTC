@@ -98,7 +98,7 @@ mapC(E14$chrXchrX, maxrange=100, col.pos=c("black","red","yellow"))
 ## Add annotation and change view
 require(rtracklayer)
 exDir <- system.file("extdata", package="HiTC")
-gene <- import(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"), format="bed", asRangedData=FALSE)
+gene <- import(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"), format="bed")
 mapC(E14$chrXchrX, tracks=list(Refseq=gene))
 
 ## Compare two samples

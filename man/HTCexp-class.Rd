@@ -195,7 +195,7 @@ E14_s_MEF<-substract(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))
 
 ## Overlap with genomic annotation
 require(rtracklayer)
-gene <- import(file.path(system.file("extdata", package="HiTC"),"refseq_mm9_chrX_98831149_103425150.bed"), format="bed", asRangedData=FALSE)
+gene <- import(file.path(system.file("extdata", package="HiTC"),"refseq_mm9_chrX_98831149_103425150.bed"), format="bed")
 plot(E14$chrXchrX, tracks=list(RefSeqGene=gene))
 
 \dontrun{

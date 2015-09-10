@@ -175,8 +175,7 @@ In the same way, we will not use here the mappability information for space issu
 
 ## Load mappability track
 require(rtracklayer)
-##map_hg18 <- import("wgEncodeCrgMapabilityAlign100mer_chr6.bw",format="BigWig"
-##,asRangedData=FALSE)
+##map_hg18 <- import("wgEncodeCrgMapabilityAlign100mer_chr6.bw",format="BigWig")
 map_hg18 <- NULL
 cutSites <- getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1, 
                                          chromosomes="chr6", 

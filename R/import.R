@@ -15,10 +15,10 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALS
         stop("BED files of x/y intervals are required")
     
     message("Loading Genomic intervals ...")
-    xgi <- rtracklayer::import(xgi.bed, format="bed", asRangedData=FALSE)
+    xgi <- rtracklayer::import(xgi.bed, format="bed")
     names(xgi) <- id(xgi)
     if (!is.null(ygi.bed)){
-        ygi <- rtracklayer::import(ygi.bed, format="bed", asRangedData=FALSE)
+        ygi <- rtracklayer::import(ygi.bed, format="bed")
         names(ygi) <- id(ygi)
     }else{
         ygi <- xgi

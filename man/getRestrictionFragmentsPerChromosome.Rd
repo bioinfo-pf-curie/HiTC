@@ -29,7 +29,7 @@ chromosomes=NULL, genomePack="BSgenome.Mmusculus.UCSC.mm9")}
 
 \dontrun{
 ## Mappability data From http://hgdownload.cse.ucsc.edu/goldenPath/hg18/encodeDCC/wgEncodeMapability/
-map_hg18<- import("wgEncodeCrgMapabilityAlign100mer.bw",format="BigWig", asRangedData=FALSE)
+map_hg18<- import("wgEncodeCrgMapabilityAlign100mer.bw",format="BigWig")
 
 ## 1- Get the list of restriction fragments for Human hg18 after HindIII digestion
 resFrag <- getRestrictionFragmentsPerChromosome(resSite="AAGCTT", overhangs5=1, chromosomes="chrX", genomePack="BSgenome.Hsapiens.UCSC.hg18")
