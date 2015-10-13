@@ -1,0 +1,21 @@
+Package: HiTC
+Type: Package
+Title: High Throughput Chromosome Conformation Capture analysis
+Description: The HiTC package was developed to explore high-throughput 'C' data such as 5C or Hi-C. Dedicated R classes as well as standard methods for quality controls, normalization, visualization, and further analysis are also provided.
+Version: 1.14.0
+Date: 2015-03-15
+Depends: R (>= 2.15.0), methods, IRanges, GenomicRanges
+Imports: Biostrings, graphics, grDevices, rtracklayer, RColorBrewer,
+        Matrix, parallel, GenomeInfoDb
+Suggests: BiocStyle, HiCDataHumanIMR90
+Author: Nicolas Servant
+Maintainer: Nicolas Servant <nicolas.servant@curie.fr>
+License: Artistic-2.0
+Collate: AllGenerics.R HTCexp-class.R HTClist-class.R qualityControl.R
+        normalize_5C.R normalize_hiC.R mapC.R mapC_tracks.R binningC.R
+        import.R export.R pca.R tads.R deprecated.R
+LazyLoad: yes
+biocViews: Sequencing, HighThroughputSequencing, HiC
+Packaged: 2015-04-17 02:10:15 UTC; biocbuild
+InstallableEverywhere: yes
+NeedsCompilation: no
