@@ -116,6 +116,7 @@ setMethod(f="forcePairwise", signature(x="HTClist"),
                 symobj <- x[[paste0(obj[2], obj[1])]]
                 HTCexp(intdata=t(intdata(symobj)), xgi=y_intervals(symobj), ygi=x_intervals(symobj))
               })
+              
               c(x, nmaps)
             }else{
               x

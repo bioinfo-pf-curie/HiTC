@@ -76,7 +76,7 @@ BiocStyle::latex(use.unsrturl=FALSE)
 The Hi-C technic was first introduced by \cite{Lieberman-Aiden2009} to simultaneoulsy detect all chromosomal interactions in a single experiment. The Hi-C aims at measuring the population-averaged frequency at which two genomic loci physically interact in three-dimensional space. Briefly, after a first crosslink and digestion with a restriction enzyme, all genomic fragments are labeled with a biotinylated nucleotide before ligation. These junctions can then be purified efficiently by streptavidin-coated magnetic beads, and finaly sequenced using an Illumina paired-end protocol.\\
 After sequencing, raw reads have to be processed to generate the inter/intrachromosomal contact maps. The main steps of this processing are described in \cite{Imakaev2012}. The raw paired-end reads are first independently aligned on a reference genome. The two mates from the same DNA fragment therefore define the two interacting loci on the genome. Imakaev et al. also proposed an iterative mapping procedure to rescue the reads spanning the ligation junction (and thus containing the two interactors in a single read).\\
 After the reads alignment, the Hi-C molecule generated from the DNA digestion and the ligation products are reconstructed using the position and direction of the sequenced mates. Self-circle ligations, single side reads and dangling ends are discarded, and the valid ligation products aligned to different restriction fragments and face toward the restriction site are used to reconstruct the contact maps. The interaction frequencies are therefore estimated by counting how many times two genomic bins (at a given resulution) were found as interactors. The data resolution usually depends on the sequencing depth. In their first paper, \cite{Lieberman-Aiden2009} generated data at a resolution of 1Mb (up to 100kb) and reveal the compartmentalization of the genome into regions of open and closed (active and inactive) chromatin as well as the three-dimensional structure of the genome (fractal globule). More recently, \cite{Dixon2012} generated 20 to 40kb contact maps in order to go deeper in the conformation structure and to study topological domains (\cite{Nora2012a}).\\
-The \Rpackage{HiTC} is designed to import processed data as contact maps. In order to generate these maps from raw sequencing reads a couple of pipeline are available on the web. We have recently developed the \href{https://github.com/nservant/HiC-Pro}{HiC-Pro} software which is an optimzed pipeline to process Hi-C data from raw reads to normalized contact maps. The outputs of \href{https://github.com/nservant/HiC-Pro}{HiC-Pro} is fully compatible with the HiTC package.\\
+The \Rpackage{HiTC} is designed to import processed data as contact maps. In order to generate these maps from raw sequencing reads a couple of pipeline are available on the web. We have recently developed the \href{https://github.com/nservant/HiC-Pro}{HiC-Pro} software which is an optimzed pipeline to process Hi-C data from raw reads to normalized contact maps \cite{Servant2015}. The outputs of \href{https://github.com/nservant/HiC-Pro}{HiC-Pro} is fully compatible with the HiTC package.\\
 This vignette is based on the analysis of the \cite{Dixon2012} contact maps, at a resolution of 40kb. These data are stored as a \Rclass{HTClist} object, i.e. a list of inter/intrachromosomal contact maps, one for each pair of chromosomes. The goal of this vignette is to describe how the \Rpackage{HiTC} R package can be used to explore such data.\\
 
 If you use \Rpackage{HiTC} for analyzing your data, please cite:
@@ -143,7 +143,7 @@ mapC(imr90_500)
 As we can see on this exemple, only half of the inter-chromosomal maps as stored and thus plotted. To display the full pairwise maps, methods such as \Rmethod{forcePairwise}, or \Rmethod{forceSymmetric} can be used to switch from a pairwise (and more memory consuming) form to a reduced form.
 
 <<plot2, fig=TRUE, width=2, height=2>>=
-mapC(forcePairwise(imr90_500), maxrange=500)
+mapC(forcePairwise(imr90_500), maxrange=200)
 @ 
 
 
@@ -200,17 +200,18 @@ The ICE normalization is one of the most popular method to correct data from Hi-
 
 <<normICE, fig=TRUE, width=3, height=3>>=
 imr90_500_ICE <-  normICE(imr90_500, max_iter=10)
-mapC(HTClist(imr90_500_ICE$chr6chr6), maxrange=500)
+mapC(HTClist(imr90_500_ICE$chr6chr6), trim.range=.95, 
+     col.pos=c("white", "orange", "red", "black"))
 @ 
 
 \section{Detection of Topological Domains}
 
-Recent studies on a high resolution human and mouse Hi-C dataset have discovered that the genome organization can be further divided into megabase-long and evolutionarily conserved topological domains (TADs), with high frequencies of intra-domain chromatin interactions but infrequent inter-domain chromatin interactions (\cite{Nora2012a}, \cite{Dixon2012}). More recently, \cite{Phillips-Cremins2013} have demonstrated that the cell-type-specific chromatin organization seems to occur at the sub-megabase scale involving different ligation proteins and epigenomic mechanisms.\\
+Recent studies on a high resolution human and mouse Hi-C dataset have discovered that the genome organization can be further divided into megabase-long and evolutionarily conserved topological domains (TADs), with high frequencies of intra-domain chromatin interactions but infrequent inter-domain chromatin interactions (\cite{Nora2012a}, \cite{Dixon2012}). More recently, \cite{Phillips-Cremins2013a} have demonstrated that the cell-type-specific chromatin organization seems to occur at the sub-megabase scale involving different ligation proteins and epigenomic mechanisms.\\
 The following code shows how to focus on TADs, such as the ones describes in IMR90 around the Hox genes.
 
 <<tads, fig=TRUE, width=5, height=3>>=
 hox <- extractRegion(hic_imr90_40$chr6chr6, chr="chr6", from=50e6, to=58e6)
-plot(hox, maxrange=50)
+plot(hox, maxrange=50, col.pos=c("white", "orange", "red", "black"))
 @ 
 
 Different algorithms have been proposed to detect TADs. The directionality index was proposed by \cite{Dixon2012} as an input to their HMM model.

@@ -4,7 +4,7 @@
 \title{Set x and y interval of the HTCexp object}
 \description{Set x and y interval of the HTCexp object and update the
   contact map accordingly}
-\usage{setIntervalScale(x, xgi, ygi, upa=TRUE, method=c("median","mean","sum"),
+\usage{setIntervalScale(x, xgi, ygi, upa=TRUE, method=c("sum","median","mean"),
 use.zero=TRUE, optimize.by = c("speed", "memory"))}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}

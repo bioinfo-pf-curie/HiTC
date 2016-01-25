@@ -6,7 +6,7 @@
   Binning of 'C' contact map
 }
 \usage{binningC(x, binsize=100000, bin.adjust=TRUE, upa=TRUE,
-method=c("median","mean","sum"), use.zero=TRUE, step=1, optimize.by = c("speed", "memory"))}
+method=c("sum", "median","mean"), use.zero=TRUE, step=1, optimize.by = c("speed", "memory"))}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{binsize}{size of the bin to consider for windowing}

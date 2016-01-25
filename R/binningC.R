@@ -12,7 +12,7 @@
 ## step = overlap of window. step = 1 for no overlap window, step = 2 50% overlap, etc
 ###################################
 
-binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("median", "mean", "sum"), use.zero=TRUE, step=1, optimize.by=c("speed","memory")){
+binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("sum", "median", "mean"), use.zero=TRUE, step=1, optimize.by=c("speed","memory")){
 
     stopifnot(inherits(x,"HTCexp"))
     met <- match.arg(method)
@@ -210,7 +210,7 @@ binningC <- function(x, binsize=100000, bin.adjust=TRUE, upa=TRUE, method=c("med
 ##
 ##################################
 
-setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method=c("median","mean","sum"), use.zero=TRUE, optimize.by=c("speed","memory")){
+setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method=c("sum", "median", "mean"), use.zero=TRUE, optimize.by=c("speed","memory")){
     
     stopifnot(inherits(x,"HTCexp"))
     met <- match.arg(method)

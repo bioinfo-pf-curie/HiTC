@@ -45,7 +45,7 @@ setValidity("HTCexp",
                     fails <- c(fails, "Multiple chromosome found in xgi or ygi object")
                 }
                 if (length(setdiff(rownames(object@intdata), id(object@ygi)))>0L){
-                    fails <- c(fails, "The 'ygi' intervals from the interaction matrix are different from those defined in the GRanges object")
+                  fails <- c(fails, "The 'ygi' intervals from the interaction matrix are different from those defined in the GRanges object")
                 }
                 if (length(setdiff(colnames(object@intdata), id(object@xgi)))>0L){
                     fails <- c(fails, "The 'xgi' intervals from the interaction matrix are different from those defined in the GRanges object")
@@ -348,7 +348,6 @@ setMethod(f="forceSymmetric", signature(x="HTCexp", uplo="character"),
           function(x, uplo){
               stopifnot(uplo=="U" || uplo=="L")# || uplo=="S")
               idata <- x@intdata
-
               #if (uplo == "U" || uplo == "L"){
               #  idata <- forceSymmetric(idata, uplo)
               #}else if (uplo== "S"){
@@ -384,7 +383,7 @@ setMethod(f="forceTriangular", signature(x="HTCexp"),
 ## Interaction Data
 setMethod(f="intdata", signature(x="HTCexp"),
           function(x){
-            if (isTriangular(x)){
+            if (isTriangular(x) && isIntraChrom(x)){
               x <- forceSymmetric(x)
             }
              x@intdata

@@ -107,6 +107,8 @@ The \Rclass{HTCexp} (High-Throughput 'C' experiment) class aims at representing 
   \item Two \Rclass{GRanges} objects that describe each features of the interaction matrix, respectively, the x (i.e. columns) and y (i.e. rows) labels of the interaction matrix. Basically, in the context of 5C, these objects will be the forward and reverse primers, and for the Hi-C the binned genomic intervals.
 \end{itemize}
 
+Note that \Biocpkg{HiTC} was not designed to processed chromatine conformation capture from raw reads, but takes contact maps as input. In order to process Hi-C data from raw sequencing reads, you can use the HiC-Pro pipeline \cite{Servant2015} which is freely available at \href{https://github.com/nservant/HiC-Pro}{https://github.com/nservant/HiC-Pro}. Data processed with HiC-Pro can then be loaded into the R environment using the importC function of \Biocpkg{HiTC}.
+
 Whereas a 5C dataset can be composed of a single cis interaction map (i.e. \Rclass{HTCexp} object), a complete Hi-C dataset is composed of a list of cis and trans interaction maps, characterized by the physical interactions of each pair of chromosomes. The \Rclass{HTClist} class represents a list of \Rclass{HTCexp} objects and provides dedicated methods and visualization functions.
 
 <<head>>=
@@ -186,7 +188,7 @@ summary(hiC)
 @
 
 \section{Quality Control}
-The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random contacts. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qcc}).
+The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random collisions. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qcc}).
 
 <<qcc, include=FALSE, fig=TRUE, width=7, height=7>>=
 par(mfrow=c(2,2))
@@ -236,7 +238,7 @@ E14subset<-extractRegion(E14$chrXchrX, c(1,2),
                          chr="chrX", from=100295000, to=102250000)
 
 ## Binning of 5C interaction map
-E14subset.binned <- binningC(E14subset, binsize=100000, step=3)
+E14subset.binned <- binningC(E14subset, binsize=100000, method="median", step=3)
 mapC(E14subset.binned)
 @
 
@@ -263,7 +265,7 @@ Interaction frequencies can be then normalized for distance by dividing the obse
 
 <<norm5Cznorm, fig=TRUE, include=FALSE, width=7, height=7>>=
 E14norm <- normPerExpected(E14subset, stdev=TRUE)
-E14norm.binned <- binningC(E14norm, binsize=50000, step=3)
+E14norm.binned <- binningC(E14norm, binsize=50000, method="median", step=3)
 mapC(E14norm.binned)
 @
 
@@ -275,7 +277,7 @@ The annotation objects have to belong to the \Rclass{GRanges} class, cand can be
 For instance, the following example displays the CTCF enriched regions (\cite{Kagey2010}) and RefSeq genes over the interaction map of the E14 sample.
 
 <<annot5C, eval=TRUE, echo=TRUE, print=FALSE, fig=TRUE, width=7, height=7, include=FALSE>>=
-E14.binned <- binningC(E14$chrXchrX, binsize=100000, step=3)
+E14.binned <- binningC(E14$chrXchrX, binsize=100000, method="median", step=3)
 require(rtracklayer)
 gene <- import(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"), 
                format="bed")
@@ -292,7 +294,7 @@ mapC(E14.binned,
  It also proposes a graphical view to compare two 'C' experiments. In the following example, the MEF sample is compared to the E14 sample (see Figure~\ref{HiTC-comp5C}).
  
 <<comp5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
-MEF.binned <- binningC(MEF$chrXchrX, binsize=100000, step=3)
+MEF.binned <- binningC(MEF$chrXchrX, binsize=100000, method="median", step=3)
 mapC(E14.binned, MEF.binned,
      tracks=list(RefSeqGene=gene, CTCF=ctcf), 
      maxrange=10)
@@ -338,7 +340,7 @@ mapC(HTClist(hiC14norm), log.data=TRUE)
 #intdata(hiC14norm) <- as(cor(as.matrix(intdata(hiC14norm))),"Matrix")
 intdata(hiC14norm) <- HiTC:::sparseCor(intdata(hiC14norm))
 mapC(HTClist(hiC14norm), maxrange=1, minrange=-1, 
-     col.pos=c("black", NA, "red"), col.neg=c("black",NA, "blue"))
+     col.pos=c("black", "red"), col.neg=c("blue","black"))
 @
 \incfig{HiTC-mapCorhic}{0.5\textwidth}{Correlation map of chromosome 14}{}
 
@@ -368,7 +370,7 @@ toLatex(sessionInfo(), locale=FALSE)
 @
 
 \section*{Acknowledgements}
-Many thanks to Joern Toedling and Pierre Gestraud for useful discussion and help in developping this R package. A special thanks to the \Rpackage{HiTC} users, and especially to Sameet Mehta for useful discussions and idea to improve it.
+Many thanks to Pierre Gestraud for useful discussion and help in developping this R package. A special thanks to the \Rpackage{HiTC} users, and especially to Sameet Mehta for useful discussions and idea to improve it.
 
 \newpage
 \small

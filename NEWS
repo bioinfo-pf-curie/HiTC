@@ -1,3 +1,23 @@
+
+
+***********************************
+CHANGES IN VERSION 1.15.1
+
+NEW FEATURES
+
+   o new saveContactMaps function
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Change default behavior of binningC function to use sum of intervals instead of median
+
+   o Hi-C color are now defined as a vector, so that more than 3 colors can be used to for the gradient
+
+BUG FIXES
+
+   o Fix bug in import.my5C in reading file
+
+
 ***********************************
 CHANGES IN VERSION 1.13.2
 

@@ -15,10 +15,12 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALS
         stop("BED files of x/y intervals are required")
     
     message("Loading Genomic intervals ...")
-    xgi <- rtracklayer::import(xgi.bed, format="bed")
+    xgi <- rtracklayer::import(xgi.bed, format="bed", asRangedData=FALSE)
+    xgi <- sortSeqlevels(xgi)
     names(xgi) <- id(xgi)
     if (!is.null(ygi.bed)){
-        ygi <- rtracklayer::import(ygi.bed, format="bed")
+        ygi <- rtracklayer::import(ygi.bed, format="bed", asRangedData=FALSE)
+        sortSeqLevels(ygi)
         names(ygi) <- id(ygi)
     }else{
         ygi <- xgi
@@ -58,7 +60,7 @@ import.my5C <- function(file, allPairwise=FALSE, lazyload=FALSE){
     ## Read data
     stopifnot(!missing(file))
     message("Reading file ...")
-    my5Cdata <- read.table(file,comment.char = "#", check.names=FALSE)
+    my5Cdata <- read.table(file,comment.char = "#", check.names=FALSE, header=TRUE, row.names=1)
 
     message("Convert my5C matrix file in HTCexp object(s)")
     my5CdataM <- as(as.matrix(my5Cdata),"Matrix")
@@ -181,3 +183,6 @@ pair.chrom <- function(chrom, use.order=TRUE, rm.cis=FALSE){
     }
     lz
 }##pair.chrom
+
+
+

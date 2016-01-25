@@ -133,3 +133,55 @@ export.my5C <- function(x, file, genome="mm9", per.chromosome=FALSE){
     }
     invisible(NULL)
 }##export.my5C
+
+
+saveContactMaps <- function(x, con, device="pdf", per.chrom=FALSE, ...)
+{
+  stopifnot(!missing(con))
+
+  if (length(grep(".pdf$", con)) != 0)
+    device <- "pdf"
+  else if (length(grep(".png$", con)) != 0)
+    device <- "png"
+
+  if (device == "pdf")
+    dFun <- pdf
+  else if (device == "png")
+    dFun <- png
+  else
+    stop("Unsupported device")
+
+  minres <- 680
+  if(inherits(x,"HTCexp")){
+    d <- dim(intdata(x))
+    if (d[1] < minres || d[2] < minres){d <- c(minres, minres)}
+    dFun(con,  width=d[1], height=d[2])
+    mapC(x, ...)
+    dev.off()
+  }else if(inherits(x,"HTClist")){
+    if (per.chrom==TRUE){
+      if (device == "pdf"){
+        dFun(con)
+        lapply(x, function(xx){
+          d <- dim(intdata(xx))
+          if (d[1] < minres || d[2] < minres){d <- c(minres, minres)}
+          pdf.options(width=d[1], height=d[2])
+          mapC(HTClist(xx), ...)
+        })
+        dev.off()
+      }else if (device=="png"){
+        lapply(x, function(xx){
+          d <- dim(intdata(xx))
+          if (d[1] < minres || d[2] < minres){d=c(minres, minres)}
+          dFun(paste0(sub(".png$","",con), "_", paste0(seqlevels(xx), collapse=""), ".png"),  width=d[1], height=d[2])
+          mapC(HTClist(xx), ...)
+          dev.off()
+        })
+      }
+    }else{
+      dFun(con,  width=1200, height=1200)
+      mapC(x, ...)
+      dev.off()
+    }
+  }
+}

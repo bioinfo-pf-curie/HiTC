@@ -15,7 +15,7 @@ importFrom("graphics", "plot", "image", "abline", "axis", "text")
 importFrom("grDevices", "col2rgb")
 importFrom("stats", "prcomp")
 importFrom("RColorBrewer", "brewer.pal")
-importFrom("Matrix", "cBind", "rBind", "Matrix", "sparseMatrix")
+importFrom("Matrix", "cBind", "rBind", "Matrix", "sparseMatrix", "t")
 importFrom("GenomeInfoDb", "seqlevels", "sortSeqlevels", "seqlengths")
 importFrom("parallel", "mclapply")
 
