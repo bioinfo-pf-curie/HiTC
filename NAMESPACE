@@ -32,39 +32,43 @@ importMethodsFrom("Matrix", "colMeans", "colSums", "crossprod", "diag", "forceSy
 
 ##Export functions and generics
 export(
-       "binningC",
-       "CQC", "intervalsDist",
-       "directionalityIndex",
-       "discretize",
-       "exportC", "export.my5C", "importC", "import.my5C",
-       "extractRegion",
-       "getExpectedCounts",
-       "getAnnotatedRestrictionSites", "getRestrictionFragmentsPerChromosome",
-       "getCombinedIntervals", "getCombinedContacts",
-       "HTCexp","HTClist",
-       "normLGF","normICE",
-       "pca.hic",
-       "removeIntervals", "setIntervalScale",
-       "setGenomicFeatures", 
-       "summary")
+    "HTCexp","HTClist",
+    "binningC",
+    "exportC", "export.my5C", "importC", "import.my5C",
+    "removeIntervals", "setIntervalScale",   
+    "CQC", "intervalsDist",
+    "extractRegion",
+    "pca.hic","getPearsonMap",
+    "getExpectedCounts", "normLGF","normICE", "setGenomicFeatures",
+    "getAnnotatedRestrictionSites", "getRestrictionFragmentsPerChromosome",
+    "discretize",
+    "directionalityIndex"
+)
 
 ##Export classes
 exportClasses("HTCexp", "HTClist")
 
 ##Export Methods
 exportMethods(
-              "as.list",
-              "c",
-              "detail","show",
-              "intdata", "intdata<-",
-              "isBinned", "isIntraChrom", "isSymmetric",
-              "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
-              "id",
-              "forcePairwise","forceSymmetric","isPairwise", "isComplete", 
-              "mapC","plot",
-              "normPerReads", "normPerExpected", "normPerTrans",
-              "range", "ranges",
-              "seqlevels",
-              "substract", "divide"
-)
+    "intdata", "intdata<-",
+    "id", "id<-",
+    "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
+    "getCombinedIntervals", "getCombinedContacts",
+    "forcePairwise", "forceTriangular",
+    "isComplete", "isPairwise",
+    "isBinned", "isIntraChrom",
+    "divide", "substract",
+    "mapC",
+    "summary",
+    "as.list", "c", "detail", "show",
+    "plot",
+    "seqlevels",
+    "range", "ranges", "reduce",
+    "substract", "divide",
+    "forcePairwise", "forceSymmetric", "forceTriangular",
+    "isTriangular", "isSymmetric",    
+    "normPerReads", "normPerTrans", "normPerExpected"
+    )
+
+
 

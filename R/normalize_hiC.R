@@ -7,17 +7,146 @@
 ##**********************************************************************************************************##
 
 ## Normalized per expected number of count
-setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, stdev=FALSE, ...){
-    expCounts <- getExpectedCounts(x, stdev=stdev, ...)
-    if (stdev){
+setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, ...){
+
+    expCounts <- getExpectedCounts(x, ...)
+    if (! is.null(expCounts$stdev.estimate)){
         x@intdata <- (x@intdata-expCounts$exp.interaction)/expCounts$stdev.estimate
     }else{
-        x@intdata <- x@intdata/expCounts$exp.interaction
+        x@intdata <- x@intdata/(expCounts$exp.interaction) 
     }
     ## Remove NaN or Inf values for further analyses
-    intdata(x)[which(is.na(x@intdata) | is.infinite(x@intdata))]<-NA
+    #x@intdata[which(is.na(x@intdata) | is.infinite(x@intdata))]<-NA
+    x@intdata[which(is.infinite(x@intdata))]<-0
+
     x
 })
+
+## Normalized per expected number of counts across all cis maps
+setMethod("normPerExpected", signature=c("HTClist"), definition=function(x, ...){
+
+  xintra <- x[isIntraChrom(x)]
+
+  ## estimated expected counts for all cis maps
+  exp <- lapply(xintra, function(xx){
+    r <- getExpectedCounts(xx, method="mean")
+    r$exp.interaction
+  })
+
+  ## combined all cis expected counts
+  N <- max(sapply(exp, dim))
+  counts <- matrix(0, ncol=N, nrow=N)
+  ss <- matrix(0, ncol=N, nrow=N)
+  for (i in 1:length(exp)){
+    n <- dim(exp[[i]])[1]
+    counts[1:n, 1:n] <- counts[1:n, 1:n]+1
+    ss[1:n, 1:n] <- ss[1:n, 1:n] + as.matrix(exp[[i]])
+  }
+ 
+  ## Mean over all expected matrices
+  ss <- ss / counts
+  
+  xintranorm <- lapply(xintra, function(xx){
+    n <- dim(xx@intdata)[1]
+    xx@intdata <- xx@intdata/ss[1:n,1:n]
+    xx@intdata[which(is.na(xx@intdata) | is.infinite(xx@intdata))]<-0
+    xx
+  })
+  x[isIntraChrom(x)] <- xintranorm
+  x
+})
+
+###################################
+## getExpectedCountsMean
+##
+## This way of calculate expected counts was used in Naumova et al.
+## The idea is just to look at all diagonals and to calculate their mean
+##
+## x = a HTCexp object
+##
+##
+## NOTES
+## Migth be interesting to add an isotonic regression on the mean to force the expected value to decrease with the distance
+###################################
+
+
+getExpectedCounts <- function(x, method=c("mean","loess"), ...){
+  met <- match.arg(method)
+
+  if (dim(intdata(x))[1]>500 & met=="loess"){
+    warning("Contact map looks big. Use mean method instead or be sure that the loess fit gives good results.")
+  }
+  
+  if (met=="mean"){
+    getExpectedCountsMean(x, ...)
+  }else if (met=="loess"){
+    getExpectedCountsLoess(x, ...)
+  }else{
+    stop("Unknown method")
+  }
+}
+
+
+logbins<- function(from, to, step=1.05, N=NULL) {
+  if (is.null(N)){
+    unique(round(c(from, exp(seq(log(from), log(to), by=log(step))), to)))
+  }else{
+    unique(round(c(from, exp(seq(log(from), log(to), length.out=N)), to)))
+  }
+}
+
+getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05){
+
+  xdata <- intdata(x)
+  N <- dim(xdata)[1]
+  if (logbin){
+    bins <- logbins(from=1,to=N, step=step)
+    bins <- as.vector(Rle(values=bins, lengths=c(diff(bins),1)))
+    stopifnot(length(bins)==N)
+  }else{
+    bins <- 1:N
+  }
+
+  message("Estimate expected per mean ...")
+  
+  xdata <- as.matrix(xdata)
+  rc <- which(colSums(xdata, na.rm=TRUE)==0)
+  rr <- which(rowSums(xdata, na.rm=TRUE)==0)
+
+  ## rm line with only zeros
+  xdata[rr,] <- NA
+  xdata[,rc] <- NA
+           
+  ## create an indicator for all diagonals in the matrix
+  rows <- matrix(rep.int(bins, N), nrow=N)
+  ##d <- rows - t(rows)
+
+  d <- matrix(bins[1+abs(col(rows) - row(rows))],nrow=N) - 1
+  d[upper.tri(d)] <- -d[upper.tri(d)]
+ 
+  if (isSymmetric(xdata)){
+    ## remove half of the matrix
+    d[upper.tri(d)] <- NA
+  }
+  ## use split to group on these values
+  mi <- split(xdata, d)
+  milen <- lapply(mi, length)
+  mimean <- lapply(mi, mean, na.rm=TRUE)
+  miexp <- lapply(1:length(milen), function(i){rep(mimean[[i]], milen[[i]])})
+  names(miexp) <- names(mi)
+  expmat <- as(matrix(unsplit(miexp, d), nrow=nrow(xdata), ncol=ncol(xdata)), "Matrix")
+  if (isSymmetric(xdata)){
+    expmat <- forceSymmetric(expmat, uplo="L")
+  }
+  
+  colnames(expmat) <- colnames(xdata)
+  rownames(expmat) <- rownames(xdata)
+
+  ## Put NA at rc and cc
+  expmat[rr,] <- NA
+  expmat[,rc] <- NA
+  return(list(exp.interaction=expmat, stdev.estimate=NULL))
+}
 
 
 ###################################
@@ -41,43 +170,18 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, stdev
 ## Easy to do with a 'for' loop but the parallel advantages are much bigger
 ###################################
 
-
-
-## x= HiTClist object
-## getExpectedCounts2 <- function(x){
-
-##   x.intra <- x[isIntraChrom(x)]
-  
-##   n <- max(sapply(x.intra, function(x){
-##     stopifnot(isSymmetric(x))
-##     dim(intdata(x))[1]}))
-
-##   expcounts <- rep(0, n)
-##   expn <- rep(0, n)
-  
-##   for (d in 1:n){
-##     dc <- sapply(x.intra, function(xx){gdiag(as.matrix(intdata(xx)), w=d)})
-##     expcounts[d] <- expcounts[d]+sum(unlist(dc))
-##     expn[d] <- expn[d]+sum(sapply(dc, length))
-##   }
-
-##   ret <- expcounts/expn
-##   ret[which(is.na(ret))]<-0
-
-##   mat <- matrix(0, ncol=n, nrow=n)
-##   for (i in 1:n){
-##     mat[(0L+i):n , i] <- ret[1:(n-i+1)]
-##   }
-
-##   mat
-## }
-
-
-
-getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
+getExpectedCountsLoess<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     stopifnot(inherits(x,"HTCexp"))
-        
-    ydata <- as.vector(intdata(x))
+
+    xdata <- as.matrix(intdata(x))
+    rc <- which(colSums(xdata, na.rm=TRUE)==0)
+    rr <- which(rowSums(xdata, na.rm=TRUE)==0)
+
+    ## rm line with only zeros
+    xdata[rr,] <- NA
+    xdata[,rc] <- NA
+      
+    ydata <- as.vector(xdata)
     ydata[which(is.na(ydata))] <- 0
     xdata.dist <- as.vector(intervalsDist(x))
     o<- order(xdata.dist)
@@ -94,7 +198,7 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
     #                y = double(length(ydata)), double(length(ydata)), double(length(ydata)), PACKAGE = "stats")$y
 
     lowess.fit <-lowess(x=xdata.dist, y=ydata, f=span, delta=delta)$y
-      
+    
     y1 <- sort(ydata)
     y1 <-  quantile(y1[which(y1>1)], probs=0.99)
 
@@ -157,7 +261,12 @@ getExpectedCounts<- function(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE){
         stdev.mat <- matrix(stdev.estimate[order(o)], nrow=length(y_intervals(x)), byrow=FALSE)
         rownames(stdev.mat) <- id(y_intervals(x))
         colnames(stdev.mat) <- id(x_intervals(x))
-    }    
+    }
+    
+    ## Put NA at rc and cc
+    lowess.mat[rr,] <- NA
+    lowess.mat[,rc] <- NA
+ 
     return(list(exp.interaction=lowess.mat,stdev.estimate=stdev.mat))
 }
     

@@ -418,6 +418,7 @@ setMethod("isSymmetric", signature(object="HTCexp"),
 ## is Triangular Matrix
 setMethod("isTriangular", signature(object="HTCexp"),
 	  function(object){
+            object@intdata[which(is.na(object@intdata))] <- 0
             ret <- Matrix::isTriangular(object@intdata)
           }
 )

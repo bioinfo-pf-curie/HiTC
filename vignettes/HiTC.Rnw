@@ -246,16 +246,16 @@ mapC(E14subset.binned)
 
 \subsubsection{Data Normalization}
 Due to the polymer nature of chromatin, at small genomic distances, pairs of restriction fragments that are close to each other in the linear genome will give higher signal than fragments that are further apart. Such property leads to strongest counts falling on the heatmap diagonal. When considering any given pair of restriction fragments, it is therefore informative to assess whether the observed counts are above what is expected given the genomic distance that separate them.\\
-Different ways of normalization have been proposed. In the current version of the package we propose to estimate the expected interaction counts as presented in \cite{Bau2011}. The expected value is the interaction frequency between two loci that one would expect based on a sole dependency on the genomic proximity of these fragments in the linear genome. This can be estimated using a Loess regression model (see Figure~\ref{HiTC-expint.png}).
+Different ways of normalization have been proposed. Here, we propose to estimate the expected interaction counts as presented in \cite{Bau2011}. The expected value is the interaction frequency between two loci that one would expect based on a sole dependency on the genomic proximity of these fragments in the linear genome. This can be estimated using a Loess regression model (see Figure~\ref{HiTC-expint.png}). Note that another model based on mean counts at each genomic distance can also be used (method=mean)
 
 <<norm5Cexp, eval=FALSE, echo=TRUE, fig=FALSE>>=
 ## Look at exptected counts
-E14exp <- getExpectedCounts(E14subset, stdev=TRUE, plot=TRUE)
+E14exp <- getExpectedCounts(E14subset, method="loess", stdev=TRUE, plot=TRUE)
 @ 
 
 <<norm5CexpEval, echo=FALSE, results=verbatim>>=
 png(file="HiTC-expint.png", res=300, units="in", width=6, height=6)
-E14exp <- getExpectedCounts(E14subset, stdev=TRUE, plot=TRUE)
+E14exp <- getExpectedCounts(E14subset, method="loess", stdev=TRUE, plot=TRUE)
 graphics.off()
 @
 
@@ -264,7 +264,7 @@ graphics.off()
 Interaction frequencies can be then normalized for distance by dividing the observed value by the expected value (\Rfunction{normPerExpected}). The variability between the interaction counts and the genomic distance between pairs of loci can be calculated if specified. These normalization methods can be easily applied using the methods \Rfunction{normPerReads} and \Rfunction{normPerExpected}.
 
 <<norm5Cznorm, fig=TRUE, include=FALSE, width=7, height=7>>=
-E14norm <- normPerExpected(E14subset, stdev=TRUE)
+E14norm <- normPerExpected(E14subset, method="loess", stdev=TRUE)
 E14norm.binned <- binningC(E14norm, binsize=50000, method="median", step=3)
 mapC(E14norm.binned)
 @
@@ -330,7 +330,7 @@ mapC(HTClist(hiC14), maxrange=100)
 
 <<mapNormhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Data Normalization by Expected number of Counts
-hiC14norm <- normPerExpected(hiC14)
+hiC14norm <- normPerExpected(hiC14, method="loess")
 mapC(HTClist(hiC14norm), log.data=TRUE)
 @
 \incfig{HiTC-mapNormhic}{0.5\textwidth}{Interaction map of chromosome 14 normalized by the expected interaction counts.}{}
@@ -346,7 +346,7 @@ mapC(HTClist(hiC14norm), maxrange=1, minrange=-1,
 
 <<mapPCAhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
 ## Principal Component Analysis
-pc <- pca.hic(hiC14, npc=1)
+pc <- pca.hic(hiC14, normPerExpected=TRUE, method="loess", npc=1)
 plot(start(pc$PC1), score(pc$PC1), type="h", 
      xlab="chr14", ylab="PC1vec", frame=FALSE)
 

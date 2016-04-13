@@ -133,8 +133,9 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
       par(new = TRUE)
       na.xdata <- matrix(NA_integer_, ncol=ncol(xdata), nrow=nrow(xdata))
       na.xdata[which(is.na(xdata))] <- 1
-      #if (!show.zero)
-      #  na.xdata[which(xdata==0)] <- 1
+      
+      ##if (!show.zero)
+      ##  na.xdata[which(xdata==0)] <- 1
       plottingfunc(x=1:nrow(na.xdata),y=1:ncol(na.xdata),z=na.xdata,show.zero=FALSE,axes=FALSE,ylab="",xlab="",col=col.na, add=TRUE)
     }
   }
@@ -401,7 +402,7 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
           xminrange=minrange
       }
       
-      ## The minrange/maxrange are simetrical around zero. The same threshold are used for positive and negative values
+      ## The minrange/maxrange are symmetrical around zero. The same threshold are used for positive and negative values
       xdata@x[which(xdata@x<=xminrange & xdata@x>0)] <- xminrange
       xdata@x[which(xdata@x>=-xminrange & xdata@x<0)] <- -xminrange
       xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange

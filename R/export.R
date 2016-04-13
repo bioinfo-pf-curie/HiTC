@@ -97,7 +97,7 @@ write.my5C <- function(data2export, xgi, ygi, file, genome="mm9", header=TRUE){
 
     message("Exporting data in '",file,"' ...")
     suppressWarnings(write.table(as.data.frame(as.matrix(data2export)), file=file, quote=FALSE, sep="\t", append=TRUE))
-}
+}##write.my5C
     
 export.my5C <- function(x, file, genome="mm9", per.chromosome=FALSE){
     if (inherits(x, "HTCexp")){
@@ -105,7 +105,7 @@ export.my5C <- function(x, file, genome="mm9", per.chromosome=FALSE){
         data2export <- intdata(x)
         xgi <- x_intervals(x)
         ygi <- y_intervals(x)
-        write.my5C(data2export, xgi, ygi, file=file)
+        write.my5C(data2export, xgi, ygi, genome=genome, file=file)
       
     }else if (inherits(x, "HTClist")){
         if (per.chromosome){
@@ -134,6 +134,15 @@ export.my5C <- function(x, file, genome="mm9", per.chromosome=FALSE){
     invisible(NULL)
 }##export.my5C
 
+###################################
+## saveContactMaps
+##
+## Export HiTC object in images at the good resolution
+##
+## x = an object of class HTCexp
+## con = output file name or prefix
+##
+###################################
 
 saveContactMaps <- function(x, con, device="pdf", per.chrom=FALSE, ...)
 {

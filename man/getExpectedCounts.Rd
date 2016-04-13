@@ -8,19 +8,44 @@
 The expected interaction is defined as the linear relationship between
 the interaction counts and the distance between two loci. See details for additional informations.
 }
-\usage{getExpectedCounts(x, span=0.01, bin=0.005, stdev=FALSE, plot=FALSE)}
+\usage{getExpectedCounts(x, method=c("mean","loess"), ...)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
-  \item{span}{fraction of the data used for smoothing at each x point.}
-  \item{bin}{interpolation parameter}
-  \item{stdev}{logical, calculate the variance}
-  \item{plot}{logical, display lowess smoothing and variance estimation points}
+  \item{method}{method used to estimate the expected counts based on the
+    genomic distance. See details}
+}
+
+\section{For 'mean' method}{
+  \describe{
+    \item{logbin}{if true logarithm based bins are used. In practice, it
+  means that the bin size will change as we move away from the diagonal}
+    \item{step}{multiplicative factor between each bin. Use if logbin is
+  true}
+  }
+}
+\section{For 'loess' method}{
+  \describe{
+    \item{span}{fraction of the data used for smoothing at each x point.}
+    \item{bin}{interpolation parameter}
+    \item{stdev}{logical, calculate the variance}
+    \item{plot}{logical, display lowess smoothing and variance estimation points}
+  }
 }
 
 \details{
 The expected value is the interaction frequency between two loci that one would expect
 based on a sole dependency on the genomic proximity of these fragments in the linear
-genome. This can be estimated using a Lowess regression model.
+genome. This can be estimated using two different methods, mean or loess.
+
+The first method (default) is simply based on the mean counts of each
+diagonal. If logbin is false, the expected counts will be estimated for
+each bin of the contact maps. If logbin is true, the binsize will change
+according to the distance to the diagonal. Short (resp. long) distance will be
+estimated with smaller (larger) bins. This method works for all resolutions.
+
+The second method is based on a Lowess regression model and works
+usually fine with low resolution data (250Kb to 1Mb). At higher
+resolution, the lowess regression might be difficult to fit.
 The lowess smoothing has two parameters : span and bin.
 The span corresponds to the fraction of the data used for smoothing.
 Instead of computing the local polynomial fitting at each data point, a

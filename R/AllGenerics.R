@@ -28,7 +28,7 @@ setGeneric(name="isBinned", def=function(x) standardGeneric("isBinned"))
 setGeneric(name="isIntraChrom", def=function(x) standardGeneric("isIntraChrom"))
 
 ## Operation
-setGeneric(name="directionalityIndex", def=function(x) standardGeneric("directionalityIndex"))
+#setGeneric(name="directionalityIndex", def=function(x) standardGeneric("directionalityIndex"))
 
 setGeneric(name="divide", def=function(x,y) standardGeneric("divide"))
 setGeneric(name="substract", def=function(x,y) standardGeneric("substract"))

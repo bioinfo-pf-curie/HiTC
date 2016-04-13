@@ -7,7 +7,7 @@
 ## file = name of intput file to read
 ###################################
 
-importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALSE){
+importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, rm.trans=FALSE, lazyload=FALSE){
     
     stopifnot(!missing(con))
 
@@ -15,12 +15,12 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALS
         stop("BED files of x/y intervals are required")
     
     message("Loading Genomic intervals ...")
-    xgi <- rtracklayer::import(xgi.bed, format="bed", asRangedData=FALSE)
+    xgi <- rtracklayer::import(xgi.bed, format="bed")
     xgi <- sortSeqlevels(xgi)
     names(xgi) <- id(xgi)
     if (!is.null(ygi.bed)){
-        ygi <- rtracklayer::import(ygi.bed, format="bed", asRangedData=FALSE)
-        sortSeqLevels(ygi)
+        ygi <- rtracklayer::import(ygi.bed, format="bed")
+        sortSeqlevels(ygi)
         names(ygi) <- id(ygi)
     }else{
         ygi <- xgi
@@ -32,6 +32,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALS
 
     id1 <- cdata[,1]
     id2 <- cdata[,2]
+
     pos1 <- match(id1, id(ygi))
     pos2 <- match(id2, id(xgi))      
     
@@ -40,7 +41,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALS
     rm(cdata)
     
     message("Convert 'C' file in HTCexp object(s)")
-    x <- splitCombinedContacts(bigMat, xgi, ygi, allPairwise, lazyload)
+    x <- splitCombinedContacts(bigMat, xgi, ygi, allPairwise, rm.trans, lazyload)
 }##importC
 
 
@@ -55,7 +56,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALS
 ##
 ##################################
 
-import.my5C <- function(file, allPairwise=FALSE, lazyload=FALSE){
+import.my5C <- function(file, allPairwise=FALSE, rm.trans=FALSE, lazyload=FALSE){
     
     ## Read data
     stopifnot(!missing(file))
@@ -66,7 +67,6 @@ import.my5C <- function(file, allPairwise=FALSE, lazyload=FALSE){
     my5CdataM <- as(as.matrix(my5Cdata),"Matrix")
     rownames(my5CdataM) <- rownames(my5Cdata)
     colnames(my5CdataM) <- colnames(my5Cdata)
-
     
     ## Create xgi and ygi object
     gr <- dimnames2gr(my5Cdata, pattern="\\||\\:|\\-", feat.names=c("name","org","chr","start", "end"))
@@ -79,7 +79,7 @@ import.my5C <- function(file, allPairwise=FALSE, lazyload=FALSE){
     
     ## For multiple maps in one file
     if (length(seqlevels(xgi)) > 1 || length(seqlevels(ygi)) > 1){
-      obj <- splitCombinedContacts(my5CdataM, xgi, ygi, allPairwise, lazyload)
+      obj <- splitCombinedContacts(my5CdataM, xgi, ygi, allPairwise, rm.trans, lazyload)
     }else{
       obj <- HTClist(HTCexp(my5CdataM, xgi, ygi, lazyload = lazyload))
     }
@@ -109,7 +109,7 @@ dimnames2gr <- function(x, pattern="\\||\\:|\\-", feat.names=c("name","chr","sta
     colnames(dr)<-feat.names
     rgr <- GRanges(seqnames=dr$chr, ranges = IRanges(start=as.numeric(as.character(dr$start)), end=as.numeric(as.character(dr$end)), names=as.character(dr$name)))
 
-    if (any(colnames(x)!=rownames(x))){
+    if (length(setdiff(colnames(x),rownames(x)))>0){
         cdata <- strsplit(colnames(x), pattern)
         cr <- do.call(rbind.data.frame, cdata)
         colnames(cr)<-feat.names
@@ -134,9 +134,9 @@ dimnames2gr <- function(x, pattern="\\||\\:|\\-", feat.names=c("name","chr","sta
 ##
 ##################################
 
-splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, lazyload=FALSE){
-    
-    chromPair <- pair.chrom(sortSeqlevels(c(seqlevels(xgi), seqlevels(ygi))), use.order = allPairwise)
+splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, rm.trans=FALSE, lazyload=FALSE){
+  chromPair <- pair.chrom(sortSeqlevels(c(seqlevels(xgi), seqlevels(ygi))), use.order = allPairwise, rm.trans=rm.trans)
+  
     obj <- mclapply(chromPair, function(chr) {
         ygi.subset <- ygi[which(seqnames(ygi) == chr[1]),] 
         seqlevels(ygi.subset) <- as.character(unique(seqnames(ygi.subset)))
@@ -152,6 +152,15 @@ splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, lazyload=FALSE)
             }
             colnames(intdata) <- id(xgi.subset)
             rownames(intdata) <- id(ygi.subset)
+            
+            ##Put as NA rows/columns with only 0s
+            ## back to matrix to speed up implementation ...
+            #cl <- class(intdata)
+            #intdata <- as.matrix(intdata)
+            #intdata[which(rowSums(intdata, na.rm=TRUE)==0),] <- NA
+            #intdata[,which(colSums(intdata, na.rm=TRUE)==0)] <- NA
+            #intdata <- as(intdata, cl)
+
             HTCexp(intdata, xgi.subset, ygi.subset, lazyload = lazyload)
         }
     })
@@ -169,7 +178,7 @@ splitCombinedContacts <- function(x, xgi, ygi, allPairwise=TRUE, lazyload=FALSE)
 ##
 ##################################
 
-pair.chrom <- function(chrom, use.order=TRUE, rm.cis=FALSE){
+pair.chrom <- function(chrom, use.order=TRUE, rm.cis=FALSE, rm.trans=FALSE){
     v <- unique(chrom)
     if (use.order)
       z <- unlist(sapply(1:length(v),function(i){paste(v[i], v)}))
@@ -181,6 +190,8 @@ pair.chrom <- function(chrom, use.order=TRUE, rm.cis=FALSE){
     if (rm.cis){
       lz <- lz[which(sapply(lapply(lz, duplicated), sum)==0)]
     }
+    if (rm.trans){
+      lz <- lz[which(sapply(lapply(lz, duplicated), sum)!=0)]    }
     lz
 }##pair.chrom
 

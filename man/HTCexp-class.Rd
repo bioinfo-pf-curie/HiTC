@@ -125,7 +125,7 @@
       symmetrical, i.e inherits the \code{symmetricMatrix} class}
     \item{normPerReads(x)}{normalize the contact matrix by the total
       number of reads of the matrix.}
-    \item{normPerExpected(x, stdev=TRUE)}{normalize the contact matrix by the expected
+    \item{normPerExpected(x, ...)}{normalize the contact matrix by the expected
       number of reads based on the distance between two loci. See details.}
     \item{normPerZscore(x)}{Defunct. See normPerExpected method}
     \item{normPerTrans(x, xtrans, ytrans, method="sum")}{Normalize cis contact map based on the trans
@@ -156,9 +156,7 @@
 \author{Nicolas Servant}
 \details{
   The \code{normPerExpected} method estimates the expected interactions based on a the dependency on the genomic
-  proximity between two loci. If \code{stdev} is false, the ratio observed/expected is returned,
-  otherwise, the zscore ((observed-expected)/stdev) is returned
-  Look at the   \code{\link{getExpectedCounts}} function for details.\cr
+  proximity between two loci. See \code{\link{getExpectedCounts}} function for details.\cr
   
   The \code{normPerTrans} method is based on the assumption that all trans contacts should be the same. Thus, the cis contacts can be normalized by the interaction level of trans data.
   The \code{xtrans} trans map has to share its 'xgi' ranges with the
