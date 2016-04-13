@@ -6,7 +6,8 @@
   Import 5C or Hi-C data from list file
 }
 
-\usage{importC(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, lazyload=FALSE)}
+\usage{importC(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE,
+rm.trans=FALSE, lazyload=FALSE)}
 \arguments{
   \item{con}{input csv file. See details}
   \item{xgi.bed}{BED file describing the 'x' Intervals (i.e. column
@@ -15,6 +16,7 @@
     contact map}
   \item{allPairwise}{logical; generate all pairwise chromosomal contact
     maps, i.e chr1-chr2, chr2-chr1}
+  \item{rm.trans}{if true, returns only intra-chromosomal maps}
   \item{lazyload}{logical; see details}
 }
 \details{
