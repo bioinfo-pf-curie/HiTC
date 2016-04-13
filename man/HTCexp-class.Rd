@@ -12,6 +12,9 @@
 \alias{divide,HTCexp,HTCexp-method}
 \alias{forceSymmetric,HTCexp,character-method}
 \alias{forceSymmetric,HTCexp,missing-method}
+\alias{forceTriangular}
+\alias{forceTriangular-method}
+\alias{forceTriangular,HTCexp-method}
 \alias{intdata}
 \alias{intdata-method}
 \alias{intdata,HTCexp-method}
@@ -27,6 +30,8 @@
 \alias{isSymmetric}
 \alias{isSymmetric-methods}
 \alias{isSymmetric,HTCexp-method}
+\alias{isTriangular-methods}
+\alias{isTriangular,HTCexp-method}
 \alias{id}
 \alias{id-methods}
 \alias{id,GRanges-method}
@@ -119,6 +124,9 @@
       same size and if the full genomic range is covered}
     \item{forceSymmetric(x)}{force the interaction data to
       'symmetricMatrix'}
+    \item{forceTriangular(x)}{force the interaction data to triangular,
+  ie. symmetric. Lower triangle of the matrix is set to zero, therefore
+  reducing the size of the data in memory}
     \item{isIntraChrom(x)}{return TRUE if the current
       \code{signature("HTCexp")} object contains intrachromosomal contact data}
     \item{isSymmetric(x)}{return TRUE if the contact map is

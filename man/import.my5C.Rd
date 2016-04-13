@@ -6,12 +6,13 @@
   Import data from my5C webtool
 }
 
-\usage{import.my5C(file, allPairwise=FALSE, lazyload=FALSE)}
+\usage{import.my5C(file, allPairwise=FALSE, rm.trans=FALSE, lazyload=FALSE)}
 
 \arguments{
   \item{file}{input file from the my5C webtool}
   \item{allPairwise}{logical; generate all pairwise chromosomal
     contact maps, i.e chr1-chr2, chr2-chr1}
+  \item{rm.trans}{if true, only intra-chromosomal maps are loaded}
   \item{lazyload}{logical; force the intra-chromosomal contact maps to
   be stored as triangular matrix}
 }

@@ -51,7 +51,7 @@ exportClasses("HTCexp", "HTClist")
 ##Export Methods
 exportMethods(
     "intdata", "intdata<-",
-    "id", "id<-",
+    "id",
     "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
     "getCombinedIntervals", "getCombinedContacts",
     "forcePairwise", "forceTriangular",

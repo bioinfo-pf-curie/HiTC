@@ -6,13 +6,14 @@
   Generate pearson correlation map, usually used to call
     chromosomal compartments
 }
-\usage{getPearsonMap(x, normPerExpected=TRUE, center=TRUE)}
+\usage{getPearsonMap(x, normPerExpected=TRUE, center=TRUE, ...)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{normPerExpected}{normalized by expected interaction using the loess
     calculation of distance dependency. see normPerExpected}
   \item{center}{default=true. center the observed/expected map before calculating the
     Pearson correlation}
+  \item{...}{additional parameters passed to \code{normPerExpected}}
 }
 
 \details{

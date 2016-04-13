@@ -29,7 +29,7 @@ setMethod("normPerExpected", signature=c("HTClist"), definition=function(x, ...)
 
   ## estimated expected counts for all cis maps
   exp <- lapply(xintra, function(xx){
-    r <- getExpectedCounts(xx, method="mean")
+    r <- getExpectedCounts(xx, method="mean", ...)
     r$exp.interaction
   })
 

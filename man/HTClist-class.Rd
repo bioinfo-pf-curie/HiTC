@@ -24,6 +24,7 @@
 \alias{isPairwise,HTClist-method}
 \alias{isBinned,HTClist-method}
 \alias{isIntraChrom,HTClist-method}
+\alias{normPerExpected,HTClist-method}
 \alias{plot,HTClist,ANY-method}
 \alias{range,HTClist-method}
 \alias{ranges}
@@ -75,6 +76,8 @@
     \item{getCombinedContacts(x)}{merge all contact maps in a single big matrix}
     \item{getCombinedIntervals(x, merge=FALSE)}{merge all x and y intervals in single
   GRangesList object, or in a single GRanges object if merge=TRUE}
+    \item{normPerExpected(x)}{normalized by genomic distance all
+  intra-chromosomal maps. See details}
     \item{ranges(x)}{applies 'range' to each element in 'x'}
     \item{range(x)}{return the reduce range of all elements in 'x'}
     \item{reduce(x, chr, cis=TRUE, trans=TRUE)}{reduce a HTClist object
@@ -108,6 +111,10 @@
   carefully. This method merges all single contact maps in one
   genome-wide map, therefore creating a very big matrix requiring memory
   space. However, this method is useful for many genome-wide analysis.
+  The \code{normPerExpected} method applied to HTClist object is only
+  available with the 'mean' method (see \code{getExpectedCounts} for
+  details). In this case, the mean counts per distance are calculated
+  over all intra-chromosomal maps.
 }
 
 \seealso{

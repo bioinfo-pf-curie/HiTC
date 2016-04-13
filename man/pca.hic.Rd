@@ -5,13 +5,14 @@
 \description{
   Perform Principle Component Analysis on Hi-C contact map
 }
-\usage{pca.hic(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE)}
+\usage{pca.hic(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE, ...)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{normPerExpected}{normalized by expected interaction using the loess
     calculation of distance dependency. see normPerExpected}
   \item{npc}{numeric; number of first principal component to return}
   \item{asGRangesList}{if TRUE a GRangesList object is returned where the scores represent the eigenvector}
+  \item{...}{additional parameters passed to \code{normPerExpected} function}
 }
 
 \details{
