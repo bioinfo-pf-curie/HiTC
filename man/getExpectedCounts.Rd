@@ -22,6 +22,8 @@ the interaction counts and the distance between two loci. See details for additi
   means that the bin size will change as we move away from the diagonal}
     \item{step}{multiplicative factor between each bin. Use if logbin is
   true}
+    \item{filter.low}{fraction of low counts to filter before
+  normalizing. default: 0.05.}
   }
 }
 \section{For 'loess' method}{

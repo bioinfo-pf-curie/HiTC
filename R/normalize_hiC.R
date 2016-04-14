@@ -95,7 +95,7 @@ logbins<- function(from, to, step=1.05, N=NULL) {
   }
 }
 
-getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05){
+getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05, filter.low=0.05){
 
   xdata <- intdata(x)
   N <- dim(xdata)[1]
@@ -107,11 +107,16 @@ getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05){
     bins <- 1:N
   }
 
-  message("Estimate expected per mean ...")
+  message("Estimate expected using mean contact frequency per genomic distance ...")
   
   xdata <- as.matrix(xdata)
-  rc <- which(colSums(xdata, na.rm=TRUE)==0)
-  rr <- which(rowSums(xdata, na.rm=TRUE)==0)
+  rc <- colSums(xdata, na.rm=TRUE)
+  ##rc <- which(rc==0)
+  print (quantile(rc[which(rc>0)], probs=filter.low))
+  rc <- which(rc <= ceiling(quantile(rc[which(rc>0)], probs=filter.low)))
+  rr <- rowSums(xdata, na.rm=TRUE)
+  ##rr <- which(rr==0)
+  rr <- which(rr <=  ceiling(quantile(rr[which(rr>0)], probs=filter.low)))
 
   ## rm line with only zeros
   xdata[rr,] <- NA
