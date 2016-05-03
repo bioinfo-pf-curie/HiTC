@@ -1,0 +1,74 @@
+#############################
+##
+## IMPORT
+##
+#############################
+
+##For S4 usage
+import("methods")
+#import("Matrix")
+import("GenomicRanges")
+import("IRanges")
+
+##Package used in HiTC
+importFrom("graphics", "plot", "image", "abline", "axis", "text")
+importFrom("grDevices", "col2rgb")
+importFrom("stats", "prcomp")
+importFrom("RColorBrewer", "brewer.pal")
+importFrom("Matrix", "cBind", "rBind", "Matrix", "sparseMatrix", "t")
+importFrom("GenomeInfoDb", "seqlevels", "sortSeqlevels", "seqlengths")
+importFrom("parallel", "mclapply")
+
+##importFrom("MASS", "glm.nb")
+importMethodsFrom("Biostrings", "detail")
+importMethodsFrom("rtracklayer", "import", "export")
+importMethodsFrom("Matrix", "colMeans", "colSums", "crossprod", "diag", "forceSymmetric", "isTriangular", "rowSums", "nnzero")
+
+#############################
+##
+## EXPORT
+##
+#############################
+
+##Export functions and generics
+export(
+    "HTCexp","HTClist",
+    "binningC",
+    "exportC", "export.my5C", "importC", "import.my5C",
+    "removeIntervals", "setIntervalScale",   
+    "CQC", "intervalsDist",
+    "extractRegion",
+    "pca.hic","getPearsonMap",
+    "getExpectedCounts", "normLGF","normICE", "setGenomicFeatures",
+    "getAnnotatedRestrictionSites", "getRestrictionFragmentsPerChromosome",
+    "discretize",
+    "directionalityIndex"
+)
+
+##Export classes
+exportClasses("HTCexp", "HTClist")
+
+##Export Methods
+exportMethods(
+    "intdata", "intdata<-",
+    "id",
+    "y_intervals", "y_intervals<-", "x_intervals", "x_intervals<-", "xy_intervals",
+    "getCombinedIntervals", "getCombinedContacts",
+    "forcePairwise", "forceTriangular",
+    "isComplete", "isPairwise",
+    "isBinned", "isIntraChrom",
+    "divide", "substract",
+    "mapC",
+    "summary",
+    "as.list", "c", "detail", "show",
+    "plot",
+    "seqlevels",
+    "range", "ranges", "reduce",
+    "substract", "divide",
+    "forcePairwise", "forceSymmetric", "forceTriangular",
+    "isTriangular", "isSymmetric",    
+    "normPerReads", "normPerTrans", "normPerExpected"
+    )
+
+
+

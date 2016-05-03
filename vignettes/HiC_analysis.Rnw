@@ -1,0 +1,242 @@
+%\VignetteIndexEntry{Hi-C data analysis using HiTC}
+%\VignetteDepends{}
+%\VignetteKeywords{next-generation sequencing}
+%\VignettePackage{HiTC} % name of package
+
+%%%% HEAD SECTION: START EDITING BELOW %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt, a4paper, fleqn]{article}
+
+<<style, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex(use.unsrturl=FALSE)
+@ 
+
+\usepackage{geometry}
+%\usepackage{color}
+%\definecolor{darkblue}{rgb}{0.0,0.0,0.75}
+\definecolor{mygray}{gray}{0.90}
+%\usepackage[%
+%baseurl={http://www.bioconductor.org},%
+%pdftitle={HiTC - Hi-C data analysis},%
+%pdfauthor={Nicolas Servant},%
+%pdfsubject={HiTC Vignette},%
+%pdfkeywords={Bioconductor},%
+%pagebackref,bookmarks,colorlinks,linkcolor=darkblue,citecolor=darkblue,%
+%filecolor=darkblue,urlcolor=darkblue,pagecolor=darkblue,%
+%raiselinks,plainpages,pdftex]{hyperref}
+
+%\usepackage[utf8]{inputenc} 
+%\usepackage{verbatim} % for multi-line comments
+%\usepackage{amsmath,a4,t1enc, graphicx}
+\usepackage{natbib}
+%\bibpunct{(}{)}{;}{a}{,}{,}
+
+%\parindent0mm
+%\parskip2ex plus0.5ex minus0.3ex
+
+%\newcommand{\Robject}[1]{{\texttt{#1}}}
+%\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+%\newcommand{\Rpackage}[1]{{\textit{#1}}}
+%\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+%\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+%\newcommand{\phead}[1]{{\flushleft \sf \small \textbf{#1} \quad}}
+% \newcommand{\myincfig}[3]{%
+%   \begin{figure}[h!tb]
+%     \begin{center}
+%       \includegraphics[width=#2]{#1}
+%       \caption{\label{#1}\textit{#3}}
+%     \end{center}
+%   \end{figure}
+% }
+%\addtolength{\textwidth}{2cm}
+%\addtolength{\oddsidemargin}{-1cm}
+%\addtolength{\evensidemargin}{-1cm}
+%\addtolength{\textheight}{2cm}
+%\addtolength{\topmargin}{-1cm}
+%\addtolength{\skip\footins}{1cm}
+
+
+%%%%%%% START EDITING HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\SweaveOpts{prefix.string = ./HiTC, eps=false, keep.source=TRUE, eval=TRUE, echo=TRUE} % produce no 'eps' figures
+%\setkeys{Gin}{width=0.5\textwidth}
+
+\title{\textbf{Analyzing Hi-C data with the \Rpackage{HiTC} BioC package}}
+\author{
+\href{mailto:nicolas.servant@curie.fr}{Nicolas Servant}
+}
+\maketitle
+
+%\tableofcontents
+%\newpage
+
+\section{Introduction}
+The Hi-C technic was first introduced by \cite{Lieberman-Aiden2009} to simultaneoulsy detect all chromosomal interactions in a single experiment. The Hi-C aims at measuring the population-averaged frequency at which two genomic loci physically interact in three-dimensional space. Briefly, after a first crosslink and digestion with a restriction enzyme, all genomic fragments are labeled with a biotinylated nucleotide before ligation. These junctions can then be purified efficiently by streptavidin-coated magnetic beads, and finaly sequenced using an Illumina paired-end protocol.\\
+After sequencing, raw reads have to be processed to generate the inter/intrachromosomal contact maps. The main steps of this processing are described in \cite{Imakaev2012}. The raw paired-end reads are first independently aligned on a reference genome. The two mates from the same DNA fragment therefore define the two interacting loci on the genome. Imakaev et al. also proposed an iterative mapping procedure to rescue the reads spanning the ligation junction (and thus containing the two interactors in a single read).\\
+After the reads alignment, the Hi-C molecule generated from the DNA digestion and the ligation products are reconstructed using the position and direction of the sequenced mates. Self-circle ligations, single side reads and dangling ends are discarded, and the valid ligation products aligned to different restriction fragments and face toward the restriction site are used to reconstruct the contact maps. The interaction frequencies are therefore estimated by counting how many times two genomic bins (at a given resulution) were found as interactors. The data resolution usually depends on the sequencing depth. In their first paper, \cite{Lieberman-Aiden2009} generated data at a resolution of 1Mb (up to 100kb) and reveal the compartmentalization of the genome into regions of open and closed (active and inactive) chromatin as well as the three-dimensional structure of the genome (fractal globule). More recently, \cite{Dixon2012} generated 20 to 40kb contact maps in order to go deeper in the conformation structure and to study topological domains (\cite{Nora2012a}).\\
+The \Rpackage{HiTC} is designed to import processed data as contact maps. In order to generate these maps from raw sequencing reads a couple of pipeline are available on the web. We have recently developed the \href{https://github.com/nservant/HiC-Pro}{HiC-Pro} software which is an optimzed pipeline to process Hi-C data from raw reads to normalized contact maps \cite{Servant2015}. The outputs of \href{https://github.com/nservant/HiC-Pro}{HiC-Pro} is fully compatible with the HiTC package.\\
+This vignette is based on the analysis of the \cite{Dixon2012} contact maps, at a resolution of 40kb. These data are stored as a \Rclass{HTClist} object, i.e. a list of inter/intrachromosomal contact maps, one for each pair of chromosomes. The goal of this vignette is to describe how the \Rpackage{HiTC} R package can be used to explore such data.\\
+
+If you use \Rpackage{HiTC} for analyzing your data, please cite:
+\begin{itemize}
+\item Servant N., Lajoie B.R., Nora E.P., Giorgetti L., Chen C., Heard E., Dekker J., Barillot E. (2012) HiTC : Exploration of High-Throughput 'C' experiments. \textit{Bioinformatics}.
+\end{itemize}
+
+
+\section{Working with Hi-C data}
+
+The \Rclass{HTCexp} (High-Throughput 'C' experiment) class aims at representing a single 'C' experiment, characteriez by :
+  \begin{itemize}
+  \item A contact map (i.e a \Rclass{Matrix})
+  \item Two \Rclass{GRanges} objects that describe each features of the contact map, respectively, the x (i.e. columns) and y (i.e. rows) labels of the matrix. In the context of 5C, these two \Rclass{GRanges} objects will describe the set of forward and reverse primers, and for the Hi-C the binned genomic intervals at a given resolution.\\
+\end{itemize}
+
+Whereas a 5C dataset is usually composed of a single intrachromosomal contact map (i.e. \Rclass{HTCexp} object), a Hi-C dataset is represented by a list of inter/intrachromosomal contact maps, characterized by the physical interactions of each pair of chromosomes. The \Rclass{HTClist} was designed as a list of \Rclass{HTCexp} objects, with a couple of dedicated methods.\\
+  
+Working at a resolution of 40kb (or even at a lower resolution) can result in an intensive memory usage. Assuming that every restriction fragment could ligate to any other, there are on the order of $10^{11}$ possible HindIII restriction fragment pairs in the Human genome. In addition to the fact that the generation of a Hi-C library with enough complexity or sequence depth to cover all possible restriction fragment interactions is difficult, this will result in contact maps with a very high level of sparsity. The \Rpackage{HiTC} package provides an efficient memory storage of the data, based on the \Rclass{sparseMatrix} class and the \Rpackage{Matrix} R package. In addition, binned intrachromosomal maps are expected to be symmetrical around the diagonal and can thus be stored as symmetrical matrix (\Rclass{dsCMatrix} Matrix class). In the same way, the interchromosomal maps are also stored once as the chr1-chr2 map is expected to be the transposed of the chr2-chr1 map.\\
+
+<<head>>=
+require(HiTC)
+require(HiCDataHumanIMR90)
+data(Dixon2012_IMR90)
+
+show(hic_imr90_40)
+class(intdata(hic_imr90_40$chr1chr1))
+object.size(hic_imr90_40)
+@
+
+\section{Description of the Hi-C data}
+
+The \Rpackage{HiTC} package provides several methods to describe a \Rclass{HTClist} object.
+<<describe>>=
+## Show data
+show(hic_imr90_40)
+## Is my data complete (i.e. composed of intra + the related inter chromosomal maps)
+isComplete(hic_imr90_40)
+## Note that a complete object is not necessarily pairwise 
+## (is both chr1-chr2 and chr2-chr1 stored ?)
+isPairwise(hic_imr90_40)
+## Which chromosomes ?
+seqlevels(hic_imr90_40)
+## Details about a given map
+detail(hic_imr90_40$chr6chr6)
+## Descriptive statistics
+head(summary(hic_imr90_40))
+@ 
+
+\section{Hi-C Visualization}
+
+The Hi-C data can be visualized as contact maps, representing the contact frequencies between two chromosomes, or at the level of the genome.
+By default, objects from the \Rclass{HTClist} class will be represented as an heatmap, whereas object from the \Rclass{HTCexp} class (i.e. single map) as a triangle. Depending on what you want to visualize the resolution of the map can also be changed (from high to lower resolution).\\
+
+<<plot1, fig=TRUE, width=3, height=3>>=
+## Go back to a smaller dataset (chr21, 22, X) at lower resolution
+sset <- reduce(hic_imr90_40, chr=c("chr5","chr6","chr7"))
+imr90_500 <- HTClist(mclapply(sset, binningC, 
+                          binsize=500000, bin.adjust=FALSE, method="sum", step=1))
+mapC(imr90_500)
+@ 
+
+
+As we can see on this exemple, only half of the inter-chromosomal maps as stored and thus plotted. To display the full pairwise maps, methods such as \Rmethod{forcePairwise}, or \Rmethod{forceSymmetric} can be used to switch from a pairwise (and more memory consuming) form to a reduced form.
+
+<<plot2, fig=TRUE, width=2, height=2>>=
+mapC(forcePairwise(imr90_500), maxrange=200)
+@ 
+
+
+\section{Hi-C Normalization}
+
+\subsection{Back to restriction fragments}
+
+In addition to descriptive methods on the \Rclass{HTClist} object, the \Rpackage{HiTC} package provides functions to extract biological information related to the data processing. These functions are useful for data normalization, in order to extract the expected bias at the level of the restriction fragment.
+
+<<resFrag>>=
+## Example on chromosome X
+## GRanges of restriction fragments after HindIII digestion
+resFrag <- getRestrictionFragmentsPerChromosome(resSite="AAGCTT", overhangs5=1, 
+                                                chromosomes="chr6", 
+                                                genomePack="BSgenome.Hsapiens.UCSC.hg18")
+resFrag
+@ 
+
+\subsection{Local genomic feature (LGF) normalization}
+As any sequencing application, the Hi-C library preparation contains bias, which can be broadly classified as ligation bias and sequence content bias. These effects were first described by \cite{Yaffe2011} and require appropriate normalization methods.\\
+\cite{Hu2012} recently proposed a linear model strategy to normalize the data. Their method (named HiCNorm) requires that the bias was infered from the restriction fragments and then used at the Hi-C resolution. 
+The \Rfunction{getAnnotatedRestrictionSites} function aims at annotating the restriction fragments according to their mappability (optional), GC content and effective length features. The local genomic features can be then assign to each genomic region, and normalized using the \cite{Hu2012} method.\\
+In the following example, we will focus on chromosome 6 only. The same code can be easily applied on a \Rclass{HTClist} object using the \Rfunction{mclapply} function.
+In the same way, we will not use here the mappability information for space issue. In practice, the mappability track can be downloaded from the ENCODE project data, and is important to normalize the Hi-C data.
+
+<<annot>>=
+## Annotation of genomic features for LGF normalization
+## Example on chromosome 6
+
+## Load mappability track
+require(rtracklayer)
+##map_hg18 <- import("wgEncodeCrgMapabilityAlign100mer_chr6.bw",format="BigWig")
+map_hg18 <- NULL
+cutSites <- getAnnotatedRestrictionSites(resSite="AAGCTT", overhangs5=1, 
+                                         chromosomes="chr6", 
+                                         genomePack="BSgenome.Hsapiens.UCSC.hg18", 
+                                         wingc=200, mappability=map_hg18, winmap=500)
+
+head(cutSites)
+## Annotation of Hi-C object
+imr90_500_chr6annot <- setGenomicFeatures(imr90_500$chr6chr6, cutSites)
+y_intervals(imr90_500_chr6annot)
+@ 
+
+<<normLGF, eval=FALSE>>=
+## LGF normalization
+imr90_500_LGF <- normLGF(imr90_500_chr6annot)
+@ 
+
+
+\subsection{Iterative correction and eigenvector decomposition (ICE) normalization}
+
+The ICE normalization is one of the most popular method to correct data from Hi-C bias. This method is based on the assumption of equal visibility of each genomic locus. The matrix of contact probabilities, $M$, for all given pairs of regions ($i$,$j$) is thus normalized such as $\sum\limits_{i,i\neq j,j\pm 1}M_{ij} = 1$ for each region $j$. Note that running the ICE normalization method can be memory consuming because it uses the full genome matrix, and then store the bias vectors. If we advice to use apply the ICE normalization on a full Hi-C dataset (using inter and intrachromosomal maps), the \Rpackage{HiTC} package also allows to run it on a single intrachromosomal map.\\
+
+<<normICE, fig=TRUE, width=3, height=3>>=
+imr90_500_ICE <-  normICE(imr90_500, max_iter=10)
+mapC(HTClist(imr90_500_ICE$chr6chr6), trim.range=.95, 
+     col.pos=c("white", "orange", "red", "black"))
+@ 
+
+\section{Detection of Topological Domains}
+
+Recent studies on a high resolution human and mouse Hi-C dataset have discovered that the genome organization can be further divided into megabase-long and evolutionarily conserved topological domains (TADs), with high frequencies of intra-domain chromatin interactions but infrequent inter-domain chromatin interactions (\cite{Nora2012a}, \cite{Dixon2012}). More recently, \cite{Phillips-Cremins2013a} have demonstrated that the cell-type-specific chromatin organization seems to occur at the sub-megabase scale involving different ligation proteins and epigenomic mechanisms.\\
+The following code shows how to focus on TADs, such as the ones describes in IMR90 around the Hox genes.
+
+<<tads, fig=TRUE, width=5, height=3>>=
+hox <- extractRegion(hic_imr90_40$chr6chr6, chr="chr6", from=50e6, to=58e6)
+plot(hox, maxrange=50, col.pos=c("white", "orange", "red", "black"))
+@ 
+
+Different algorithms have been proposed to detect TADs. The directionality index was proposed by \cite{Dixon2012} as an input to their HMM model.
+<<di, fig=TRUE, width=6, height=4>>=
+di<-directionalityIndex(hox)
+barplot(di, col=ifelse(di>0,"darkred","darkgreen"))
+@ 
+
+\small
+\section*{Package versions}
+This vignette was generated using the following package versions:
+<<sessionInfo, echo=FALSE, results=tex>>=
+toLatex(sessionInfo(), locale=FALSE)
+@
+
+\section*{Acknowledgements}
+Many thanks to Nelle Varoquaux and Pierre Gestraud for useful discussion and help in developping this R package. Thank you to Ming Hu who developped the HiCNorm method, and help us in the integration of its method in the HiTC package. A special thanks to the \Rpackage{HiTC} users for useful discussions and idea to improve it.
+
+\newpage
+\small
+%%% BIBLIOGRAPHY STARTS HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{abbrvnat}
+\bibliography{HiTC}
+
+%\begin{thebibliography}{}
+%\end{thebibliography}
+
+\end{document}

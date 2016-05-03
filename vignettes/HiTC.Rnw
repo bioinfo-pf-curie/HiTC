@@ -1,0 +1,384 @@
+%\VignetteIndexEntry{Introduction to HiTC package}
+%\VignetteDepends{}
+%\VignetteKeywords{next-generation sequencing}
+%\VignettePackage{HiTC} % name of package
+
+%%%% HEAD SECTION: START EDITING BELOW %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt, a4paper, fleqn]{article}
+
+<<style, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex(use.unsrturl=FALSE)
+@ 
+
+\usepackage{geometry}
+%\usepackage{color}
+%\definecolor{darkblue}{rgb}{0.0,0.0,0.75}
+\definecolor{mygray}{gray}{0.90}
+%\usepackage[%
+%baseurl={http://www.bioconductor.org},%
+%pdftitle={HiTC - High Throughput analysis of 'C' experiments},%
+%pdfauthor={Nicolas Servant},%
+%pdfsubject={HiTC Vignette},%
+%pdfkeywords={Bioconductor},%
+%pagebackref,bookmarks,colorlinks,linkcolor=darkblue,citecolor=darkblue,%
+%filecolor=darkblue,urlcolor=darkblue,pagecolor=darkblue,%
+%raiselinks,plainpages,pdftex]{hyperref}
+
+%\usepackage[utf8]{inputenc} 
+%\usepackage{verbatim} % for multi-line comments
+%\usepackage{amsmath,a4,t1enc, graphicx}
+\usepackage{natbib}
+%\bibpunct{(}{)}{;}{a}{,}{,}
+
+%\parindent0mm
+%\parskip2ex plus0.5ex minus0.3ex
+
+%\newcommand{\Robject}[1]{{\texttt{#1}}}
+%\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+%\newcommand{\Rpackage}[1]{{\textit{#1}}}
+%\newcommand{\Rclass}[1]{{\textit{#1}}}
+%\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+%\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+%\newcommand{\phead}[1]{{\flushleft \sf \small \textbf{#1} \quad}}
+% \newcommand{\myincfig}[3]{%
+%   \begin{figure}[h!tb]
+%     \begin{center}
+%       \includegraphics[width=#2]{#1}
+%       \caption{\label{#1}\textit{#3}}
+%     \end{center}
+%   \end{figure}
+% }
+%\addtolength{\textwidth}{2cm}
+%\addtolength{\oddsidemargin}{-1cm}
+%\addtolength{\evensidemargin}{-1cm}
+%\addtolength{\textheight}{2cm}
+%\addtolength{\topmargin}{-1cm}
+%\addtolength{\skip\footins}{1cm}
+
+
+%%%%%%% START EDITING HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\SweaveOpts{prefix.string = ./HiTC, eps=false, keep.source=TRUE, eval=TRUE, echo=TRUE} % produce no 'eps' figures
+%\setkeys{Gin}{width=0.5\textwidth}
+
+\title{\textbf{HiTC - Exploration of \textbf{Hi}gh \textbf{T}hroughput '\textbf{C}' experiments}}
+\author{
+\href{mailto:nicolas.servant@curie.fr}{Nicolas Servant}
+}
+\maketitle
+
+%\tableofcontents
+%\newpage
+
+% \begin{center}
+%     \fcolorbox{black}{mygray}{
+%      \begin{minipage}[c]{1\textwidth}
+%       \textbf{HiTC - Major Release}\\\\ Since version 1.5.2 the HiTC package now depends on the \Rpackage{Matrix} package. The main reason of this change is an improvment of the memory usage of the package in order to deal with recent high resolution Hi-C data. See section~\ref{sec:speedandmem} for details.
+    
+%      \end{minipage}}
+% \end{center}
+\vspace{2cm}
+
+\section{Introduction}
+Chromosome Capture Conformation (3C) was first introduced by \cite{Dekker2002a} ten years ago. The 3C technique aims in detecting physical contact between pairs of genomic loci and is now widely used to detect intrachromosomal (cis) and interchromosomal (trans) interactions between genes and regulatory elements. The development of the 3C-based techniques has changed our vision of the nulcear oragnization  (see \cite{Wit2012} for a review).\\
+With the development of high throughput analyses, and in particular second-generation sequencing, the 3C has been adapted to study in parallel physical interactions between many loci, and thus increase the scale at which interactions between genomic loci can be detected (4C - Circular 3C, \cite{Simonis2006}, \cite{Zhao2006}; 5C - 3C Carbone Copy, \cite{Dostie2006}). More recently, this technique was further extended to obtain detailed insights into the general three-dimensional arrangements of complete genomes (Hi-C, \cite{Lieberman-Aiden2009}).
+
+While the use of high-throuput 'C' techniques is expected to increase in the coming years, it also creates some new statistical and bioinformatics challenges. In this way, publicly available bioinformatics tools, as well as clear analysis strategy are still lacking. The \href{http://my5c.umassmed.edu/welcome/welcome.php}{my5C web browser} was proposed by \cite{Lajoie2009} to visualize, transform and analyze 5C data. However, the my5C webtool is targeted to end-users and biologists to prepare their 5C experiments and to handle their data but is not dedicated
+to the development of new statistical algorithms.
+
+The \Biocpkg{HiTC} R package has been developed to offer a bioinformatic environment to explore high-troughput 'C' data. One advantage of this package is that it operates within the open source Bioconductor framework, and thus, offers new opportunities for futur development in this field. The current version of the package provides the basic visualization, transformation and normalization functions described in \cite{Lajoie2009}, but also some new functionnalities such as data import, new visualization functions, annotation and other data transformation. Our goal is also to provide a flexible basis for further development, aiming at the integration of new analysis algorithm that are being developped (\cite{Yaffe2011}, \cite{Hu2012}, \cite{Imakaev2012})
+
+This document briefly describes how to use the \Biocpkg{HiTC} R package. The package is built on the functionality of Bioconductor packages such as \Biocpkg{IRanges} and \Biocpkg{GenomicRanges}, and provides new classes and methods to handle with high-throughput 'C' data. It is especially suited to 5C and Hi-C data handling, but can also in principle be used for 4C, though specific needs of 4C users may be best met by \Biocpkg{r3Cseq} R package.\\
+Even if the 5C and Hi-C approaches are derived from the same 3C technique, strong differences in their protocol can also be noticed. While 5C enables analysis of interactions between many loci, it also required an extensive number of primers, which is not suitable for a genome-wide analysis as the Hi-C. Thus, the pre-processing of these two types of data is totally different with, for instance, two different mapping strategies.
+
+If you use \textit{HiTC} for analyzing your data, please cite:
+\begin{itemize}
+\item Servant N., Lajoie B.R., Nora E.P., Giorgetti L., Chen C., Heard E., Dekker J., Barillot E. (2012) HiTC : Exploration of High-Throughput 'C' experiments. \textit{Bioinformatics}.
+\end{itemize}
+
+\section{Getting started}
+
+The current version of the \Biocpkg{HiTC} package was developped to work on processed 5C, Hi-C or other high-throughput 3C data.\\
+The \Rclass{HTCexp} (High-Throughput 'C' experiment) class aims at representing a single 'C' experiment, characteriez by :
+  \begin{itemize}
+  \item An interaction map (i.e a \Rclass{Matrix})
+  \item Two \Rclass{GRanges} objects that describe each features of the interaction matrix, respectively, the x (i.e. columns) and y (i.e. rows) labels of the interaction matrix. Basically, in the context of 5C, these objects will be the forward and reverse primers, and for the Hi-C the binned genomic intervals.
+\end{itemize}
+
+Note that \Biocpkg{HiTC} was not designed to processed chromatine conformation capture from raw reads, but takes contact maps as input. In order to process Hi-C data from raw sequencing reads, you can use the HiC-Pro pipeline \cite{Servant2015} which is freely available at \href{https://github.com/nservant/HiC-Pro}{https://github.com/nservant/HiC-Pro}. Data processed with HiC-Pro can then be loaded into the R environment using the importC function of \Biocpkg{HiTC}.
+
+Whereas a 5C dataset can be composed of a single cis interaction map (i.e. \Rclass{HTCexp} object), a complete Hi-C dataset is composed of a list of cis and trans interaction maps, characterized by the physical interactions of each pair of chromosomes. The \Rclass{HTClist} class represents a list of \Rclass{HTCexp} objects and provides dedicated methods and visualization functions.
+
+<<head>>=
+library(HiTC)
+showClass("HTCexp")
+showClass("HTClist")
+@ 
+
+\section{Working with 'C' Data}
+\Rclass{HTCexp} or \Rclass{HTClist} objects can be easily created using the dedicated constructors. Additional functions to import data from files are also available.
+
+\subsection{A simple example}
+
+<<importSimple>>=
+require(Matrix)
+## Two genome intervals objects with primers informations
+reverse <- GRanges(seqnames=c("chr1","chr1"), 
+                   ranges = IRanges(start=c(98831149, 98837507), 
+                   end=c(98834145, 98840771), 
+                   names=c("REV_2","REV_4")))
+
+forward <- GRanges(seqnames=c("chr1","chr1"), 
+                   ranges = IRanges(start=c(98834146, 98840772), 
+                   end=c(98837506, 98841227), 
+                   names=c("FOR_3","FOR_5")))
+
+## A matrix of interaction counts
+interac <- Matrix(c(8463, 7144, 2494, 8310), ncol=2)
+colnames(interac) <- c("REV_2","REV_4")
+rownames(interac) <- c("FOR_3","FOR_5")
+
+z <- HTCexp(interac, xgi=reverse, ygi=forward)
+detail(z)
+
+## Access to the slots
+x_intervals(z)
+y_intervals(z)
+intdata(z)
+
+## Methods
+range(z)
+isBinned(z)
+isIntraChrom(z)
+seqlevels(z)
+@ 
+
+\subsection{Import/Export Data}
+
+The HiTC package provides the \Rfunction{importC} and \Rfunction{exportC} functions to import/export data from a list file. Only non null values have the written in this file allowing a efficient storage of Hi-C (sparse) data.
+The format is defined as follow :
+\begin{itemize}
+\item A list file (tab-separated) with per line, the name of both interactors and the number of associated sequencing reads (i.e. \verb?I1 I2 Count1-2?).
+\item The associated \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files describing the x and y intervals of the HTCexp object. For 5C experiment, it can be the forward and reverse primers location, whereas for Hi-C experiment, it can be a description of the genomic bins. The name of these intervals must match with the name of the interactors in the list file.
+ \end{itemize}
+
+In addition, the package is fully compatible with the \href{http://my5c.umassmed.edu/welcome/welcome.php}{my5C web browser}. The interaction counts matrices can be imported/exported from a matrix file format. The matrix format summarizes all the informations with genomic coordinates as row and column names (ex: \verb?HIC_bin1|hg18|chr14:1-999999?). The row and column names are splitted to create the HTCexp object.
+
+The \Biocpkg{HiTC} package includes a sample of the Human Hi-C dataset (\href{http://0-www.ncbi.nlm.nih.gov.elis.tmu.edu.tw/geo/query/acc.cgi?acc=GSE18199}{GSE18199}) published by \cite{Lieberman-Aiden2009}. The interaction map of chromosome 12 to 14 is used to illustrate the capabilities of the \Biocpkg{HiTC} package to explore Hi-C data.
+
+<<importMatrix>>=
+## Load Lieberman et al. Chromosome 12 to 14 data (from GEO GSE18199)
+exDir <- system.file("extdata", package="HiTC")
+l <- sapply(list.files(exDir, pattern=paste("HIC_gm06690_"), full.names=TRUE),
+            import.my5C)
+hiC <- HTClist(l)
+show(hiC)
+names(hiC)
+
+## Methods
+ranges(hiC)
+range(hiC)
+isBinned(hiC)
+isIntraChrom(hiC)
+isComplete(hiC)
+seqlevels(hiC)
+summary(hiC)
+@
+
+\section{Quality Control}
+The first step after data pre-procesing is a quality control to check weither the data are likely to reflect cis and/or trans chromosomal interactions rather than just random collisions. Quality control for the percentage of reads aligned to interchromosomal and intrachromosomal interactions is available, as well as distribution of the interaction frequency against the genomic distance between two loci, and simple statistics (see Figure~\ref{HiTC-qcc}).
+
+<<qcc, include=FALSE, fig=TRUE, width=7, height=7>>=
+par(mfrow=c(2,2))
+CQC(hiC, winsize = 1e+06, dev.new=FALSE, hist.dist=FALSE)
+@
+
+\incfig{HiTC-qcc}{0.6\textwidth}{Quality Control of \Robject{hiC} data.}{From top-left to bottom-right : proportion of intra/inter chromosomal interactions, scatter-plot of interaction counts versus genomic distance between two loci, histogram of interaction counts for intra (CIS) and inter (TRANS) interactions, histogram of distances between two intrachromosomal loci.}
+
+
+\newpage
+\section{HTCexp : single 'C' map experiment}
+
+\subsection{Attached 5C data}
+The \Biocpkg{HiTC} package includes a 5C dataset (\href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE35721}{GSE35721}) published by \cite{Nora2012a}, from which we choose two different Mouse samples, male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). This dataset is mainly used to describe the available functionalities of the package.
+
+<<importNora, echo=TRUE>>=
+## Load Nora et al 5C dataset
+data(Nora_5C)
+show(E14)
+show(MEF)
+@ 
+
+\subsection{Visualization of Interaction Maps}
+The interaction map represents the frequency at which each pair of restriction fragments have been ligated together during the 3C procedure. The goal is to visualize at once these counts for many pairs of restriction fragments across a large genomic region. Each entry in the matrix corresponds to a count information, i.e., number of times two restriction fragments have been sequenced as a pair.\\
+In the \Biocpkg{HiTC} package, the \Rclass{HTCexp} object are represented as a triangle view (see Figure~\ref{HiTC-mapC.png}). This view is particulary useful for interaction maps comparison and alignment with genomic or epigenomic features on a small region. The mapC function proposes a list of options to play with data visualization, such as contrast, color, or trimming.
+
+<<mapC, eval=FALSE, echo=TRUE>>=
+mapC(E14$chrXchrX)
+@
+
+<<norm5CEval, echo=FALSE, results=verbatim>>=
+png(file="HiTC-mapC.png", res=300, units="in", width=5, height=5)
+mapC(E14$chrXchrX)
+graphics.off()
+@
+
+\incfig{HiTC-mapC.png}{0.6\textwidth}{Visualization of \Rclass{HTCexp} object (1).}{Raw 5C interaction map of chromosome X.}
+
+\subsection{Data Transformation}
+\subsubsection{Windowing}
+Each pixel of an interaction map can correspond either to a single restriction fragment, several restriction fragments or genomic intervals of any given size (and therefore various restriction fragment numbers). 5C allows assessing interaction frequencies for each pair of restriction fragments. The Hi-C protocol, on contrary, does not necessarily yields counts for every single pair of restriction fragments, especially when working with large genomes. Results are thus typically displayed for genomic bins of an arbitrary size.\\
+To produce an interaction map, the genomic range of the display should be divided into appropriately size loci. This size depends on the resolution desired for the analysis. For instance, 5C data can be visualized at the primers resolution, or segmented into 100Kb or 1Mb bins that can be partially overlap or not. Such binned interaction map is symmetrical around the diagonal. For the following example, we decided to focus on a subset of the original dataset (see Figure~\ref{HiTC-bin5C}).
+
+<<bin5C, fig=TRUE, include=FALSE, width=7, height=7>>= 
+## Focus on a subset chrX:100295000:102250000
+E14subset<-extractRegion(E14$chrXchrX, c(1,2),
+                         chr="chrX", from=100295000, to=102250000)
+
+## Binning of 5C interaction map
+E14subset.binned <- binningC(E14subset, binsize=100000, method="median", step=3)
+mapC(E14subset.binned)
+@
+
+\incfig{HiTC-bin5C}{0.5\textwidth}{Visualization of \Rclass{HTCexp} object (2).}{Binned 5C interaction map of chrX:100295000-102250000.}
+
+\subsubsection{Data Normalization}
+Due to the polymer nature of chromatin, at small genomic distances, pairs of restriction fragments that are close to each other in the linear genome will give higher signal than fragments that are further apart. Such property leads to strongest counts falling on the heatmap diagonal. When considering any given pair of restriction fragments, it is therefore informative to assess whether the observed counts are above what is expected given the genomic distance that separate them.\\
+Different ways of normalization have been proposed. Here, we propose to estimate the expected interaction counts as presented in \cite{Bau2011}. The expected value is the interaction frequency between two loci that one would expect based on a sole dependency on the genomic proximity of these fragments in the linear genome. This can be estimated using a Loess regression model (see Figure~\ref{HiTC-expint.png}). Note that another model based on mean counts at each genomic distance can also be used (method=mean)
+
+<<norm5Cexp, eval=FALSE, echo=TRUE, fig=FALSE>>=
+## Look at exptected counts
+E14exp <- getExpectedCounts(E14subset, method="loess", stdev=TRUE, plot=TRUE)
+@ 
+
+<<norm5CexpEval, echo=FALSE, results=verbatim>>=
+png(file="HiTC-expint.png", res=300, units="in", width=6, height=6)
+E14exp <- getExpectedCounts(E14subset, method="loess", stdev=TRUE, plot=TRUE)
+graphics.off()
+@
+
+\incfig{HiTC-expint.png}{0.5\textwidth}{Estimation of expected count using a Loess smoothing.}{The crosses represent the interpolation points.}
+
+Interaction frequencies can be then normalized for distance by dividing the observed value by the expected value (\Rfunction{normPerExpected}). The variability between the interaction counts and the genomic distance between pairs of loci can be calculated if specified. These normalization methods can be easily applied using the methods \Rfunction{normPerReads} and \Rfunction{normPerExpected}.
+
+<<norm5Cznorm, fig=TRUE, include=FALSE, width=7, height=7>>=
+E14norm <- normPerExpected(E14subset, method="loess", stdev=TRUE)
+E14norm.binned <- binningC(E14norm, binsize=50000, method="median", step=3)
+mapC(E14norm.binned)
+@
+
+\incfig{HiTC-norm5Cznorm}{0.5\textwidth}{Normalized 5C data.}{Interaction map of data normalized from the background level of interactions.}
+
+\subsubsection{Annotation of Interaction Maps}
+The \Biocpkg{HiTC} package contains functions for visualizing genomic regions with interaction maps (see Figure~\ref{HiTC-annot5C}).
+The annotation objects have to belong to the \Rclass{GRanges} class, cand can be loaded from \href{http://genome.ucsc.edu/FAQ/FAQformat.html#format1}{BED} files using the \Biocpkg{rtracklayer} package.
+For instance, the following example displays the CTCF enriched regions (\cite{Kagey2010}) and RefSeq genes over the interaction map of the E14 sample.
+
+<<annot5C, eval=TRUE, echo=TRUE, print=FALSE, fig=TRUE, width=7, height=7, include=FALSE>>=
+E14.binned <- binningC(E14$chrXchrX, binsize=100000, method="median", step=3)
+require(rtracklayer)
+gene <- import(file.path(exDir,"refseq_mm9_chrX_98831149_103425150.bed"), 
+               format="bed")
+ctcf <- import(file.path(exDir,"CTCF_chrX_98892125_102969775.bed"), 
+               format="bed")
+mapC(E14.binned, 
+     tracks=list(RefSeqGene=gene, CTCF=ctcf), 
+     maxrange=10)
+@ 
+\incfig{HiTC-annot5C}{0.6\textwidth}{Visualization of interaction map and genomic annotations.}{CTCF enriched regions and RefSeq genes over the interaction map of the E14 sample.}
+
+\subsection{Comparison of HTCexp objects}
+ The \Biocpkg{HiTC} package provides methods to perform simple operations on \Rclass{HTCexp}, such as dividing, substracting two objects or extracting a genomic region.\\
+ It also proposes a graphical view to compare two 'C' experiments. In the following example, the MEF sample is compared to the E14 sample (see Figure~\ref{HiTC-comp5C}).
+ 
+<<comp5C, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+MEF.binned <- binningC(MEF$chrXchrX, binsize=100000, method="median", step=3)
+mapC(E14.binned, MEF.binned,
+     tracks=list(RefSeqGene=gene, CTCF=ctcf), 
+     maxrange=10)
+@ 
+\incfig{HiTC-comp5C}{0.7\textwidth}{Comparison of interaction maps.}{Comparison of two binned interaction maps, and visualization with genomic annotations.}
+
+\newpage
+\section{HTClist : Multiple 'C' experiments}
+\label{section:hic}
+
+Basically, 5C and Hi-C data can be described in the same way. Thus, most of the functions and methods described for the 5C data can be applied to the Hi-C data.
+
+\subsection{Visualization of Interaction Maps}
+The visualization of the \Rclass{HTClist} is designed such as several interaction maps from the same experiment can be displayed together.\\
+Therefore these data are typically displayed using two dimensional heatmaps of all cis/trans maps.
+
+<<mapClist, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+mapC(hiC, maxrange=100)
+@ 
+\incfig{HiTC-mapClist}{0.5\textwidth}{Visualization of a Hi-C dataset.}{Two dimensional heatmaps of the cis/trans maps from the Liberman-Aiden et al. dataset.}
+
+\subsection{Hi-C analysis}
+
+In this section, we present how, using a few command lines, we can reproduce some analyses of the \cite{Lieberman-Aiden2009} paper (see Figures~\ref{HiTC-mapChic}-\ref{HiTC-mapCorhic}) on the chromosome 14, from visualization of maps to Principal Component Analysis (PCA).
+
+<<mapChic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+## Extract region of interest and plot the interaction map
+hiC14 <- extractRegion(hiC$chr14chr14, 
+                     chr="chr14", from=1.8e+07, to=106368584)
+mapC(HTClist(hiC14), maxrange=100)
+@ 
+\incfig{HiTC-mapChic}{0.5\textwidth}{Hi-C interaction map of chromosome 14.}{}
+
+<<mapNormhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+## Data Normalization by Expected number of Counts
+hiC14norm <- normPerExpected(hiC14, method="loess")
+mapC(HTClist(hiC14norm), log.data=TRUE)
+@
+\incfig{HiTC-mapNormhic}{0.5\textwidth}{Interaction map of chromosome 14 normalized by the expected interaction counts.}{}
+
+<<mapCorhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+## Correlation Map of Chromosome 14
+#intdata(hiC14norm) <- as(cor(as.matrix(intdata(hiC14norm))),"Matrix")
+intdata(hiC14norm) <- HiTC:::sparseCor(intdata(hiC14norm))
+mapC(HTClist(hiC14norm), maxrange=1, minrange=-1, 
+     col.pos=c("black", "red"), col.neg=c("blue","black"))
+@
+\incfig{HiTC-mapCorhic}{0.5\textwidth}{Correlation map of chromosome 14}{}
+
+<<mapPCAhic, eval=TRUE, echo=TRUE, fig=TRUE, width=7, height=7, include=FALSE>>=
+## Principal Component Analysis
+pc <- pca.hic(hiC14, normPerExpected=TRUE, method="loess", npc=1)
+plot(start(pc$PC1), score(pc$PC1), type="h", 
+     xlab="chr14", ylab="PC1vec", frame=FALSE)
+
+@
+\incfig{HiTC-mapPCAhic}{0.5\textwidth}{PCA analysis (Lieberman-Aiden et al.).}{Results of the PCA (eigenvector), which reflect the compartmentalization inherent in the heatmap.}
+
+\newpage
+\section{A word about speed and memory usage}
+\label{sec:speedandmem}
+In order to improve the run time on machines with multiple processors, some of the functions in the \Biocpkg{HiTC} package have been implemented to make use of the functionality of the \Rpackage{parallel} package. If the options \Robject{mc.cores} is initialised before calling these functions, they will make use of \Rfunction{mclapply} instead of the normal \Rfunction{lapply}.\\
+Since the version 1.5.2 of the package, the interaction maps are now stored as \Rpackage{Matrix} object. In case of very high resolution data, such as the 20kb interaction maps published by \cite{Dixon2012}, a sparse matrix representation is much more efficient in terms of memory usage. The memory requires by the HiTC package for high resolution Hi-C data is represented in the figure~\ref{HiTC_memory_usage.png}. However, in many cases, using \Rclass{Matrix} objects instead of \Rclass{matrix} objects is much more slower. Thus, for some functions such as \Rfunction{binningC}, the user can now set the \Robject{optimize.by} argument to "speed" or "memory". If set to "speed", the \Rclass{Matrix} object is convert into a standard \Rclass{matrix} class, thus taking much more memory during the execution of the function but being much faster.
+One can notice that for now, all the vizualition functions are based on \Rclass{matrix} object.
+
+\incfig{HiTC_memory_usage.png}{0.5\textwidth}{HiTC memory usage.}{Improvement of the memory usage of the HiTC package through the storage of sparse matrix (\Rclass{Matrix}).}
+
+\small
+\section*{Package versions}
+This vignette was generated using the following package versions:
+<<sessionInfo, echo=FALSE, results=tex>>=
+toLatex(sessionInfo(), locale=FALSE)
+@
+
+\section*{Acknowledgements}
+Many thanks to Pierre Gestraud for useful discussion and help in developping this R package. A special thanks to the \Rpackage{HiTC} users, and especially to Sameet Mehta for useful discussions and idea to improve it.
+
+\newpage
+\small
+%%% BIBLIOGRAPHY STARTS HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{abbrvnat}
+\bibliography{HiTC}
+
+%\begin{thebibliography}{}
+%\end{thebibliography}
+
+\end{document}

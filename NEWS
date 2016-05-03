@@ -1,0 +1,401 @@
+
+
+***********************************
+CHANGES IN VERSION 1.15.1
+
+NEW FEATURES
+
+   o new saveContactMaps function
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Change default behavior of binningC function to use sum of intervals instead of median
+
+   o Hi-C color are now defined as a vector, so that more than 3 colors can be used to for the gradient
+
+BUG FIXES
+
+   o Fix bug in import.my5C in reading file
+
+
+***********************************
+CHANGES IN VERSION 1.13.2
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Change in the way the interaction matrix is loaded. During the import, the lazyload option will force the data to be stored as triangular matrix.
+   Note that a symmetric matrix is not triangular by construction. Then, to avoid any error in the data processing, the triangular matrix is always converted into symmetrical matrix before being returned by the intdata method.
+
+   o Update of track display in mapC function. Off-set plot of adjacent features
+
+BUG FIXES
+
+   o Bug fixed in quality control function when empty maps are used
+
+   o Bug fixed when plotting empty matrix
+
+***********************************
+CHANGES IN VERSION 1.13.1
+
+NEW FEATURES
+
+   o Export methods getCombinedContacts, getCombinedIntervals for HTClist objects
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o getCombinedContact is now able to merge HTCexp objects for non complete HiTClist objects. Missing maps are replaced by NA matrices
+
+   o Update of isComplete, isPairwise, getCombinedIntervals methods for Hi-C data with no intrachromosomal maps
+
+   o When the maxrange argument is set in the mapC function, all maps are displayed on the same scale so that they can be compared to each other
+
+BUG FIXES
+
+   o Bug fixed in mapC with the contact map is empty
+
+   o Bug fixed in seqlevels(HTClist) method
+
+***********************************
+CHANGES IN VERSION 1.11.4
+
+NEW FEATURES
+
+   o New directionalyIndex function as a first step of TADs detection
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o new forcePairwise method for HTClist or HTCexp objects. The methods reverse the forceSymmetrical method. Useful for plotting function.
+
+BUG FIXES
+
+   o Bug in mapC for Pairwise Hi-C map
+
+***********************************
+CHANGES IN VERSION 1.11.3
+
+BUG FIXES
+
+   o Bug in setEnvDisplay report by S. Thomas. Change decimal to 5 to avoid layout of size 0 for small chromosomes
+
+***********************************
+CHANGES IN VERSION 1.11.1
+
+NEW FEATURES
+
+   o Changes in forceSymmetric method on HTCexp object. The default is now to sum up both upper and lower maps.
+
+BUG FIXES
+
+   o Bug in import.my5C function
+
+***********************************
+CHANGES IN VERSION 1.9.6
+
+BUG FIXES
+
+   o Bug in import.my5C function
+
+
+***********************************
+CHANGES IN VERSION 1.9.5
+
+NEW FEATURES
+
+   o The normLGF function can now be applied both on intra and inter-chromosomal maps
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Access the contact map is now ALWAYS performed using chromosomes' name such as ygi/xgi, i.e. rownames/colnames of contact maps
+
+   o Update of the setGenomicFeatures method and speed improvment
+
+BUG FIXES
+
+   o Update of isComplete method
+
+   o Update of import functions
+
+***********************************
+CHANGES IN VERSION 1.9.4
+
+NEW FEATURES
+
+   o ICE normalization can now be applied on both HTCexp and HTClist objects
+
+   o New methods for HTClist-class : isComplete, isPairwise, forcePairwise, forceSymmetric
+
+   o New methods for HTCexp-class : forceSymmetric
+
+   o New methods (not exported) for HTClist-class : getCombinedIntervals, getCombinedContacts
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Update of the binningC method. Improvement of speed and memory usage. The binningC function can now be applied on Hi-C data (or any already binned data). The goal is to move from a very high resolution map (for instance 40kb) to a lower resolution ( for instance 1Mb) by aggregationg and summing the bins.
+
+   o Update of the importC/exportC functions which are now based on a new format (list with interactor1/interactor2/count + BED files). This format is recommanded to store sparse data because only the non null values are exported/imported.
+
+   o Update of the import.my5C/export.m5C functions. Only the matrix format is now supported. For the list format, see the importC/exportC functions.
+
+BUG FIXES
+
+   o Bug fixed in divide method
+
+***********************************
+CHANGES IN VERSION 1.9.3
+
+NEW FEATURES
+
+   o getRestrictionFragmentsPerChromosome
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Update output of summary method to add the seqlevels of both interactors
+
+   o Speed improvement; seqlevels
+
+   o Update import.my5C function
+
+BUG FIXES
+
+   o Fix bug in HTCexp constructor. Only intrachromosomal data can be force to be symmetrical
+
+   o Fix bug in summary function for HTClist object
+
+   o Fix bug in mapC function, in case of empty matrices (only zero values)
+
+***********************************
+CHANGES IN VERSION 1.7.11
+
+NEW FEATURES
+
+   o Update NAMESPACE for BioC 2.14
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+BUG FIXES
+
+   o Fix a bug in the getRestrictionSitesPerChromosome and matchPattern function (fixed=TRUE). If FALSE, all 'N' are reported.
+
+***********************************
+CHANGES IN VERSION 1.7.5
+
+NEW FEATURES
+
+   o Update for BioC 2.14
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Add fit.out parameter in the plotIntraDist to remove the outliers during the regression
+
+BUG FIXES
+
+***********************************
+CHANGES IN VERSION 1.7.4
+
+NEW FEATURES
+
+SIGNIFICANT USER-VISIBLE CHANGES
+  
+  o New parameter for normICE - spars.filter, to filter out the more sparse bins before normlization
+
+  o Change the parameters of getAnnotatedRestrictionSites and setGenomicFeatures functions
+
+  o Update of the setGenomicAnnotation function to fit with the original HiCNorm method
+
+BUG FIXES
+
+  o isSymmetrix - NA values
+
+  o Bug in definition of upstream and downstream flanking region for a restriction site in getAnnotatedRestrictionSites
+
+***********************************
+CHANGES IN VERSION 1.7.3
+
+NEW FEATURES
+   
+   o Add new normalization method for Hi-C data from Hu et al (HiCNorm). This method is based on linear regression model between interaction counts and sources of bias such as GC content, mappability, fragment length, etc. See normLGF(), setGenomicFeatures(), getAnnotatedRestrictionSites().
+
+   o Add new normalization method for Hi-C data from Imakaev et al.(ICE). The ICE procedure is an iterative normalization method used to remove any bias from HiC data.
+
+   o Add 'summary' method for HTCexp and HTClist objects
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Improve quality control methods based using sparse data
+
+   o Change method option for normPerTrans methods. The 'mean' method is in fact a 'max' method
+
+   o Update of the export.my5C list format
+
+BUG FIXES
+
+   o max (na.rm=TRUE) in mapC function
+
+***********************************
+CHANGES IN VERSION 1.5.2
+
+NEW FEATURES
+
+    o Efficient memory matrix representation using the Matrix package. The memory usage for big sparse matrix is improved by a factor 7. However, some operation are much slower based on the Matrix implementation. Thus, for some task as the plotting function, the Matrix are converted in standard matrix based object
+
+    o 'show' and 'detail' method for HTClist object
+
+    o 'c(x, ...)' method for HTCexp and HTClist objects
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o The option mask.data from the mapC function is deprecated
+
+    o Update of parallel computation for some functions (import, normalize)
+
+BUG FIXES
+
+    o Bug Fixe in import.my5C for ChrM
+    
+
+***********************************
+CHANGES IN VERSION 1.5.1
+
+BUG FIXES
+
+   o Fix bug in HTCexp contructor for matrix of dim 1
+
+   o Fix bug in import.my5C for matrix of dim 1
+
+   o Fix bug for title display on HTCexp plots
+
+   o Fix bug in HiTClist plot due to chromosome order 
+
+   o Correct errors in the man pages
+
+***********************************
+CHANGES IN VERSION 1.3.3
+
+NEW FEATURES
+
+   o Add PCA function on Hi-C interaction map as in Lieberman-Aiden et al. 2009
+
+BUG FIXES
+
+   o Error in constructor when the interaction map has a dim = 1
+
+
+***********************************
+CHANGES IN VERSION 1.3.2
+
+NEW FEATURES
+
+   o New visualization for HTClist objects
+
+   o New methods for HTClist objects
+
+   o New HTClist class to manage list of HTCexp object (basically Hi-C data)
+
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o Update of all man pages
+
+   o Update of the Nora_5C data. E14 and MEF are now HTClist objects
+
+   o Update of the importC/exportC function. The standard format is now matrix-based. This seems to be the most commonly used format.
+
+   o Update of all mapC methods. The view parameter is removed. The HTCexp object are now displayed in the triangle view, whereas the HTClist are displayed in the heatmap view
+
+
+***********************************
+CHANGES IN VERSION 1.3.1
+
+NEW FEATURES
+
+   o MAJOR RELEASE : replace all GenomeIntervals objects by GRanges ones in order to improve the compatibility with other HT BioC packages
+
+SIGNIFICANT USER-VISIBLE CHANGES
+ 
+   o The ExtractRegion method has a new MARGIN parameter. The idea is the same than for any apply function. If MARGIN is equal to 1 (resp. 2, resp. c(1,2)), the region is extracted from the 'x' (resp. 'y', resp. both) intervals 
+   
+   o Plot function. When two HTCexp objects are plot together, only the intersection of the 'x' and 'y' intervals are used.
+
+   o The 'range' method now returns a GRanges object
+
+   o Changes in the data windowing for the extreme bins
+
+   o mapC requires a HTCexp object only. Objects from the matrix class are no longer allowed
+
+DEPRECATED AND DEFUNCT
+
+   o seq_name is now deprecated
+
+   o export and normPerZscore are now defunct 
+
+BUG FIXES
+
+   o exportC. Bug fixed in bin coordinates
+
+   o CQC. Bug fixed with NA values
+
+   o mapC. Bug fixed in the visualization of annotation features. Select the annotation in the same chromosome space before plotting.
+
+   o mapC. Bug fixed in the visualization of count values for interchromosomal data 
+
+***********************************
+CHANGES IN VERSION 1.1.3
+
+NEW FEATURES
+
+   o Adding CITATION file
+
+DEPRECATED AND DEFUNCT
+
+   o Update of getExpectedCount function to use the lowess() function (stats). The 'C' call in stats is now deprecated
+
+
+***********************************
+CHANGES IN VERSION 1.1.2
+
+NEW FEATURES
+
+   o New package vignette
+
+   o Add new normalization method - normPerTrans
+
+   o Add importC and exportC function, to load and import csv file
+
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o The CQC function now returns a matrix
+
+   o Simplify getExpectedCounts help page
+
+   o Update of import.my5C function. Simplify the import for matrix data
+
+
+DEPRECATED AND DEFUNCT
+
+   o The export method is now replace by exportC. The standard csv format is now exported.
+
+   o The normPerZscore method is depracted. See normPerExpected instead
+
+   o Remove Bau et al. 5C dataset
+
+
+BUG FIXES
+
+  o isBinned. Fix bug for interchromosomal interactions
+
+  o extracRegion. Add a chromosome parameter, and changes for interchromosomal data
+
+  o binningC. Changes for interchromosomal maps
+
+  o Sort xgi and ygi objects when the HTCexp constructor is called
+
+  o Force the xgi and ygi objects to have some ids
+
+  
+***********************************
+CHANGES IN VERSION 1.1.1
+
+NEW FEATURES
+
+   o Include the Nora et al (Nature 2012) 5C dataset (GSE35721).Two mouse samples are included in the package ; male undifferentiated ES cells (E14, GSM873935) and male embryonic fibroblasts (MEF, GSM873924). Only the cis interaction maps chrX vs chX are provided.

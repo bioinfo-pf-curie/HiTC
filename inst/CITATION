@@ -1,0 +1,17 @@
+citHeader("If you use HiTC for analysing your data, please cite:")
+
+citEntry(entry="article",  
+  title  = "HiTC: Exploration of High-Throughput 'C' experiments",
+  author = personList(as.person("Nicolas Servant"),
+  	   	      as.person("Bryan R. Lajoie"),
+		      as.person("Elphege P. Nora"),
+		      as.person("Luca Giorgetti"),
+		      as.person("Chong-Jian Chen"),
+		      as.person("Edith Heard"),
+		      as.person("Job Dekker"),
+		      as.person("Emmanuel Barillot")),
+  journal = "Bioinformatics",
+  year = "2012",
+  doi = "10.1093/bioinformatics/bts521",
+  textVersion = paste("Servant N., Lajoie B.R., Nora E.P., Giorgetti L., Chen C., Heard E., Dekker J., Barillot E. (2012)", "HiTC : Exploration of High-Throughput 'C' experiments.", "Bioinformatics"))
+
