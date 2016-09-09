@@ -131,7 +131,7 @@ head(summary(hic_imr90_40))
 The Hi-C data can be visualized as contact maps, representing the contact frequencies between two chromosomes, or at the level of the genome.
 By default, objects from the \Rclass{HTClist} class will be represented as an heatmap, whereas object from the \Rclass{HTCexp} class (i.e. single map) as a triangle. Depending on what you want to visualize the resolution of the map can also be changed (from high to lower resolution).\\
 
-<<plot1, fig=TRUE, width=3, height=3>>=
+<<plot1, fig=TRUE, width=5, height=5>>=
 ## Go back to a smaller dataset (chr21, 22, X) at lower resolution
 sset <- reduce(hic_imr90_40, chr=c("chr5","chr6","chr7"))
 imr90_500 <- HTClist(mclapply(sset, binningC, 

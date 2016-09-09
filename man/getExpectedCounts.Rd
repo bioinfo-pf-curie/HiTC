@@ -8,11 +8,13 @@
 The expected interaction is defined as the linear relationship between
 the interaction counts and the distance between two loci. See details for additional informations.
 }
-\usage{getExpectedCounts(x, method=c("mean","loess"), ...)}
+\usage{getExpectedCounts(x, method=c("mean","loess"), asList=FALSE, ...)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{method}{method used to estimate the expected counts based on the
     genomic distance. See details}
+  \item{asList}{return the results as a list. Otherwise, return an
+    object of class \code{HTCexp}}
   \item{...}{arguments for mean or loess method, see below}
 }
 
@@ -70,6 +72,6 @@ data(Nora_5C)
 
 ## Estimate expected interaction from distance between intervals
 E14.exp<-getExpectedCounts(E14$chrXchrX, method="loess", stdev=TRUE, plot=FALSE)
-mapC(HTCexp(E14.exp$exp.interaction, xgi=x_intervals(E14$chrXchrX), ygi=y_intervals(E14$chrXchrX)))
+mapC(E14.exp)
 }
 \keyword{manip}

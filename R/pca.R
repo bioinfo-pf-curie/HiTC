@@ -9,17 +9,18 @@
 ## asGRangesList = if TRUE a GRangesList object is returned where the score represents the eigenvector
 ##################################
 
-pca.hic <- function(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE, ...){
+pca.hic <- function(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE, gene.gr=NULL, ...){
     stopifnot(inherits(x,"HTCexp"))
     stopifnot(isBinned(x))
     
     xcor <- getPearsonMap(x, normPerExpected, ...)
     xdata.cor <- intdata(xcor)
-      
+    xgi <- x_intervals(x)
+    
     ## remove NA if still there
     idx <- which(apply(xdata.cor, 1, function(x){length(which(is.na(x)))}) != dim(xdata.cor)[1])
     xdata.cor <- xdata.cor[idx,idx]
-    
+
     ## Perform PCA
     if (length(xdata.cor) == 0){
       warning("Empty correlation matrix for ", seqlevels(x))
@@ -27,27 +28,67 @@ pca.hic <- function(x, normPerExpected=TRUE, npc=2, asGRangesList=TRUE, ...){
     }
     else{
       pca <- prcomp(xdata.cor, scale=TRUE)
-    
+
+      ## Gene density
+      if (!is.null(gene.gr)){
+          stopifnot(inherits(gene.gr,"GenomicRanges"))
+          gene.density <- countOverlaps(xgi, gene.gr)
+      }
+     
       ## Get results
       if (!asGRangesList){
         pca.res <- list()
+        pscore <- rep(NA, length(xgi))
         pca.res$varianceProp <- summary(pca)$importance[2,1:npc]
         for (i in 1:npc){
-          pca.res[[eval(paste("PC",i, sep=""))]] <- pca$rotation[,i]
-        }
+            pscore[idx] <- round(pca$rotation[,i],3)
+                       
+            if (!is.null(gene.gr)){
+              gd.pos <- sum(gene.density[which(pscore>=0)])
+              gd.neg <- sum(gene.density[which(pscore<0)])
+              message("Gene density per bin - >0 = ", gd.pos)
+              message("Gene density per bin - <0 = ", gd.neg)
+              
+              ## Add Chromosome compartment information
+              if (gd.pos > gd.neg)
+                cc <- ifelse(pscore>0, "A", "B")
+              else{
+                cc <- ifelse(pscore<0, "A", "B")
+                pscore <- -pscore
+              }
+              pca.res[[eval(paste("PC",i, sep=""))]] <- rbind(pscore, cc, gene.density)
+            }else{
+              pca.res[[eval(paste("PC",i, sep=""))]] <- pscore
+            }
+          }
       }else{
-        pca.res <- GRangesList()
-        xgi <- x_intervals(x)[idx]
+        pca.res <- GRangesList()      
         for (i in 1:npc){
-          pca.res[[eval(paste("PC",i, sep=""))]] <- GRanges(seqnames(xgi), ranges=ranges(xgi), strand=strand(xgi), score=round(pca$rotation[,i],3))
+          pscore <- rep(NA, length(xgi))
+          pscore[idx] <- round(pca$rotation[,i],3)
+            
+          if (!is.null(gene.gr)){
+            gd.pos <- sum(gene.density[which(pscore>=0)])
+            gd.neg <- sum(gene.density[which(pscore<0)])
+            message("Gene density per bin - >0 = ", gd.pos)
+            message("Gene density per bin - <0 = ", gd.neg)
+            
+            ## Add Chromosome compartment information
+            if (gd.pos > gd.neg)
+              cc <- ifelse(pscore>0, "A", "B")
+            else{
+              pscore <- -pscore
+              cc <- ifelse(pscore>0, "A", "B")
+            }
+            pca.res[[eval(paste("PC",i, sep=""))]] <- GRanges(seqnames(xgi), ranges=ranges(xgi), strand=strand(xgi), score=pscore, genedens=gene.density, ccompartments=cc)
+          }else{
+            pca.res[[eval(paste("PC",i, sep=""))]] <- GRanges(seqnames(xgi), ranges=ranges(xgi), strand=strand(xgi), score=pscore)
+          }         
         }
       }
     }
-
-    ## Add Chromosome compartment information
-    ##pca.res$PC1$CCompartment=ifelse(score(pca.res$PC1)>0, "A", "B")
     return(pca.res)
-}
+  }
 
 ###################################
 ## sparseCor
@@ -74,9 +115,11 @@ getPearsonMap <- function(x, normPerExpected=TRUE, center=TRUE, ...){
   stopifnot(inherits(x,"HTCexp"))
   stopifnot(isBinned(x))
 
+  ## force symmetric matrix
+  x <- forceSymmetric(x)
   x.save <- x
  
-  ## observed/expected map using the loess calculation of distance dependency
+  ## observed/expected map
   if (normPerExpected){
     x <- normPerExpected(x, ...)
   }
@@ -97,11 +140,13 @@ getPearsonMap <- function(x, normPerExpected=TRUE, center=TRUE, ...){
   ## In theory this never appends because bins with NAs values should be removed earlier
 
   ## scale on rows
+  ## The Pearson's is calculated after subtracting the mean of the row from the O/E matrix.  This is because correlation of small values should be as valuable as correlation of big values.  We subtract the row mean from every entry in the row, in effect recentering the distribution.  O/E ranges from something like 1/5 to 5, and values below 1 that are correlated/anti-correlated with values above 1 need to count that way.
   if (center){
     xdata <- t(scale(t(intdata(x)), center=TRUE, scale=FALSE))
   }else{
-    xdata <- intdata(x)
+    xdata <- as.matrix(intdata(x))
   }
+
   ## calculate correlation of columns
   xdata.cor <- sparseCor(xdata)
 

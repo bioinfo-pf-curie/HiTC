@@ -20,7 +20,7 @@ importC <- function(con, xgi.bed, ygi.bed=NULL, allPairwise=FALSE, rm.trans=FALS
     names(xgi) <- id(xgi)
     if (!is.null(ygi.bed)){
         ygi <- rtracklayer::import(ygi.bed, format="bed")
-        sortSeqlevels(ygi)
+        ygi <- sortSeqlevels(ygi)
         names(ygi) <- id(ygi)
     }else{
         ygi <- xgi

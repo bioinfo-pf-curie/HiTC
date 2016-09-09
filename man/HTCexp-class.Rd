@@ -192,8 +192,11 @@ isBinned(E14$chrXchrX)
 ## Is a inter or intrachromsomal experiment ?
 isIntraChrom(E14$chrXchrX)
 
+## Bin the data
+E14.bin <- binningC(E14$chrXchrX, binsize=100000, step=3)
+
 ## Divide by expected interaction counts
-E14norm<-normPerExpected(E14$chrXchrX)
+E14norm<-normPerExpected(E14.bin)
 
 ## Operation on HTCexp object
 E14_d_MEF<-divide(normPerReads(E14$chrXchrX), normPerReads(MEF$chrXchrX))

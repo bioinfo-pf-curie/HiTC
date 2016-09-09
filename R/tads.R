@@ -8,7 +8,7 @@
 
 directionalityIndex <- function(x, winup=2e6, windown=2e6){
     stopifnot(isBinned(x))
-    xdata <- intdata(x)
+    xdata <- as.matrix(intdata(x))
     rx <- ranges(x_intervals(x))
     upranges <- IRanges(start(rx)-winup+1, start(rx))
     A <- rep(NA, length(upranges))

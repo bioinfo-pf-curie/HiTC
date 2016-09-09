@@ -383,9 +383,9 @@ setMethod(f="forceTriangular", signature(x="HTCexp"),
 ## Interaction Data
 setMethod(f="intdata", signature(x="HTCexp"),
           function(x){
-            if (isTriangular(x) && isIntraChrom(x)){
-              x <- forceSymmetric(x)
-            }
+            #if (isTriangular(x) && isIntraChrom(x)){
+            #  x <- forceSymmetric(x)
+            #}
              x@intdata
           }
 )
@@ -419,7 +419,7 @@ setMethod("isSymmetric", signature(object="HTCexp"),
 setMethod("isTriangular", signature(object="HTCexp"),
 	  function(object){
             object@intdata[which(is.na(object@intdata))] <- 0
-            ret <- Matrix::isTriangular(object@intdata)
+            Matrix::isTriangular(object@intdata)
           }
 )
 

@@ -10,8 +10,7 @@ setClass("HTClist",
 
 setValidity("HTClist",
             function(object){
-                fails <- character(0)
-                
+                fails <- character(0)                
                 ## Check Chromosome Pairs Data
                  chrom <- sapply(object, function(x){
                      paste(seqlevels(x_intervals(x)), seqlevels(y_intervals(x)), sep="")
@@ -130,6 +129,9 @@ setMethod(f="forceSymmetric", signature(x="HTClist", uplo="character"),
           function(x, uplo){
               stopifnot(uplo=="U" || uplo=="L")
               stopifnot(isComplete(x))
+              ## cis
+              x[isIntraChrom(x)] <- lapply(x[isIntraChrom(x)], forceSymmetric)
+              ## trans
               x <- sortSeqlevels(x)
               chrs <- seqlevels(x)
               pch <- pair.chrom(chrs, use.order=FALSE)
@@ -203,7 +205,7 @@ setMethod(f="getCombinedContacts", signature(x="HTClist"),
               do.call(cBind, apply(allpairs, 1, function(chrs){
                 mapname <- paste0(chrs, collapse="")
                 if (is.element(mapname, names(x))){
-                  as(intdata(x[[mapname]]), "sparseMatrix")
+                    as(intdata(x[[mapname]]), "sparseMatrix")
                 }else{
                   as(matrix(0, ncol=dimchr[chrs[2]], nrow=dimchr[chrs[1]]), "sparseMatrix")
                 }
@@ -263,13 +265,20 @@ setMethod(f="range", signature(x="HTClist"),
 
 
 setMethod(f="reduce", signature(x="HTClist"),
-          function(x, chr, cis=TRUE, trans=TRUE){
-            xr <- x[intersect(names(x), names(pair.chrom(chr, rm.cis=!cis)))]
+          function(x, chr, cis=TRUE, trans=TRUE, extend=FALSE){
+            pc <- as.matrix(data.frame(pair.chrom(seqlevels(x), rm.cis=!cis)))
+            if (extend){
+              sel <- colnames(pc)[which(pc[1,] %in% chr | pc[2,] %in% chr)]
+            }else{
+              sel <- colnames(pc)[which(pc[1,] %in% chr & pc[2,] %in% chr)]
+            }
+            xr <- x[intersect(names(x), sel)]
             if (!trans){
               xr <- xr[isIntraChrom(xr)]
             }
             xr
           })
+
 
 setMethod(f="seqlevels", signature(x="HTClist"),
           function(x){

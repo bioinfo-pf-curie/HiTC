@@ -78,7 +78,6 @@ plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
 ##################################
 
 heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na=TRUE, col.pos=c("white","red"), col.neg=c("white","blue"), col.na="#CCCCCC", col.zero="#FFFFFF", grid=FALSE, maxrange=NA, title=NULL, k=500){
-
   xdata <- t(xdata)
   xdata <- as(xdata[,ncol(xdata):1], "sparseMatrix")
 
@@ -167,25 +166,30 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
 ##
 ##################################
 
-triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TRUE, col.pos=c("white","red"), col.neg=c("white","blue"), col.na="gray80",  col.zero="#FFFFFF", title=NULL, k=500){
+triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TRUE, col.pos=c("white","red"), col.neg=c("white","blue"), col.na="gray80",  col.zero="#FFFFFF", title=NULL, k=500, w=NA){
 
     d <- min(dim(xdata))
-
+    
     ## Start with a matrix for speed implementation - optimize.by option ???
     trimat <- matrix(0, ncol=d*2, nrow=d)
     xdata <- as.matrix(xdata)
-    for (w in 0:(d-1)){
-        s <- gdiag(xdata, w=w)
+    for (p in 0:(d-1)){
+        s <- gdiag(xdata, w=p)
         ls <- length(s)
         ss <- c(s,s)[as.vector(sapply(1:ls,function(x){return(c(x,x+ls))}))]
-        trimat[w+1, (w+1):(d*2-w)] <- ss
+        trimat[p+1, (p+1):(d*2-p)] <- ss
     }
+
+    if (!is.na(w)){
+        trimat <- trimat[1:w*2, ]
+    }
+    
     trimat <- as(trimat, "Matrix")
     
     if (flip){
         trimat <- trimat[nrow(trimat):1,]
     }
-
+ 
     trimat.pos <- trimat.neg <- NULL
     if (max(trimat, na.rm=TRUE)>0){
         trimat.pos <- trimat
@@ -207,7 +211,7 @@ triViewC <- function(xdata, flip=FALSE, value=FALSE, show.zero=FALSE, show.na=TR
     if (!is.null(trimat.pos)){     
         col.pos <- colorC(col.pos,k=k)
         plottingfunc(y=1:nrow(trimat),x=1:ncol(trimat),z=t(trimat.pos),show.zero=show.zero,axes=FALSE,ylab="",xlab="",col=c(col.zero, col.pos))
-    }
+     }
     if (show.na){
         if (length(which(is.na(trimat))>0)){
             par(new = TRUE)
@@ -419,6 +423,19 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
     xdata
 }
        
+
+maskdiag <- function (x, w = 0){
+    m <- min(dim(x))
+    ret <- matrix(FALSE, nrow=dim(x)[1], ncol=dim(x)[2])
+    w <- abs(w)
+    for (i in 0:w)
+        ret[1L + (0L + i):(m - 1L) * (dim(x)[1L] + 1L) - i] <- TRUE
+    w <- -w
+    for (i in w:0)
+        ret[1L + 0L:(m - 1L - abs(i)) * (dim(x)[1L] + 1L) + abs(i)] <- TRUE
+    ret
+}
+
 ###################################
 ## mapC methods
 ## 
@@ -459,6 +476,7 @@ setMethod("mapC", signature="HTClist",
                       obj <- x[[i]]
                       message("Plotting ",i,"...")
                       xdata <- getData2Map(obj, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
+                      
                       
                       if (!names)
                           par(mar=c(0,0,0,0))
@@ -514,7 +532,7 @@ setMethod("mapC", signature="HTCexp",
 
 setMethod("mapC", signature=c("HTCexp","HTCexp"),
           function(x, y, tracks=NULL,
-                   minrange=NA, maxrange=NA, trim.range=0.98,  show.zero=FALSE, show.na=FALSE, log.data=FALSE, value=FALSE, k=500,
+                   minrange=NA, maxrange=NA, w=NA, trim.range=0.98,  show.zero=FALSE, show.na=FALSE, log.data=FALSE, value=FALSE, k=500,
                    col.pos=c("white","red"), col.neg=c("blue","white"), col.na="#CCCCCC",  col.zero="#FFFFFF", grid=FALSE, title=NULL){
 
               if (!isBinned(x) || !isBinned(y))
@@ -522,6 +540,12 @@ setMethod("mapC", signature=c("HTCexp","HTCexp"),
               if (seqlevels(x) != seqlevels(y))
                   stop("x and y have to come from the same chromosome")
 
+              ## Remore long range contact if specified
+              if (!is.na(w)){
+                  intdata(x)[!maskdiag(intdata(x), w=w)] <- NA
+                  intdata(y)[!maskdiag(intdata(y), w=w)] <- NA
+              }
+              
               ## Set Graphical Environment
               setEnvDisplay(x, y, tracks=tracks, view=2)
 
@@ -537,10 +561,10 @@ setMethod("mapC", signature=c("HTCexp","HTCexp"),
                   addImageTracks(y, tracks, orientation="h")
                 }
               }
-              par(mar=c(.5,0,0,0))
-              triViewC(xdata, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, col.zero=col.zero, title=title[1], k=k)
-              par(mar=c(0,0,.5,0))
-              triViewC(ydata, flip=TRUE, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, col.zero=col.zero, title=title[2], k=k)
+              par(mar=c(0,0,0,0))
+              triViewC(xdata, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, col.zero=col.zero, title=title[1], k=k, w=w)
+              par(mar=c(0,0,0,0))
+              triViewC(ydata, flip=TRUE, value=value, show.zero=show.zero, show.na=show.na, col.pos=col.pos, col.neg=col.neg, col.na=col.na, col.zero=col.zero, title=title[2], k=k, w=w)
             }
 )
 

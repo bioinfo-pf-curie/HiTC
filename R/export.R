@@ -23,7 +23,7 @@ writeC <- function(data2export, xgi, ygi, file, genome="mm9", header=TRUE){
         write(paste("##",date(), sep=""),file=bed.ygi, append=TRUE)
         rtracklayer::export(ygi, con=paste(file,"_ygi.bed", sep=""), format="bed", append=TRUE)
     }
-    count.out <- paste(file,".count", sep="")
+    count.out <- paste(file,".mat", sep="")
     message("Export interaction map in '",count.out,"' ...")
     write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=count.out)
     write(paste("##",date(), sep=""),file=count.out, append=TRUE)
@@ -37,7 +37,7 @@ writeC <- function(data2export, xgi, ygi, file, genome="mm9", header=TRUE){
 
 exportC <- function(x, file, per.chromosome=FALSE){
     if (inherits(x, "HTCexp")){
-        stopifnot(isSymmetric(x))
+        ##stopifnot(isSymmetric(x))
         data2export <- intdata(x)
         xgi <- x_intervals(x)
         if(!isSymmetric(x))
@@ -61,7 +61,7 @@ exportC <- function(x, file, per.chromosome=FALSE){
             if (isComplete(x)){
                 data2export <- getCombinedContacts(x)
                 combi <- getCombinedIntervals(x)
-                writeC(data2export, combi$xgi, combi$ygi, file=paste0(file, "_fullgen"))
+                writeC(data2export, combi$xgi, combi$ygi, file)
             }else{
                 stop("isComplete(x) is not TRUE. Cannot export incomplete HTClist object as one file. Please use per.chromosome=TRUE.")
             }
@@ -101,7 +101,7 @@ write.my5C <- function(data2export, xgi, ygi, file, genome="mm9", header=TRUE){
     
 export.my5C <- function(x, file, genome="mm9", per.chromosome=FALSE){
     if (inherits(x, "HTCexp")){
-        stopifnot(isSymmetric(x))
+        ##stopifnot(isSymmetric(x))
         data2export <- intdata(x)
         xgi <- x_intervals(x)
         ygi <- y_intervals(x)

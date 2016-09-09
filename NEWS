@@ -1,4 +1,27 @@
+***********************************
+CHANGES IN VERSION 1.17.1
 
+NEW FEATURES
+
+   o New getPearsonMap function. Will generate the correlation map used by the pca analysis
+
+   o The pca.hic function is now able to detect and to assign the A/B compartment if a gene annotation is provided
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o update of reduce method for HTClist object
+
+   o update of the getExpectedCounts function with two methods ; loess and mean. The mean method allows to estimated the expected counts using the mean of diagonal matrices. The method is adviced in case of high resolution maps when the loess smoothing can take time and might not give good results
+
+   o By default, obs/exp maps are now centered before calculated the pearson correlation map. This allow correlation of small values to be as valuable as correlation of big values
+
+   o asRangedData from importC is now deprecated due to rtracklayer change
+
+   o normPerExpected function now reports 0 instead of NA to avoid error in correlation calculation
+
+BUG FIXES
+
+   o Fix bug in directionalityIndex. The input count matrix is converted into a dense matrix before calculation 
 
 ***********************************
 CHANGES IN VERSION 1.15.1

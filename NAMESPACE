@@ -11,13 +11,14 @@ import("GenomicRanges")
 import("IRanges")
 
 ##Package used in HiTC
-importFrom("graphics", "plot", "image", "abline", "axis", "text")
-importFrom("grDevices", "col2rgb")
-importFrom("stats", "prcomp")
 importFrom("RColorBrewer", "brewer.pal")
 importFrom("Matrix", "cBind", "rBind", "Matrix", "sparseMatrix", "t")
 importFrom("GenomeInfoDb", "seqlevels", "sortSeqlevels", "seqlengths")
 importFrom("parallel", "mclapply")
+importFrom("grDevices", "col2rgb", "colorRampPalette", "dev.off", "pdf", "pdf.options", "png")
+importFrom("graphics", "plot", "image", "abline", "axis", "text", "barplot", "hist", "layout", "legend", "lines", "par", "points", "rect")
+importFrom("stats", "prcomp", "approx", "density", "glm", "lm", "lowess", "residuals")
+importFrom("utils", "combn", "object.size", "packageVersion", "read.table", "write.table")
 
 ##importFrom("MASS", "glm.nb")
 importMethodsFrom("Biostrings", "detail")

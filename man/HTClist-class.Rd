@@ -80,9 +80,10 @@
   intra-chromosomal maps. See details}
     \item{ranges(x)}{applies 'range' to each element in 'x'}
     \item{range(x)}{return the reduce range of all elements in 'x'}
-    \item{reduce(x, chr, cis=TRUE, trans=TRUE)}{reduce a HTClist object
+    \item{reduce(x, chr, cis=TRUE, trans=TRUE, extend=FALSE)}{reduce a HTClist object
   to the list of provided chromosomes. Intra/Interchromosomal maps are
-  returned accoring to the cis and trans args}
+  returned accoring to the cis and trans args. If extend = True, all
+  maps involving one of the chromosomes are returned}
     \item{seqlevels(x)}{return the sequence levels of all elements in 'x'}
     \item{as.list(x)}{coercion to simple \code{list} object}
     \item{names(x)}{get the names of the elements}

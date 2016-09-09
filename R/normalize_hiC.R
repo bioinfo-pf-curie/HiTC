@@ -8,8 +8,7 @@
 
 ## Normalized per expected number of count
 setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, ...){
-
-    expCounts <- getExpectedCounts(x, ...)
+    expCounts <- getExpectedCounts(forceSymmetric(x), asList=TRUE, ...)
     if (! is.null(expCounts$stdev.estimate)){
         x@intdata <- (x@intdata-expCounts$exp.interaction)/expCounts$stdev.estimate
     }else{
@@ -18,7 +17,6 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, ...){
     ## Remove NaN or Inf values for further analyses
     #x@intdata[which(is.na(x@intdata) | is.infinite(x@intdata))]<-NA
     x@intdata[which(is.infinite(x@intdata))]<-0
-
     x
 })
 
@@ -29,8 +27,8 @@ setMethod("normPerExpected", signature=c("HTClist"), definition=function(x, ...)
 
   ## estimated expected counts for all cis maps
   exp <- lapply(xintra, function(xx){
-    r <- getExpectedCounts(xx, method="mean", ...)
-    r$exp.interaction
+      r <- getExpectedCounts(forceSymmetric(xx), method="mean", asList=TRUE, ...)
+      r$exp.interaction
   })
 
   ## combined all cis expected counts
@@ -70,7 +68,7 @@ setMethod("normPerExpected", signature=c("HTClist"), definition=function(x, ...)
 ###################################
 
 
-getExpectedCounts <- function(x, method=c("mean","loess"), ...){
+getExpectedCounts <- function(x, method=c("mean","loess"), asList=FALSE, ...){
   met <- match.arg(method)
 
   if (dim(intdata(x))[1]>500 & met=="loess"){
@@ -78,11 +76,18 @@ getExpectedCounts <- function(x, method=c("mean","loess"), ...){
   }
   
   if (met=="mean"){
-    getExpectedCountsMean(x, ...)
+    ret <- getExpectedCountsMean(x, ...)
   }else if (met=="loess"){
-    getExpectedCountsLoess(x, ...)
+    ret <- getExpectedCountsLoess(x, ...)
   }else{
     stop("Unknown method")
+  }
+
+  if (asList){
+    return(ret)
+  }else{
+    intdata(x) <- ret$exp.interaction
+    return(x)
   }
 }
 
@@ -112,11 +117,10 @@ getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05, filter.low=0.05){
   xdata <- as.matrix(xdata)
   rc <- colSums(xdata, na.rm=TRUE)
   ##rc <- which(rc==0)
-  print (quantile(rc[which(rc>0)], probs=filter.low))
-  rc <- which(rc <= ceiling(quantile(rc[which(rc>0)], probs=filter.low)))
+  rc <- which(rc < ceiling(quantile(rc[which(rc>0)], probs=filter.low)))
   rr <- rowSums(xdata, na.rm=TRUE)
   ##rr <- which(rr==0)
-  rr <- which(rr <=  ceiling(quantile(rr[which(rr>0)], probs=filter.low)))
+  rr <- which(rr <  ceiling(quantile(rr[which(rr>0)], probs=filter.low)))
 
   ## rm line with only zeros
   xdata[rr,] <- NA
@@ -127,11 +131,11 @@ getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05, filter.low=0.05){
   ##d <- rows - t(rows)
 
   d <- matrix(bins[1+abs(col(rows) - row(rows))],nrow=N) - 1
-  d[upper.tri(d)] <- -d[upper.tri(d)]
+  d[lower.tri(d)] <- -d[upper.tri(d)]
  
   if (isSymmetric(xdata)){
     ## remove half of the matrix
-    d[upper.tri(d)] <- NA
+    d[lower.tri(d)] <- NA
   }
   ## use split to group on these values
   mi <- split(xdata, d)
@@ -141,7 +145,7 @@ getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05, filter.low=0.05){
   names(miexp) <- names(mi)
   expmat <- as(matrix(unsplit(miexp, d), nrow=nrow(xdata), ncol=ncol(xdata)), "Matrix")
   if (isSymmetric(xdata)){
-    expmat <- forceSymmetric(expmat, uplo="L")
+    expmat <- forceSymmetric(expmat, uplo="U")
   }
   
   colnames(expmat) <- colnames(xdata)
