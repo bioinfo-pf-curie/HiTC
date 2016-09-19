@@ -268,9 +268,11 @@ setMethod(f="reduce", signature(x="HTClist"),
           function(x, chr, cis=TRUE, trans=TRUE, extend=FALSE){
             pc <- as.matrix(data.frame(pair.chrom(seqlevels(x), rm.cis=!cis)))
             if (extend){
-              sel <- colnames(pc)[which(pc[1,] %in% chr | pc[2,] %in% chr)]
+                sel <- colnames(pc)[union(which(pc[1,] %in% chr), which(pc[2,] %in% chr))]
+                ##sel <- colnames(pc)[which(pc[1,] %in% chr | pc[2,] %in% chr)]
             }else{
-              sel <- colnames(pc)[which(pc[1,] %in% chr & pc[2,] %in% chr)]
+                sel <- colnames(pc)[intersect(which(pc[1,] %in% chr), which(pc[2,] %in% chr))]
+                ##sel <- colnames(pc)[which(pc[1,] %in% chr & pc[2,] %in% chr)]
             }
             xr <- x[intersect(names(x), sel)]
             if (!trans){
