@@ -46,7 +46,8 @@ colorC <- function (cols, k = 50){
 
 plottingfunc <- function(x, y, z, show.zero=FALSE, col, ...){
     if (!show.zero && length(col)>1){
-        zi <- which(!is.na(z) & z == 0) ##zi <- which(Matrix:::is0(z))
+        ##zi <- which(!is.na(z) & z == 0)
+        zi <- which(Matrix:::is0(z))
         z <- as.matrix(z)
         z[zi] <- NA_integer_
         ## remove col.zero
@@ -476,8 +477,6 @@ setMethod("mapC", signature="HTClist",
                       obj <- x[[i]]
                       message("Plotting ",i,"...")
                       xdata <- getData2Map(obj, minrange=minrange, maxrange=maxrange, trim.range=trim.range, log.data=log.data)
-                      
-                      
                       if (!names)
                           par(mar=c(0,0,0,0))
                       else
