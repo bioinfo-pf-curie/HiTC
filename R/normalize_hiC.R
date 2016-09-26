@@ -8,6 +8,7 @@
 
 ## Normalized per expected number of count
 setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, ...){
+    
     expCounts <- getExpectedCounts(forceSymmetric(x), asList=TRUE, ...)
     if (! is.null(expCounts$stdev.estimate)){
         x@intdata <- (x@intdata-expCounts$exp.interaction)/expCounts$stdev.estimate
@@ -16,7 +17,7 @@ setMethod("normPerExpected", signature=c("HTCexp"), definition=function(x, ...){
     }
     ## Remove NaN or Inf values for further analyses
     #x@intdata[which(is.na(x@intdata) | is.infinite(x@intdata))]<-NA
-    x@intdata[which(is.infinite(x@intdata))]<-0
+    x@intdata[Matrix::which(is.infinite(x@intdata))]<-0
     x
 })
 

@@ -328,8 +328,8 @@ setMethod("divide", signature=c("HTCexp","HTCexp"),
               b <- y@intdata[id(y.ygi), id(y.xgi)]
               ##a <- x@intdata[id(ygi), id(xgi)]
               ##b <- y@intdata[id(ygi), id(xgi)]
-              a[which(a==0L | b==0L)]<-NA
-              b[which(a==0L | b==0L)]<-NA
+              a[Matrix::which(a==0L | b==0L)]<-NA
+              b[Matrix::which(a==0L | b==0L)]<-NA
 
               ## Use x as reference for intervals description
               colnames(b) <- colnames(a)

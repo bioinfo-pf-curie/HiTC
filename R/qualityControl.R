@@ -57,7 +57,7 @@ intervalsDist<-function(x, use.zero=TRUE){
     if (!use.zero){
         dist.mat <- dist.mat + 1 ## zero distance are different from zero values
         sl.xdata <- xdata!=0
-        dist.mat[which(!sl.xdata)] <- 0
+        dist.mat[which(as.matrix(!sl.xdata))] <- 0
         dist.mat <- as(dist.mat, "dgTMatrix")
     }
     dist.mat
