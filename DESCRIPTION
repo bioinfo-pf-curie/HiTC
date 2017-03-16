@@ -2,7 +2,7 @@ Package: HiTC
 Type: Package
 Title: High Throughput Chromosome Conformation Capture analysis
 Description: The HiTC package was developed to explore high-throughput 'C' data such as 5C or Hi-C. Dedicated R classes as well as standard methods for quality controls, normalization, visualization, and further analysis are also provided.
-Version: 1.18.0
+Version: 1.18.1
 Date: 2015-12-15
 Depends: R (>= 2.15.0), methods, IRanges, GenomicRanges
 Imports: Biostrings, graphics, grDevices, rtracklayer, RColorBrewer,
