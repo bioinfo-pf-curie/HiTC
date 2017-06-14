@@ -133,7 +133,7 @@ getPearsonMap <- function(x, normPerExpected=TRUE, center=TRUE, ...){
   idx.na <- union(names(which(apply(intdata(x), 1, function(x) all(is.na(x))))),
                names(which(apply(intdata(x), 2, function(x) all(is.na(x))))))
   x <- removeIntervals(x,idx.na)
-  
+
   ## Calculate correlation
   ## use="pairwise.complete.obs" means that the correlation between two vectors is calculated using only the paired non-NAs values.
   ## It means that two correlations can be calculated using a different set of points ...
@@ -145,6 +145,11 @@ getPearsonMap <- function(x, normPerExpected=TRUE, center=TRUE, ...){
     xdata <- t(scale(t(intdata(x)), center=TRUE, scale=FALSE))
   }else{
     xdata <- as.matrix(intdata(x))
+  }
+
+  ## check diagonal, if diag is NA put 0
+  if (is.na(max(diag(xdata), na.rm=FALSE))){
+      diag(xdata)<-0
   }
 
   ## calculate correlation of columns

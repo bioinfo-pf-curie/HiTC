@@ -402,8 +402,12 @@ normLGF <- function(x,  family=c("poisson", "nb")){
     }
     
     ##centralize cov matrix of enz, gcc
-    len_m<-(len_m-mean(len_m, na.rm=TRUE))/apply(len_m, 2, sd, na.rm=TRUE)
-    gcc_m<-(gcc_m-mean(gcc_m, na.rm=TRUE))/apply(gcc_m, 2, sd, na.rm=TRUE)
+    #len_m<-(len_m-mean(len_m, na.rm=TRUE))/apply(len_m, 2, sd, na.rm=TRUE)
+    #gcc_m<-(gcc_m-mean(gcc_m, na.rm=TRUE))/apply(gcc_m, 2, sd, na.rm=TRUE)
+    #Fix bug in BioC [bioc] A: normLGF yields non-symetric matrices
+    len_m<-(len_m-mean(len_m, na.rm=TRUE))/sd(len_m, na.rm=TRUE)
+    gcc_m<-(gcc_m-mean(gcc_m, na.rm=TRUE))/sd(gcc_m, na.rm=TRUE)
+
     
     ##change matrix into vector
     if (isIntraChrom(x)){
