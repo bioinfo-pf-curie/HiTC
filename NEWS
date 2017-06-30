@@ -3,6 +3,8 @@ CHANGES IN VERSION 1.21.0
 
 BUG FIXES
 
+    o Fix bug in getExpectedCountsMean for non-symmetrical data
+
     o Deal with NA in getPearson function
 
     o Fix bug in normLGF leading to non symmetrical matrices

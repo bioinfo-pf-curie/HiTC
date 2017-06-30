@@ -132,7 +132,7 @@ getExpectedCountsMean <- function(x, logbin=TRUE, step=1.05, filter.low=0.05){
   ##d <- rows - t(rows)
 
   d <- matrix(bins[1+abs(col(rows) - row(rows))],nrow=N) - 1
-  d[lower.tri(d)] <- -d[upper.tri(d)]
+  d[lower.tri(d)] <- -d[lower.tri(d)]
  
   if (isSymmetric(xdata)){
     ## remove half of the matrix
