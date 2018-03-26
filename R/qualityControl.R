@@ -214,7 +214,8 @@ extractCounts <- function(x){
       if (length(which(isIntraChrom(x)))>0){
           x.intra <- x[isIntraChrom(x)]
           xdata.intra <- unlist(lapply(x.intra,function(x){
-              return(as(as(intdata(x), "sparseMatrix"),"dgTMatrix")@x)
+              out <- as(as(intdata(x), "sparseMatrix"),"dgTMatrix")@x
+              return(out[which(out>0)])
           }))
           xdata.intra.dist <- unlist(lapply(x.intra,function(x){
               return(intervalsDist(x, use.zero=FALSE)@x)}))
@@ -222,17 +223,20 @@ extractCounts <- function(x){
       if (length(which(!isIntraChrom(x)))>0){
           x.inter <- x[!isIntraChrom(x)]
           xdata.inter <- unlist(lapply(x.inter,function(x){
-              return(intdata(x)@x)
+              out <- intdata(x)@x
+              return(out[which(out>0)])
           }))
       }
   } else if(inherits(x,"HTCexp")){
       if (isIntraChrom(x)){
           x.intra <- x
           xdata.intra <- as(as(intdata(x.intra), "sparseMatrix"),"dgTMatrix")@x
+          xdata.intra <- xdata.intra[which(xdata.intra>0)]
           xdata.intra.dist <- intervalsDist(x.intra, use.zero=FALSE)@x
       }else {
           x.inter <- x
           xdata.inter <- intdata(x.inter)@x
+          xdata.inter <- xdata.inter[which(xdata.inter>0)]
           xdata.intra.dist <- NULL
       }
   }else{

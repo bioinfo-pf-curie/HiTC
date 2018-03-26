@@ -5,12 +5,13 @@
 \description{
   Export \code{HTCexp} object to tab format
 }
-\usage{exportC(x, file, per.chromosome=FALSE)}
+\usage{exportC(x, file, per.chromosome=FALSE, use.names=FALSE, header=FALSE)}
 \arguments{
   \item{x}{object that inherits from class \code{HTCexp}}
   \item{file}{character; the basename of the output file}
-  \item{per.chromosome}{logical; export each contact maps in a different
-  file (i.e one per chromosome pair)}
+  \item{per.chromosome}{logical; export each contact maps in a different files (i.e one per chromosome pair)}
+  \item{use.names}{if TRUE, keep the original row/colnames of the contact matrix}
+  \item{header}{if TRUE, add an header with the package version and the date}
 }
 \value{
  Three output files will be created ; 2 BED files for each genomic

@@ -8,34 +8,63 @@
 ##
 ###################################
 
-writeC <- function(data2export, xgi, ygi, file, genome="mm9", header=TRUE){
+writeC <- function(data2export, xgi, ygi, file, genome="mm9", header=FALSE, use.names=TRUE, rm.na=TRUE){
     message("Export genomic ranges as BED files ...")
 
-    ## Write header
-    bed.xgi <- paste(file,"_xgi.bed", sep="")  
-    write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=bed.xgi)
-    write(paste("##",date(), sep=""),file=bed.xgi, append=TRUE)
-    rtracklayer::export(xgi, con=paste(file,"_xgi.bed", sep=""), format="bed", append=TRUE)
+    ## Use names
+    if (!use.names){
+        rownames(data2export) <- 1:nrow(data2export)
+        colnames(data2export) <- 1:ncol(data2export)
+        elementMetadata(xgi)$name <- 1:length(xgi)
+        if (!is.null(ygi)){
+            elementMetadata(ygi)$name <- 1:length(ygi)
+        }
+    }
+    
+    ## Remove NA
+    if (rm.na){
+        data2export[Matrix::which(is.na(data2export))] <- 0
+    }
+    
+    ## Write header and BED files
+    bed.xgi <- paste(file,"_xgi.bed", sep="")
+    if (header){
+        write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=bed.xgi)
+        write(paste("##",date(), sep=""),file=bed.xgi, append=TRUE)
+        rtracklayer::export(xgi, con=paste(file,"_xgi.bed", sep=""), format="bed", append=TRUE)
+    }else{
+        rtracklayer::export(xgi, con=paste(file,"_xgi.bed", sep=""), format="bed", append=FALSE)
+    }  
 
     if(!is.null(ygi)){
         bed.ygi <- paste(file,"_ygi.bed", sep="")  
-        write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=bed.ygi)
-        write(paste("##",date(), sep=""),file=bed.ygi, append=TRUE)
-        rtracklayer::export(ygi, con=paste(file,"_ygi.bed", sep=""), format="bed", append=TRUE)
+        if (header){
+            write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=bed.ygi)
+            write(paste("##",date(), sep=""),file=bed.ygi, append=TRUE)
+            rtracklayer::export(ygi, con=paste(file,"_ygi.bed", sep=""), format="bed", append=TRUE)
+        }else{
+            rtracklayer::export(ygi, con=paste(file,"_ygi.bed", sep=""), format="bed", append=FALSE)
+        }
     }
+    
+    ## Export map
     count.out <- paste(file,".mat", sep="")
     message("Export interaction map in '",count.out,"' ...")
-    write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=count.out)
-    write(paste("##",date(), sep=""),file=count.out, append=TRUE)
-    
     data2export <- as(data2export, "TsparseMatrix")
-    write(paste(rownames(data2export)[data2export@i+1], colnames(data2export)[data2export@j+1], data2export@x, sep="\t"), file=count.out, append=TRUE)
+    
+    if (header){
+        write(paste("##HiTC - v", packageVersion("HiTC"), sep=""),file=count.out)
+        write(paste("##",date(), sep=""),file=count.out, append=TRUE)
+        write(paste(rownames(data2export)[data2export@i+1], colnames(data2export)[data2export@j+1], data2export@x, sep="\t"), file=count.out, append=TRUE)
+    }else{
+        write(paste(rownames(data2export)[data2export@i+1], colnames(data2export)[data2export@j+1], data2export@x, sep="\t"), file=count.out, append=FALSE)
+    }
     invisible(NULL)
 }
     
 
 
-exportC <- function(x, file, per.chromosome=FALSE){
+exportC <- function(x, file, per.chromosome=FALSE, use.names=FALSE, header=FALSE){
     if (inherits(x, "HTCexp")){
         ##stopifnot(isSymmetric(x))
         data2export <- intdata(x)
@@ -44,7 +73,7 @@ exportC <- function(x, file, per.chromosome=FALSE){
             ygi <- y_intervals(x)
         else
             ygi <- NULL
-        writeC(data2export, xgi, ygi, file)
+        writeC(data2export, xgi, ygi, file, header=header, use.names=use.names)
     }else if (inherits(x, "HTClist")){
         if (per.chromosome){
             lapply(x, function(xx){
@@ -55,13 +84,13 @@ exportC <- function(x, file, per.chromosome=FALSE){
                 else
                     ygi <- NULL
                 chrname <- paste0(seqlevels(xx), collapse="")
-                writeC(data2export, xgi, ygi, file=paste0(file, "_", chrname))
+                writeC(data2export, xgi, ygi, file=paste0(file, "_", chrname), header=header, use.names=use.names)
             })
         }else{
             if (isComplete(x)){
                 data2export <- getCombinedContacts(x)
                 combi <- getCombinedIntervals(x)
-                writeC(data2export, combi$xgi, combi$ygi, file)
+                writeC(data2export, combi$xgi, combi$ygi, file, use.names=use.names, header=header)
             }else{
                 stop("isComplete(x) is not TRUE. Cannot export incomplete HTClist object as one file. Please use per.chromosome=TRUE.")
             }

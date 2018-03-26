@@ -103,11 +103,11 @@ heatmapC <- function(xdata,  names=FALSE, value=FALSE, show.zero=FALSE,  show.na
       #col.neg <- col.neg[length(col.neg)-round(length(col.neg)*(max(abs(xdata.neg), na.rm=TRUE)/maxrange)):length(col.neg)]
       col.neg <- col.neg[1:round(length(col.neg)*(max(abs(xdata.neg), na.rm=TRUE)/maxrange))]
     }
-    plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.neg, show.zero=show.zero, axes=FALSE,ylab="",xlab="",col=c(col.zero,col.neg))
+    plottingfunc(x=1:nrow(xdata),y=1:ncol(xdata),z=xdata.neg, show.zero=show.zero, axes=FALSE,ylab="",xlab="",col=c(col.neg, col.zero))
     par(new = TRUE)
   }
   
-  if (!is.null(xdata.pos)){   
+  if (!is.null(xdata.pos)){
     col.pos <- colorC(col.pos,k=k)   
     if (!is.na(maxrange) && max(xdata, na.rm=TRUE) < maxrange){
       col.pos <- col.pos[1:round(length(col.pos)*(max(xdata, na.rm=TRUE)/maxrange))]
@@ -381,6 +381,7 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
     ## #####################
     if (log.data){
         xdata <- log2(xdata)
+        xdata[is.infinite(xdata)] <- 0
     }
  
     ## #################
@@ -409,8 +410,8 @@ getData2Map <- function(x, minrange, maxrange, trim.range, log.data){
       
       ## The minrange/maxrange are symmetrical around zero. The same threshold are used for positive and negative values
       xdata@x[which(xdata@x<=xminrange & xdata@x>0)] <- xminrange
-      xdata@x[which(xdata@x>=-xminrange & xdata@x<0)] <- -xminrange
       xdata@x[which(xdata@x>=xmaxrange & xdata@x>0)] <- xmaxrange
+      xdata@x[which(xdata@x>=-xminrange & xdata@x<0)] <- -xminrange
       xdata@x[which(xdata@x<=-xmaxrange & xdata@x<0)] <- -xmaxrange
 
       if (max(xdata@x, na.rm=TRUE)>0)

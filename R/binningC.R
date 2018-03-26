@@ -225,8 +225,8 @@ setIntervalScale <- function(x, xgi, ygi, upa=TRUE, method=c("sum", "median", "m
     
     ## Unique Primer Assignment
     if (upa){
-        start(ranges(x.xgi)) <- end(ranges(x.xgi)) <- mean(ranges(x.xgi))
-        start(ranges(x.ygi)) <- end(ranges(x.ygi)) <- mean(ranges(x.ygi))
+        start(ranges(x.xgi)) <- end(ranges(x.xgi)) <- start(ranges(x.xgi)) + floor(width(ranges(x.xgi)))/2
+        start(ranges(x.ygi)) <- end(ranges(x.ygi)) <- start(ranges(x.ygi)) + floor(width(ranges(x.ygi)))/2
     }
 
     x.nb.bin <- length(xgi)
