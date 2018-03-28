@@ -34,7 +34,8 @@
 }
 \author{N. Servant}
 \seealso{\code{\link{HTClist-class}},\code{\link{HTCexp-class}},\code{\link{importC}},
-  \code{\link{Matrix-class}, \code{\link[Matrix]{symmetricMatrix-class}}}}
+  \code{\link{Matrix-class}}, \code{\link[Matrix]{symmetricMatrix-class}}
+}
 \examples{
 exDir <- system.file("extdata", package="HiTC")
 ## Load my5C matrix format
